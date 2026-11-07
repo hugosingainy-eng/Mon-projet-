@@ -82,26 +82,26 @@ Cela permet de tout tester avant d'ajouter vos clés.
 
 Le modèle par défaut est `claude-opus-5-5`. Le repli automatique côté serveur (`fallbacks: "default"`) est activé : si une requête est refusée, elle est relancée sur un autre modèle.
 
-## Pilote automatique : les agents travaillent 24h/24, 7j/7
+## Programmes de recherche : les agents cherchent quand VOUS le demandez
 
-Dans **Pilote auto**, créez un programme : la liste des métiers et la liste des villes, par exemple
-« boulangerie, plombier, coiffeur » × « Lyon, Villeurbanne ».
-Cochez « Élargir » : l'IA ajoute les arrondissements et les communes voisines.
+Rien ne se lance tout seul. Les agents restent au repos tant que vous ne leur demandez rien.
 
-À partir de là, sans aucune intervention :
+1. Dans **Programmes**, enregistrez une fois vos métiers et vos villes, par exemple « boulangerie, plombier, coiffeur » × « Lyon, Villeurbanne ». Option « Élargir » : l'IA ajoute les arrondissements et les communes voisines.
+2. Quand vous voulez des clients, cliquez sur **« Chercher des clients »**. Les agents passent toutes les combinaisons métier × ville, une par une, avec tout le circuit et le contrôle du Boss.
+3. Ils **s'arrêtent tout seuls** une fois toutes les combinaisons faites, ou quand le plafond de nouveaux prospects du lancement est atteint (il maîtrise vos coûts). Le Boss vous prévient dans le Fil des agents.
+4. Le bouton **« Arrêter »** interrompt la recherche à tout moment. La recherche en cours se termine proprement.
+5. Relancer plus tard un même programme ne fait remonter que les **nouveaux** commerces : ceux déjà connus sont ignorés.
 
-1. **Toutes les X minutes**, le pilote lance la recherche suivante, une combinaison métier × ville à la fois. Les agents font tout le circuit, sous le contrôle du Boss.
-2. **Quand toutes les combinaisons sont faites**, un nouveau cycle commence. Les commerces déjà connus sont ignorés : seuls les **nouveaux** remontent (ouvertures, fiches ajoutées sur Google Maps).
-3. **Une limite de nouveaux prospects par jour** maîtrise vos coûts d'API. Une fois atteinte, le programme reprend à minuit.
-4. **Les emails partent tout seuls** si « Envoi automatique » est activé. Ils sont envoyés seulement aux horaires de bureau, plafonnés par jour (30 par défaut) et espacés de 1 à 3 minutes pour ne pas finir en spam. Les dossiers en attente partent au créneau suivant.
-5. **Chaque matin**, le Boss vous envoie un rapport des dernières 24 h (heure et adresse dans Réglages).
-6. **Après un redémarrage ou une panne**, les dossiers interrompus reprennent automatiquement.
+Pour une recherche ponctuelle, le formulaire du tableau de bord (activité + ville) suffit.
 
-Une seule recherche automatique tourne à la fois, pour garder des coûts prévisibles.
+Autres réglages (dans **Réglages**) :
+- **Envoi automatique** : désactivé par défaut. Activé, les emails validés par le Boss partent aux horaires de bureau, plafonnés par jour (30 par défaut) et espacés de 1 à 3 minutes.
+- **Rapport quotidien** : un résumé des dernières 24 h par email. Vous pouvez le désactiver.
+- Après un redémarrage, une recherche que **vous** aviez lancée reprend là où elle en était.
 
-## Mettre en ligne (indispensable pour le 24h/24)
+## Mettre en ligne
 
-Votre ordinateur s'éteint ; pour tourner en permanence, l'application doit être sur un serveur.
+Pour que les liens « Voir mon futur site » marchent chez vos prospects et que vous accédiez au QG depuis votre téléphone, l'application doit être sur un serveur.
 Le plus simple est un petit serveur privé (VPS : Hetzner, OVH, Scaleway… environ 5 €/mois) avec Docker :
 
 ```bash
@@ -132,7 +132,7 @@ Seuls les sites d'aperçu (`/sites/...`) sont publics, et ils sont marqués `noi
 server/
   index.js            serveur, connexion privée, API
   orchestrator.js     circuit des agents + boucle « livrer → Boss → corriger »
-  autopilot.js        pilote automatique 24h/24 : programmes, envois étalés, rapport, reprise
+  autopilot.js        programmes de recherche lancés à la demande, envois étalés, rapport, reprise
   sendPolicy.js       règles d'envoi (plafond, horaires, heure de Paris)
   team.js             organigramme, activité en direct, délégation chef → sous-agent
   agents/
@@ -144,5 +144,5 @@ server/
   services/           Google Places, audit de site, recherche web (sites cachés + emails), SMTP
   llm.js              accès à Claude (sorties JSON structurées)
 public/               tableau de bord
-test/                 tests du Boss, des sous-agents, de la recherche web et du pilote (npm test)
+test/                 tests du Boss, des sous-agents, de la recherche web et des programmes (npm test)
 ```

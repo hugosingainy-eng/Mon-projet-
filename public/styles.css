@@ -269,14 +269,16 @@ code { font: 13px var(--mono); background: var(--surface-2); padding: 1px 6px; b
 .led { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
 .led.on { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-soft); animation: pulse 2s infinite; }
 .auto-status { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.auto-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; align-items: end; }
+.auto-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 24px; align-items: end; }
 .auto-form h2 { grid-column: 1 / -1; }
 .auto-form .wide { grid-column: 1 / -1; }
 .auto-form label span { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .06em; }
 .auto-form label small { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .auto-form .check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
 .auto-form .check input { width: auto; accent-color: var(--accent); }
-.auto-form .btn { grid-column: 1 / -1; justify-self: start; }
+.auto-form .form-actions { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; }
+.auto-list { margin-bottom: 24px; }
+.program.searching { border-left-color: var(--info); }
 .auto-list { display: grid; gap: 14px; }
 .program { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; display: grid; gap: 10px; border-left: 4px solid var(--line); }
 .program.on { border-left-color: var(--ok); }

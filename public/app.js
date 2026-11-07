@@ -229,82 +229,67 @@ const inMinutes = (iso) => {
 function renderAuto() {
   const st = state.auto.status || {};
   const progs = state.auto.programs || [];
-  $('#nav-auto-dot').hidden = !st.active;
-  $('#auto-strip').innerHTML = progs.length
-    ? `<span class="led ${st.active ? 'on' : ''}"></span><b>Pilote auto ${st.active ? 'en marche' : 'à l’arrêt'}</b>
-       <span class="sep">|</span><span>${st.active} programme(s) actif(s)</span>
-       <span class="sep">|</span><span>${st.searching ? 'recherche en cours…' : `prochaine recherche ${inMinutes(st.nextRunAt)}`}</span>
-       <span class="sep">|</span><span>${st.sendsToday}/${st.sendLimit} emails envoyés aujourd’hui${st.sendOk ? '' : ` · envoi en pause : ${esc(st.sendReason)}`}</span>`
-    : `<span class="led"></span><b>Pilote auto</b><span>Faites travailler vos agents 24h/24 : créez un programme →</span>`;
+  const searching = st.searching || [];
+  $('#nav-auto-dot').hidden = !searching.length;
+  $('#auto-strip').innerHTML = searching.length
+    ? `<span class="led on"></span><b>Recherche en cours</b><span>${searching.map(esc).join(', ')}</span><span class="sep">|</span><span>voir l’avancement →</span>`
+    : `<span class="led"></span><b>Agents au repos</b><span>Ils ne cherchent que quand vous le demandez.</span><span class="sep">|</span><span>${progs.length ? 'Lancer un programme →' : 'Créer un programme de recherche →'}</span>`;
 
   if ($('[data-page="autopilot"]').hidden) return;
-  const tile = (n, l) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`;
-  $('#auto-status').innerHTML =
-    tile(st.active || 0, 'programmes actifs') +
-    tile(st.searching ? '●' : inMinutes(st.nextRunAt), st.searching ? 'recherche en cours' : 'prochaine recherche') +
-    tile(`${st.sendsToday ?? 0}/${st.sendLimit ?? 0}`, st.sendOk ? 'emails envoyés aujourd’hui' : `envoi en pause : ${esc(st.sendReason || '')}`) +
-    tile(progs.reduce((s, p) => s + p.total_leads, 0), 'prospects trouvés par le pilote');
-
-  $('#auto-list').innerHTML = progs.length ? progs.map((p) => {
-    const pct = p.combos ? Math.round(((p.position - 1) / p.combos) * 100) : 0;
+  $('#auto-list').innerHTML = progs.map((p) => {
+    const pct = p.combos ? Math.round((p.done / p.combos) * 100) : 0;
     const tags = (arr, max) => arr.slice(0, max).map((t) => `<span class="pill">${esc(t)}</span>`).join('') + (arr.length > max ? `<span class="pill">+${arr.length - max}</span>` : '');
-    return `<div class="program ${p.active ? 'on' : ''}">
+    return `<div class="program ${p.searching ? 'searching' : ''}">
       <div class="program-head"><div><h3>${esc(p.name)}</h3>
-        <span class="muted">${p.running ? '● recherche en cours' : !p.active ? 'en pause' : p.leads_today >= p.daily_limit ? 'limite du jour atteinte : reprise à minuit' : `prochaine recherche ${inMinutes(p.next_run_at)}`} · toutes les ${p.interval_minutes} min</span></div>
+        <span class="muted">${p.searching ? `● recherche en cours : ${p.done}/${p.combos} faites, ${p.found} nouveaux prospects` : `${p.combos} recherche(s) par lancement · au repos`}</span></div>
         <div class="program-actions">
-          <button class="btn small" data-auto-run="${p.id}">Lancer maintenant</button>
-          <button class="btn small danger" data-auto-del="${p.id}">Supprimer</button>
-          <label class="switch" title="Activer / mettre en pause"><input type="checkbox" data-auto-toggle="${p.id}" ${p.active ? 'checked' : ''}><span></span></label>
+          ${p.searching
+            ? `<button class="btn" data-auto-stop="${p.id}">Arrêter</button>`
+            : `<button class="btn primary" data-auto-run="${p.id}">Chercher des clients</button>`}
+          <button class="btn small danger" data-auto-del="${p.id}" ${p.searching ? 'disabled' : ''}>Supprimer</button>
         </div></div>
       <div class="tags">${tags(p.queries, 8)}</div>
       <div class="tags">${tags(p.cities, 10)}</div>
-      <div class="progress" title="Avancement du cycle"><i style="width:${pct}%"></i></div>
+      ${p.searching ? `<div class="progress" title="Avancement"><i style="width:${pct}%"></i></div>` : ''}
       <div class="program-meta">
-        <span>Cycle <b>${p.cycle}</b> · recherche <b>${p.position}/${p.combos}</b></span>
-        <span>Aujourd’hui <b>${p.leads_today}/${p.daily_limit}</b> nouveaux prospects</span>
-        <span>Total <b>${p.total_leads}</b> prospects en <b>${p.runs}</b> recherches</span>
+        <span>Max <b>${p.max}</b> nouveaux prospects par lancement</span>
+        <span>Lancé <b>${p.runs}</b> fois · <b>${p.total_leads}</b> prospects au total</span>
       </div>
-      ${p.last_result ? `<div class="muted" style="font-size:13px">Dernière recherche : ${esc(p.last_result)}</div>` : ''}
+      ${p.last_result ? `<div class="muted" style="font-size:13px">Dernier résultat : ${esc(p.last_result)}</div>` : ''}
     </div>`;
-  }).join('') : '<div class="empty">Aucun programme. Créez-en un ci-dessus : vos agents chercheront en continu, même quand vous dormez.</div>';
+  }).join('') || '<div class="empty">Aucun programme enregistré. Créez-en un ci-dessous.</div>';
 }
 
 $('#auto-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = e.target;
-  const btn = f.querySelector('button[type=submit]');
-  btn.disabled = true;
-  btn.textContent = f.expand.checked ? 'Préparation de la zone…' : 'Démarrage…';
+  const launch = e.submitter?.value === '1';
+  const btns = f.querySelectorAll('button');
+  btns.forEach((b) => (b.disabled = true));
   try {
     const r = await api('/api/autopilot', { method: 'POST', body: {
       name: f.name.value, queries: f.queries.value, cities: f.cities.value, expand: f.expand.checked,
-      intervalMinutes: f.intervalMinutes.value, resultsPerRun: f.resultsPerRun.value, dailyLimit: f.dailyLimit.value,
+      resultsPerRun: f.resultsPerRun.value, maxProspects: f.maxProspects.value, launch,
     } });
-    toast(`Programme démarré sur ${r.cities.length} zone(s) 🚀`);
+    toast(launch ? `C’est parti : les agents cherchent (${r.cities.length} zone(s)) 🧭` : 'Programme enregistré. Lancez-le quand vous voulez.');
     f.reset();
     refresh();
   } catch (err) { toast(err.message); }
-  btn.disabled = false;
-  btn.textContent = 'Démarrer le programme';
+  btns.forEach((b) => (b.disabled = false));
 });
 
 $('#auto-list').addEventListener('click', async (e) => {
   const run = e.target.closest('[data-auto-run]');
+  const stop = e.target.closest('[data-auto-stop]');
   const del = e.target.closest('[data-auto-del]');
   try {
-    if (run) { await api(`/api/autopilot/${run.dataset.autoRun}`, { method: 'PATCH', body: { runNow: true } }); toast('Recherche lancée dans la minute'); }
+    if (run) { await api(`/api/autopilot/${run.dataset.autoRun}/launch`, { method: 'POST' }); toast('C’est parti : les agents cherchent des clients 🧭'); }
+    if (stop) { await api(`/api/autopilot/${stop.dataset.autoStop}/stop`, { method: 'POST' }); toast('Arrêt demandé : la recherche en cours se termine proprement.'); }
     if (del && confirm('Supprimer ce programme ? Les prospects déjà trouvés sont conservés.')) {
       await api(`/api/autopilot/${del.dataset.autoDel}`, { method: 'DELETE' }); toast('Programme supprimé');
     }
-    if (run || del) refresh();
+    if (run || stop || del) refresh();
   } catch (err) { toast(err.message); }
-});
-$('#auto-list').addEventListener('change', async (e) => {
-  const t = e.target.closest('[data-auto-toggle]');
-  if (!t) return;
-  await api(`/api/autopilot/${t.dataset.autoToggle}`, { method: 'PATCH', body: { active: t.checked } });
-  toast(t.checked ? 'Programme relancé' : 'Programme en pause');
-  refresh();
 });
 
 // ---------- Fiche prospect ----------

@@ -1,6 +1,6 @@
-# Lancement 24h/24 : `docker compose up -d`
-# Le conteneur redémarre tout seul en cas de plantage ou de redémarrage du serveur,
-# et les dossiers interrompus reprennent automatiquement.
+# Lancement : `docker compose up -d`
+# Le conteneur redémarre tout seul en cas de plantage ou de redémarrage du serveur.
+# Les agents ne cherchent que quand vous lancez une recherche.
 services:
   qg-agents:
     build: .

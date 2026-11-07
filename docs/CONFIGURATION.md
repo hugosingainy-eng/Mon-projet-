@@ -144,7 +144,7 @@ PUBLIC_URL=https://votre-domaine.fr
    - l'email trouvé et sa source ;
    - l'email préparé.
 6. Envoyez le premier email **à vous-même** : dans la fiche, remplacez l'adresse par la vôtre, puis cliquez sur « Envoyer ».
-7. Si tout est bon, créez votre programme dans **Pilote auto**. Pour la première semaine, mettez une limite de 20 à 30 prospects par jour.
+7. Si tout est bon, enregistrez votre programme dans **Programmes** et cliquez sur **« Chercher des clients »** quand vous voulez. Pour commencer, mettez un plafond de 20 à 30 nouveaux prospects par lancement.
 
 ## En cas de problème
 

@@ -1,11 +1,14 @@
-// Pilote automatique : les agents travaillent 24h/24, 7j/7, sans intervention.
+// Programmes de recherche : les agents ne cherchent QUE quand vous le demandez.
 //
-// Toutes les minutes, le planificateur :
-//  1. lance la prochaine recherche des programmes actifs (métier × ville, à tour de rôle) ;
-//  2. envoie les dossiers prêts, dans les horaires et le plafond d'envoi ;
-//  3. vous envoie le rapport du jour (une fois par jour).
+// Un programme = une liste de métiers × une liste de villes, enregistrée une fois.
+// Quand vous cliquez « Chercher des clients », les agents passent toutes les
+// combinaisons une par une, puis S'ARRÊTENT. Rien ne se lance tout seul.
 //
-// Au redémarrage du serveur, les dossiers interrompus reprennent automatiquement.
+// En tâche de fond, chaque minute, le serveur :
+//  1. poursuit les recherches que vous avez lancées (une combinaison à la fois) ;
+//  2. envoie les dossiers prêts, seulement si vous avez activé l'envoi automatique ;
+//  3. vous envoie le rapport du jour, si vous l'avez activé.
+// Au redémarrage, les recherches et dossiers en cours reprennent là où ils en étaient.
 import { db, getLead, logMessage, updateLead, getSetting, setSetting } from './db.js';
 import { config } from './config.js';
 import { runMission, processLead, sendLead } from './orchestrator.js';
@@ -40,8 +43,10 @@ export function listAutopilots() {
     return {
       ...a,
       combos,
-      position: combos ? (a.cursor % combos) + 1 : 0,
-      leads_today: a.day === parisNow().ymd ? a.leads_today : 0,
+      done: Math.min(a.cursor, combos),         // combinaisons faites pendant ce lancement
+      found: a.leads_today,                      // nouveaux prospects de ce lancement
+      max: a.daily_limit,                        // plafond de nouveaux prospects par lancement
+      searching: a.active === 1,
       running: missionBusy === a.id,
     };
   });
@@ -65,76 +70,89 @@ export async function expandCities(cities) {
   }
 }
 
-export function createAutopilot({ name, queries, cities, resultsPerRun = 20, intervalMinutes = 30, dailyLimit = 100 }) {
+export function createAutopilot({ name, queries, cities, resultsPerRun = 20, maxProspects = 100, launch = false }) {
   if (!queries.length || !cities.length) throw new Error('Indiquez au moins un métier et une ville.');
   const info = db.prepare(
-    `INSERT INTO autopilots (name, queries, cities, results_per_run, interval_minutes, daily_limit, next_run_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(
-    name || `${queries[0]} — ${cities[0]}`, JSON.stringify(queries), JSON.stringify(cities),
-    clamp(resultsPerRun, 1, 60), clamp(intervalMinutes, 5, 1440), clamp(dailyLimit, 1, 2000), new Date().toISOString()
-  );
-  return Number(info.lastInsertRowid);
+    `INSERT INTO autopilots (name, queries, cities, results_per_run, daily_limit, active)
+     VALUES (?, ?, ?, ?, ?, 0)`
+  ).run(name || `${queries[0]} — ${cities[0]}`, JSON.stringify(queries), JSON.stringify(cities),
+    clamp(resultsPerRun, 1, 60), clamp(maxProspects, 1, 2000));
+  const id = Number(info.lastInsertRowid);
+  if (launch) launchProgram(id);
+  return id;
 }
 
-/** Minuit (heure de Paris) + 1 minute, en ISO. */
-export function nextParisMidnight(from = new Date()) {
-  const { hour, minute } = parisNow(from);
-  return new Date(from.getTime() + ((23 - hour) * 60 + (60 - minute) + 1) * 60e3).toISOString();
+/** « Chercher des clients » : lance un passage complet sur toutes les combinaisons. */
+export function launchProgram(id) {
+  const a = getAutopilot(id);
+  if (!a) throw new Error('Programme introuvable.');
+  if (a.active) return;
+  db.prepare('UPDATE autopilots SET active = 1, cursor = 0, leads_today = 0, runs = runs + 1, last_result = ? WHERE id = ?')
+    .run('Recherche lancée…', id);
+  logMessage({ from: 'Vous', to: 'Boss', kind: 'info', content: `Cherche-moi des clients : programme « ${a.name} » (${a.queries.length * a.cities.length} recherches à faire).` });
+  setTimeout(tick, 500);
+}
+
+/** Arrête une recherche en cours (la combinaison en cours se termine proprement). */
+export function stopProgram(id) {
+  const a = getAutopilot(id);
+  if (!a?.active) return;
+  db.prepare('UPDATE autopilots SET active = 0, last_result = ? WHERE id = ?')
+    .run(`Arrêtée par vous après ${a.cursor} recherche(s), ${a.leads_today} nouveaux prospects.`, id);
+  logMessage({ from: 'Vous', to: 'Boss', kind: 'info', content: `Stop : arrête la recherche « ${a.name} ».` });
 }
 
 function clamp(v, min, max) {
   return Math.min(max, Math.max(min, Math.round(Number(v) || min)));
 }
 
-// ---------- 1. Recherches automatiques ----------
-async function runOnce(a) {
-  const today = parisNow().ymd;
-  const leadsToday = a.day === today ? a.leads_today : 0;
-  const remaining = a.daily_limit - leadsToday;
-  const next = new Date(Date.now() + a.interval_minutes * 60e3).toISOString();
+// ---------- 1. Recherches lancées par vous ----------
+function finish(a, reason) {
+  db.prepare('UPDATE autopilots SET active = 0, last_run_at = ?, last_result = ? WHERE id = ?').run(new Date().toISOString(), reason, a.id);
+  logMessage({ from: 'Boss', to: 'Vous', kind: 'info', content: `Programme « ${a.name} » terminé : ${reason} Les agents attendent votre prochaine demande.` });
+}
 
-  if (remaining <= 0) {
-    db.prepare('UPDATE autopilots SET day = ?, leads_today = ?, next_run_at = ?, last_result = ? WHERE id = ?')
-      .run(today, leadsToday, nextParisMidnight(), `Limite du jour atteinte (${a.daily_limit} prospects) : reprise à minuit.`, a.id);
-    return;
-  }
-
+async function runNext(a) {
   const combos = a.queries.flatMap((q) => a.cities.map((c) => [q, c]));
-  const [query, city] = combos[a.cursor % combos.length];
+  if (a.cursor >= combos.length) return finish(a, `${combos.length} recherche(s) faite(s), ${a.leads_today} nouveaux prospects.`);
+  const remaining = a.daily_limit - a.leads_today;
+  if (remaining <= 0) return finish(a, `plafond de ${a.daily_limit} nouveaux prospects atteint.`);
+
+  const [query, city] = combos[a.cursor];
   const mission = db.prepare('INSERT INTO missions (query, city, max_results, autopilot_id) VALUES (?, ?, ?, ?)')
     .run(query, city, Math.min(a.results_per_run, remaining), a.id);
   const missionId = Number(mission.lastInsertRowid);
-  logMessage({ missionId, from: 'Pilote auto', to: 'Boss', kind: 'info', content: `Programme « ${a.name} » : recherche ${(a.cursor % combos.length) + 1}/${combos.length} (cycle ${a.cycle}) → « ${query} » à ${city}.` });
+  logMessage({ missionId, from: 'Boss', to: 'Prospecteur', kind: 'info', content: `Programme « ${a.name} » : recherche ${a.cursor + 1}/${combos.length} → « ${query} » à ${city}.` });
 
   const stats = (await runMission(missionId)) || { found: 0, added: 0, accepted: 0 };
-  const newCursor = a.cursor + 1;
-  const wrapped = newCursor % combos.length === 0;
-  db.prepare(`UPDATE autopilots SET cursor = ?, cycle = ?, day = ?, leads_today = ?, total_leads = total_leads + ?, runs = runs + 1,
-      last_run_at = ?, next_run_at = ?, last_result = ? WHERE id = ?`).run(
-    newCursor, wrapped ? a.cycle + 1 : a.cycle, today, leadsToday + stats.added, stats.added,
-    new Date().toISOString(), next,
+  db.prepare(`UPDATE autopilots SET cursor = cursor + 1, leads_today = leads_today + ?, total_leads = total_leads + ?,
+      last_run_at = ?, last_result = ? WHERE id = ?`).run(
+    stats.added, stats.added, new Date().toISOString(),
     `« ${query} » à ${city} : ${stats.found} trouvés, ${stats.added} nouveaux, ${stats.accepted} retenus.`, a.id
   );
-  if (wrapped) {
-    logMessage({ from: 'Pilote auto', to: 'Vous', kind: 'info', content: `Programme « ${a.name} » : cycle ${a.cycle} terminé (${combos.length} recherches). On recommence pour repérer les nouveaux commerces.` });
+  const after = getAutopilot(a.id);
+  if (after?.active && (after.cursor >= combos.length || after.leads_today >= after.daily_limit)) {
+    finish(after, after.cursor >= combos.length
+      ? `${combos.length} recherche(s) faite(s), ${after.leads_today} nouveaux prospects.`
+      : `plafond de ${after.daily_limit} nouveaux prospects atteint.`);
   }
 }
 
-async function runDueAutopilots() {
+async function runRequestedSearches() {
   if (missionBusy) return;
-  const now = new Date().toISOString();
-  const due = db.prepare('SELECT id FROM autopilots WHERE active = 1 AND (next_run_at IS NULL OR next_run_at <= ?) ORDER BY next_run_at LIMIT 1').get(now);
-  if (!due) return;
-  const a = getAutopilot(due.id);
+  const next = db.prepare('SELECT id FROM autopilots WHERE active = 1 ORDER BY last_run_at IS NOT NULL, last_run_at LIMIT 1').get();
+  if (!next) return;   // personne n'a rien demandé : les agents ne cherchent pas
+  const a = getAutopilot(next.id);
   missionBusy = a.id;
-  runOnce(a)
+  runNext(a)
     .catch((err) => {
-      db.prepare('UPDATE autopilots SET next_run_at = ?, last_result = ? WHERE id = ?')
-        .run(new Date(Date.now() + 15 * 60e3).toISOString(), `Erreur : ${err.message}`.slice(0, 500), a.id);
-      logMessage({ from: 'Pilote auto', to: 'Vous', kind: 'erreur', content: `Programme « ${a.name} » : ${err.message}` });
+      db.prepare('UPDATE autopilots SET active = 0, last_result = ? WHERE id = ?').run(`Erreur : ${err.message}`.slice(0, 500), a.id);
+      logMessage({ from: 'Système', to: 'Vous', kind: 'erreur', content: `Programme « ${a.name} » arrêté : ${err.message}` });
     })
-    .finally(() => { missionBusy = false; });
+    .finally(() => {
+      missionBusy = false;
+      setTimeout(tick, 500); // enchaîne la combinaison suivante sans attendre la minute
+    });
 }
 
 // ---------- 2. Envois étalés ----------
@@ -183,7 +201,7 @@ export function buildReport() {
     `• ${r.sites} sites créés et validés par le Boss (${r.renvois} renvois pour correction)\n` +
     `• ${r.envoyes} emails envoyés · ${r.prets} dossiers prêts à envoyer · ${r.aCompleter} emails à renseigner\n` +
     `• ${r.bloques} dossiers bloqués ou en erreur à regarder\n` +
-    `• ${r.programmes} programme(s) du pilote automatique actif(s)`;
+    `• ${r.programmes} recherche(s) en cours`;
   return r;
 }
 
@@ -216,7 +234,7 @@ async function resumeInterrupted() {
   const leads = db.prepare(`SELECT id FROM leads WHERE status IN (${placeholders}) ORDER BY priority DESC, id`).all(...TRANSIENT);
   if (!leads.length) return;
   db.prepare(`UPDATE leads SET status = 'en_file' WHERE status IN (${placeholders})`).run(...TRANSIENT);
-  logMessage({ from: 'Pilote auto', to: 'Vous', kind: 'info', content: `Redémarrage : ${leads.length} dossier(s) interrompu(s) reprennent automatiquement.` });
+  logMessage({ from: 'Système', to: 'Vous', kind: 'info', content: `Redémarrage : ${leads.length} dossier(s) interrompu(s) reprennent automatiquement.` });
   for (const { id } of leads) await processLead(id);
 }
 
@@ -225,11 +243,11 @@ async function tick() {
   if (ticking) return;
   ticking = true;
   try {
-    await runDueAutopilots();
+    await runRequestedSearches();
     flushSendQueue();       // en arrière-plan (peut durer plusieurs minutes)
     await maybeDailyReport();
   } catch (err) {
-    console.error('Pilote auto :', err);
+    console.error('Tâches de fond :', err);
   } finally {
     ticking = false;
   }
@@ -237,21 +255,24 @@ async function tick() {
 
 export function startAutopilot() {
   if (timer) return;
+  // Ancienne version « 24h/24 » : plus aucun programme ne tourne sans votre demande.
+  if (getSetting('programs_manual') !== 'true') {
+    db.prepare('UPDATE autopilots SET active = 0').run();
+    setSetting('programs_manual', 'true');
+  }
   resumeInterrupted().catch((err) => console.error('Reprise :', err));
   timer = setInterval(tick, 60e3);
   setTimeout(tick, 3000);
 }
 
 export function autopilotStatus() {
-  const active = db.prepare('SELECT COUNT(*) AS n FROM autopilots WHERE active = 1').get().n;
-  const next = db.prepare('SELECT MIN(next_run_at) AS t FROM autopilots WHERE active = 1').get().t;
+  const running = db.prepare('SELECT name FROM autopilots WHERE active = 1').all().map((r) => r.name);
   const send = canAutoSend();
   return {
-    active,
-    nextRunAt: next,
-    searching: Boolean(missionBusy),
+    searching: running,
     sendsToday: sendsToday(),
     sendLimit: Number(setting('send_limit')),
+    autoSend: getSetting('auto_send') === 'true',
     sendOk: send.ok,
     sendReason: send.ok ? null : send.reason,
   };

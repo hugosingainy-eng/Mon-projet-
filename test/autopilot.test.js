@@ -38,19 +38,22 @@ test('les listes de métiers et de villes sont nettoyées', () => {
   assert.deepEqual(parseList('boulangerie, plombier;\n coiffeur,, plombier'), ['boulangerie', 'plombier', 'coiffeur']);
 });
 
-test('un programme démarre tout de suite et borne ses réglages', () => {
-  const id = createAutopilot({ queries: ['plombier'], cities: ['Lyon'], intervalMinutes: 1, resultsPerRun: 500, dailyLimit: 0 });
+test("un programme enregistré ne cherche pas tant qu'on ne le lance pas", () => {
+  const id = createAutopilot({ queries: ['plombier'], cities: ['Lyon'], resultsPerRun: 500, maxProspects: 0 });
   const a = getAutopilot(id);
-  assert.equal(a.interval_minutes, 5);
+  assert.equal(a.active, 0, 'au repos par défaut');
   assert.equal(a.results_per_run, 60);
   assert.equal(a.daily_limit, 1);
-  assert.ok(new Date(a.next_run_at) <= new Date());
   assert.throws(() => createAutopilot({ queries: [], cities: ['Lyon'] }), /au moins un métier/);
 });
 
-test('après la limite du jour, reprise juste après minuit (heure de Paris)', async () => {
-  const { nextParisMidnight } = await import('../server/autopilot.js');
-  const next = new Date(nextParisMidnight(new Date('2026-12-01T21:30:00Z'))); // 22h30 à Paris
-  assert.equal(parisNow(next).hour, 0);
-  assert.equal(parisNow(next).ymd, '2026-12-02');
+test('lancer puis arrêter un programme', async () => {
+  const { launchProgram, stopProgram } = await import('../server/autopilot.js');
+  const id = createAutopilot({ queries: ['plombier', 'coiffeur'], cities: ['Lyon'] });
+  launchProgram(id);
+  assert.equal(getAutopilot(id).active, 1);
+  assert.equal(getAutopilot(id).cursor, 0);
+  stopProgram(id);
+  assert.equal(getAutopilot(id).active, 0);
+  assert.match(getAutopilot(id).last_result, /Arrêtée par vous/);
 });

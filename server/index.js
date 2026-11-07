@@ -13,7 +13,7 @@ import { smtpConfigured } from './services/mailer.js';
 import { sitesDir } from './agents/webbuilder.js';
 import { TEAM, activity } from './team.js';
 import { serperAvailable } from './services/webResearch.js';
-import { startAutopilot, listAutopilots, createAutopilot, expandCities, parseList, autopilotStatus, buildReport } from './autopilot.js';
+import { startAutopilot, listAutopilots, createAutopilot, expandCities, parseList, autopilotStatus, buildReport, launchProgram, stopProgram } from './autopilot.js';
 import { setting, DEFAULTS } from './sendPolicy.js';
 
 // ---------- Accès privé : un seul utilisateur (vous) ----------
@@ -160,22 +160,23 @@ app.post('/api/autopilot', wrap(async (req, res) => {
   if (b.expand) cities = await expandCities(cities);
   const id = createAutopilot({
     name: String(b.name || '').trim(), queries, cities,
-    resultsPerRun: b.resultsPerRun, intervalMinutes: b.intervalMinutes, dailyLimit: b.dailyLimit,
+    resultsPerRun: b.resultsPerRun, maxProspects: b.maxProspects, launch: Boolean(b.launch),
   });
   res.json({ id, cities });
 }));
 
-app.patch('/api/autopilot/:id', wrap((req, res) => {
-  const b = req.body || {};
-  if ('active' in b) {
-    db.prepare('UPDATE autopilots SET active = ?, next_run_at = COALESCE(next_run_at, ?) WHERE id = ?')
-      .run(b.active ? 1 : 0, new Date().toISOString(), req.params.id);
-  }
-  if (b.runNow) db.prepare('UPDATE autopilots SET next_run_at = ?, active = 1 WHERE id = ?').run(new Date().toISOString(), req.params.id);
+app.post('/api/autopilot/:id/launch', wrap((req, res) => {
+  launchProgram(Number(req.params.id));
+  res.json({ ok: true });
+}));
+
+app.post('/api/autopilot/:id/stop', wrap((req, res) => {
+  stopProgram(Number(req.params.id));
   res.json({ ok: true });
 }));
 
 app.delete('/api/autopilot/:id', wrap((req, res) => {
+  stopProgram(Number(req.params.id));
   db.prepare('DELETE FROM autopilots WHERE id = ?').run(req.params.id);
   res.json({ ok: true });
 }));
@@ -330,5 +331,5 @@ app.listen(config.port, () => {
   console.log(`   Google Maps : ${demoMode.google ? 'MODE DÉMO (pas de clé)' : 'réel'}`);
   console.log(`   IA Claude   : ${demoMode.ai ? 'MODE SANS IA (pas de clé)' : config.model}`);
   console.log(`   SMTP        : ${smtpConfigured() ? 'configuré' : 'non configuré (envoi désactivé)'}`);
-  console.log('   Pilote auto : démarré (vérification chaque minute)\n');
+  console.log('   Recherches  : uniquement à votre demande\n');
 });
