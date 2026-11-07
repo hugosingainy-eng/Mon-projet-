@@ -1,0 +1,23 @@
+{
+  "name": "agence-ia-prospection",
+  "version": "1.0.0",
+  "description": "SaaS privé : agents IA qui prospectent sur Google Maps, auditent les sites, créent des sites web et préparent les emails — supervisés par un agent Boss.",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node --no-warnings server/index.js",
+    "dev": "node --no-warnings --watch server/index.js",
+    "test": "node --no-warnings --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.6.0",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.3.0",
+    "nodemailer": "^10.3.1"
+  }
+}

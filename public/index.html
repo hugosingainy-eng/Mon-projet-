@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>QG des Agents</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- Connexion -->
+<section id="login" class="login" hidden>
+  <form id="login-form" class="login-card">
+    <div class="brand-mark">◆</div>
+    <h1>QG des Agents</h1>
+    <p class="muted">Espace privé. Entrez votre mot de passe.</p>
+    <input type="password" name="password" placeholder="Mot de passe" autocomplete="current-password" required autofocus>
+    <button class="btn primary" type="submit">Entrer</button>
+    <p class="error" id="login-error"></p>
+  </form>
+</section>
+
+<!-- Application -->
+<div id="app" class="shell" hidden>
+  <aside class="side">
+    <div class="brand"><span class="brand-mark">◆</span> QG des Agents</div>
+    <nav>
+      <a href="#/" data-view="dashboard" class="active">Tableau de bord</a>
+      <a href="#/leads" data-view="leads">Prospects</a>
+      <a href="#/missions" data-view="missions">Missions</a>
+      <a href="#/feed" data-view="feed">Fil des agents</a>
+      <a href="#/settings" data-view="settings">Réglages</a>
+    </nav>
+    <div class="side-foot">
+      <div id="mode-badges"></div>
+      <button class="btn ghost small" id="logout">Se déconnecter</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- Tableau de bord -->
+    <section data-page="dashboard">
+      <header class="page-head">
+        <div>
+          <h1>Bonjour, chef.</h1>
+          <p class="muted">Vos agents travaillent pour vous. Le Boss valide tout avant que ça parte.</p>
+        </div>
+      </header>
+
+      <form id="mission-form" class="mission-bar">
+        <label><span>Activité</span><input name="query" placeholder="ex : boulangerie, plombier, coiffeur" required></label>
+        <label><span>Ville</span><input name="city" placeholder="ex : Lyon 7e" required></label>
+        <label class="narrow"><span>Max</span><input name="maxResults" type="number" min="1" max="60" value="20"></label>
+        <button class="btn primary" type="submit">Lancer la mission</button>
+      </form>
+
+      <div class="org" id="org"></div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head"><h2>À envoyer</h2><a href="#/leads?status=pret_a_envoyer" class="link">Tout voir</a></div>
+          <div id="ready-list" class="list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>En direct</h2><a href="#/feed" class="link">Fil complet</a></div>
+          <div id="mini-feed" class="feed compact"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Prospects -->
+    <section data-page="leads" hidden>
+      <header class="page-head">
+        <h1>Prospects</h1>
+        <div class="filters">
+          <input id="lead-search" type="search" placeholder="Rechercher…">
+          <select id="lead-status"></select>
+        </div>
+      </header>
+      <div class="table-wrap"><table class="table" id="leads-table"></table></div>
+    </section>
+
+    <!-- Missions -->
+    <section data-page="missions" hidden>
+      <header class="page-head"><h1>Missions</h1></header>
+      <div class="table-wrap"><table class="table" id="missions-table"></table></div>
+    </section>
+
+    <!-- Fil -->
+    <section data-page="feed" hidden>
+      <header class="page-head">
+        <div><h1>Fil des agents</h1><p class="muted">Chaque livraison, chaque validation et chaque refus du Boss.</p></div>
+      </header>
+      <div id="feed" class="feed"></div>
+    </section>
+
+    <!-- Réglages -->
+    <section data-page="settings" hidden>
+      <header class="page-head"><h1>Réglages</h1></header>
+      <div class="panel settings" id="settings"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Fiche prospect -->
+<div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-modal="true" role="dialog">
+  <div class="drawer-head">
+    <div><h2 id="d-name"></h2><p class="muted" id="d-sub"></p></div>
+    <button class="icon-btn" id="drawer-close" aria-label="Fermer">✕</button>
+  </div>
+  <div class="tabs" id="d-tabs">
+    <button data-tab="fiche" class="active">Fiche</button>
+    <button data-tab="audit">Audit</button>
+    <button data-tab="site">Site créé</button>
+    <button data-tab="email">Email & carte</button>
+    <button data-tab="boss">Échanges Boss</button>
+  </div>
+  <div class="drawer-body" id="d-body"></div>
+  <div class="drawer-foot" id="d-foot"></div>
+</aside>
+
+<div class="toast" id="toast" hidden></div>
+<script src="/app.js" type="module"></script>
+</body>
+</html>
