@@ -6,6 +6,7 @@ import { askJson, aiAvailable, obj } from '../llm.js';
 import { config } from '../config.js';
 import { logMessage } from '../db.js';
 import { track } from '../team.js';
+import { isPlatformEmail, isDirectory } from '../services/webResearch.js';
 
 export const name = 'Boss';
 
@@ -143,4 +144,42 @@ export async function reviewEmail(lead, email, siteUrl, ctx = null) {
     hard,
     ctx
   );
+}
+
+// --- 5. Validation de la vérification « a-t-il vraiment pas de site ? » ----------
+export function reviewWebsiteCheck(lead, r) {
+  if (!r.searched) {
+    return verdict(true, 6, "Recherche web impossible (aucun moteur configuré) : on se fie à Google Maps.");
+  }
+  if (!r.website) {
+    return verdict(true, 8, `Confirmé : aucun site trouvé après recherche (${r.engine}).` +
+      (r.social.length ? ` Présence uniquement sur : ${r.social.join(', ')}.` : ''));
+  }
+  const issues = [];
+  if (isDirectory(r.website)) issues.push(`${r.website} est un annuaire ou un réseau social, pas le site de l'entreprise`);
+  if (r.score < 55) issues.push(`preuves insuffisantes (${r.score}/100) que ${r.website} appartient bien à ${lead.name}`);
+  const e = r.evidence || {};
+  if (!e.hasPhone && !e.hasAddress && !e.hasName && e.certitude !== 'haute') {
+    issues.push("la page ne mentionne ni le téléphone, ni l'adresse, ni le nom : vérifie que c'est la bonne entreprise");
+  }
+  return issues.length
+    ? verdict(false, 4, issues.join(' ; '))
+    : verdict(true, 9, `Site trouvé hors Google Maps : ${r.website} (confiance ${r.score}/100). Direction l'Auditeur.`);
+}
+
+// --- 6. Validation de l'email trouvé sur le web ------------------------------------
+export function reviewContact(lead, r) {
+  if (!r.email) {
+    return verdict(true, 7, r.log?.some((l) => l.includes('Aucun moteur'))
+      ? 'Aucun moteur de recherche configuré : email à renseigner à la main.'
+      : 'Aucun email publié trouvé sur le web : email à renseigner à la main.');
+  }
+  const issues = [];
+  if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(r.email)) issues.push(`format invalide : ${r.email}`);
+  if (isPlatformEmail(r.email)) issues.push(`${r.email} appartient à une plateforme, pas à l'entreprise`);
+  if (!r.mxOk) issues.push(`le domaine de ${r.email} ne reçoit pas d'emails (aucun serveur MX)`);
+  if (r.score < 35) issues.push(`pas assez de preuves que ${r.email} appartient à ${lead.name} (${r.score}/100)`);
+  return issues.length
+    ? verdict(false, 3, issues.join(' ; '))
+    : verdict(true, 8, `Email validé : ${r.email} (confiance ${r.score}/100, source : ${r.source}).`);
 }

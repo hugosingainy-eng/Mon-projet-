@@ -4,6 +4,7 @@ import { searchPlaces } from '../services/googlePlaces.js';
 import { askJson, aiAvailable, obj } from '../llm.js';
 import { demoMode } from '../config.js';
 import { delegate } from '../team.js';
+import { findWebsite, findEmail } from '../services/webResearch.js';
 
 export const name = 'Prospecteur';
 
@@ -61,4 +62,41 @@ export async function run({ query, city, maxResults }, ctx = null) {
       return `${hot} prospect(s) très prioritaire(s) sur ${list.length}. En tête : ${list.slice(0, 3).map((p) => `${p.name} (${p.priority})`).join(', ') || '—'}.`;
     },
   });
+}
+
+// ---------- Recherches approfondies sur le web (par prospect) ----------
+
+/** 🌐 « Pas de site sur Google Maps » ne suffit pas : on vérifie sur tout le web. */
+export async function verifyNoWebsite(lead, feedback = '', previous = null, ctx = null) {
+  const exclude = [...(previous?.excluded || []), ...(previous?.website ? [previous.website] : [])];
+  const r = await delegate({
+    ctx, chef: name, helper: 'Vérificateur de site',
+    task: feedback
+      ? `Reprends ta recherche de site pour ${lead.name}. Retour du Boss : ${feedback}`
+      : `Google Maps n'indique aucun site pour ${lead.name}. Vérifie sur Google qu'il n'en a vraiment pas.`,
+    run: () => findWebsite(lead, { exclude, feedback }),
+    summary: (x) => [
+      x.website ? `Site trouvé : ${x.website} (confiance ${x.score}/100).` : `Aucun site officiel trouvé (${x.engine}).`,
+      x.social.length ? `Réseaux : ${x.social.join(', ')}.` : '',
+      ...x.log.slice(-3),
+    ].filter(Boolean).join(' '),
+  });
+  return { ...r, excluded: exclude };
+}
+
+/** 📧 Trouve l'email sur tout le web quand le site de l'entreprise n'en affiche pas. */
+export async function findContact(lead, feedback = '', previous = null, ctx = null) {
+  const exclude = [...(previous?.excluded || []), ...(previous?.email ? [previous.email] : [])];
+  const r = await delegate({
+    ctx, chef: name, helper: 'Détective email',
+    task: feedback
+      ? `Cherche une autre adresse pour ${lead.name}. Retour du Boss : ${feedback}`
+      : `Trouve l'email de ${lead.name} (${lead.address}) sur Google, les annuaires, Facebook, les mentions légales…`,
+    run: () => findEmail(lead, { exclude, feedback }),
+    summary: (x) => [
+      x.email ? `Trouvé : ${x.email} (confiance ${x.score}/100, ${x.mxOk ? 'domaine valide' : 'domaine sans serveur mail'}) sur ${x.source}.` : `Aucun email publié trouvé (${x.engine}).`,
+      ...x.log.slice(-3),
+    ].join(' '),
+  });
+  return { ...r, excluded: exclude };
 }

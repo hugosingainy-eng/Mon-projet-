@@ -1,7 +1,7 @@
 // Chef d'orchestre : fait travailler les agents dans l'ordre, sous le contrôle du Boss.
 //
-//  Prospecteur ──► Boss ──► (site ?) ──► Auditeur ──► Boss ──► Créateur de site ──► Boss ──► Rédacteur ──► Boss ──► prêt à envoyer
-//                                   └─ pas de site ─────────────────┘
+//  Prospecteur ──► Boss ──► (vrai site ? recherche Google) ──► Auditeur ──► Boss ──► Créateur de site ──► Boss ──► Rédacteur ──► Boss ──► prêt à envoyer
+//                                   └─ pas de site ─────────────────┘   + Détective email (Google, annuaires…) avant le site
 //
 // Chaque chef d'équipe (Prospecteur, Auditeur, Créateur de site, Rédacteur) délègue à ses
 // propres sous-agents et contrôle leur travail avant de livrer au Boss (voir team.js).
@@ -54,6 +54,29 @@ export async function processLead(leadId) {
   const ctx = { missionId, leadId };
 
   try {
+    // Étape 1 bis : Google Maps dit « pas de site » ? On vérifie sur tout le web.
+    if (!lead.website && !lead.web_check) {
+      updateLead(leadId, { status: 'verif_site' });
+      const { deliverable: check } = await supervised({
+        ...ctx,
+        agent: prospector.name,
+        produce: (fb, prev) => prospector.verifyNoWebsite(lead, fb, prev, ctx),
+        review: async (r) => boss.reviewWebsiteCheck(lead, r),
+        summarize: (r) => (r.website ? `Site caché trouvé : ${r.website} (confiance ${r.score}/100)` : `Vérifié : pas de site (${r.engine})`),
+      });
+      const { log, excluded, ...webCheck } = check;
+      updateLead(leadId, {
+        web_check: { ...webCheck, checkedAt: new Date().toISOString() },
+        website: check.website || null,
+        segment: check.website ? null : 'sans_site',
+        status: check.website ? 'a_auditer' : 'qualifie',
+      });
+      if (check.website) {
+        logMessage({ ...ctx, from: boss.name, to: auditor.name, kind: 'info', content: `${lead.name} a en fait un site (${check.website}) que Google Maps ne montre pas : audite-le.` });
+      }
+      lead = getLead(leadId);
+    }
+
     // Étape 2 : audit si le prospect a un site
     if (lead.website && !lead.audit) {
       updateLead(leadId, { status: 'audit_en_cours' });
@@ -70,6 +93,9 @@ export async function processLead(leadId) {
         audit: { ...audit, tech },
         audit_score: audit.note_globale,
         email: lead.email || tech.emails?.[0] || null,
+        ...(!lead.email && tech.emails?.[0]
+          ? { email_info: { source: lead.website, score: 90, engine: 'site de l’entreprise', found: true } }
+          : {}),
         segment: bad ? 'mauvais_site' : 'bon_site',
         status: bad ? 'qualifie' : 'ecarte',
         boss_notes: bad ? 'Site de mauvaise qualité : opportunité.' : 'Site correct : pas une priorité.',
@@ -78,6 +104,33 @@ export async function processLead(leadId) {
         logMessage({ ...ctx, from: boss.name, to: 'Vous', kind: 'info', content: `${lead.name} a déjà un bon site : prospect écarté.` });
         return;
       }
+      lead = getLead(leadId);
+    }
+
+    // Étape 2 bis : pas d'email sur son site ? Le Détective email cherche sur tout le web.
+    if (!lead.email && !lead.email_info) {
+      updateLead(leadId, { status: 'recherche_email' });
+      let contact = null;
+      try {
+        ({ deliverable: contact } = await supervised({
+          ...ctx,
+          agent: prospector.name,
+          produce: (fb, prev) => prospector.findContact(lead, fb, prev, ctx),
+          review: async (r) => boss.reviewContact(lead, r),
+          summarize: (r) => (r.email ? `email trouvé : ${r.email} (confiance ${r.score}/100, source ${r.source})` : `aucun email trouvé (${r.engine})`),
+        }));
+      } catch (err) {
+        if (!(err instanceof BlockedError)) throw err;
+        // Une recherche d'email ratée ne bloque pas le dossier : vous pourrez l'ajouter à la main.
+        logMessage({ ...ctx, from: boss.name, to: 'Vous', kind: 'info', content: `Aucun email fiable pour ${lead.name} : à renseigner à la main.` });
+      }
+      updateLead(leadId, {
+        email: contact?.email || null,
+        email_info: contact
+          ? { source: contact.source, score: contact.score, engine: contact.engine, extract: contact.extract, alternatives: contact.alternatives, found: Boolean(contact.email) }
+          : { found: false },
+        status: lead.segment === 'mauvais_site' || lead.segment === 'sans_site' ? 'qualifie' : lead.status,
+      });
       lead = getLead(leadId);
     }
 

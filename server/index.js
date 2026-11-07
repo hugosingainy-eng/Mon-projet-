@@ -7,9 +7,12 @@ import fs from 'node:fs';
 import { config, demoMode } from './config.js';
 import { db, getLead, updateLead, getSetting, setSetting, logMessage } from './db.js';
 import { runMission, processLead, sendLead, isRunning } from './orchestrator.js';
+import * as prospector from './agents/prospector.js';
+import * as boss from './agents/supervisor.js';
 import { smtpConfigured } from './services/mailer.js';
 import { sitesDir } from './agents/webbuilder.js';
 import { TEAM, activity } from './team.js';
+import { serperAvailable } from './services/webResearch.js';
 
 // ---------- Accès privé : un seul utilisateur (vous) ----------
 if (!config.adminPassword) {
@@ -40,7 +43,7 @@ function safeEqual(a, b) {
 
 // Après un redémarrage, les travaux interrompus sont signalés pour être relancés.
 db.prepare(`UPDATE leads SET status = 'erreur', boss_notes = 'Traitement interrompu par un redémarrage du serveur : cliquez sur Relancer.'
-  WHERE status IN ('audit_en_cours','site_en_cours','email_en_cours','en_file','a_auditer','qualifie','site_valide')`).run();
+  WHERE status IN ('audit_en_cours','site_en_cours','email_en_cours','en_file','a_auditer','qualifie','site_valide','verif_site','recherche_email')`).run();
 db.prepare("UPDATE missions SET status = 'erreur' WHERE status = 'en_cours'").run();
 
 const loginAttempts = new Map();
@@ -95,6 +98,7 @@ app.get('/api/status', (req, res) => {
     demoGoogle: demoMode.google,
     demoAi: demoMode.ai,
     smtp: smtpConfigured(),
+    googleSearch: serperAvailable(),
     autoSend: getSetting('auto_send') === 'true',
     model: config.model,
     sender: config.sender,
@@ -213,6 +217,35 @@ app.post('/api/leads/:id/retry', wrap((req, res) => {
   updateLead(lead.id, fields);
   // Un prospect repêché avec un "bon" site saute l'audit.
   processLead(lead.id);
+  res.json({ ok: true });
+}));
+
+// Relancer la recherche d'email sur le web pour un prospect.
+app.post('/api/leads/:id/find-email', wrap((req, res) => {
+  const lead = getLead(req.params.id);
+  if (!lead) throw new Error('Prospect introuvable.');
+  if (['recherche_email', 'site_en_cours', 'email_en_cours', 'verif_site', 'audit_en_cours'].includes(lead.status)) {
+    throw new Error('Les agents travaillent déjà sur ce dossier.');
+  }
+  const previous = lead.status;
+  updateLead(lead.id, { status: 'recherche_email' });
+  const ctx = { missionId: lead.mission_id, leadId: lead.id };
+  (async () => {
+    try {
+      const r = await prospector.findContact(lead, '', null, ctx);
+      const v = boss.reviewContact(lead, r);
+      logMessage({ ...ctx, from: boss.name, to: prospector.name, kind: v.approved ? 'validation' : 'rejet', content: `${v.approved ? '✅' : '❌'} ${v.feedback}` });
+      const email = v.approved ? r.email : null;
+      updateLead(lead.id, {
+        email: email || lead.email,
+        email_info: { source: r.source, score: r.score, engine: r.engine, extract: r.extract, alternatives: r.alternatives, found: Boolean(email) },
+        status: email && previous === 'email_manquant' ? 'pret_a_envoyer' : previous,
+      });
+    } catch (err) {
+      updateLead(lead.id, { status: previous });
+      logMessage({ ...ctx, from: 'Système', to: 'Vous', kind: 'erreur', content: err.message });
+    }
+  })();
   res.json({ ok: true });
 }));
 

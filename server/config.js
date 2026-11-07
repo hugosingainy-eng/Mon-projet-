@@ -35,6 +35,8 @@ export const config = {
   // Google
   googleMapsKey: env.GOOGLE_MAPS_API_KEY || '',
   pageSpeedKey: env.PAGESPEED_API_KEY || env.GOOGLE_MAPS_API_KEY || '',
+  // Recherche Google « normale » (résultats web) via serper.dev
+  serperKey: env.SERPER_API_KEY || '',
 
   // Email (SMTP)
   smtp: {

@@ -256,3 +256,6 @@ code { font: 13px var(--mono); background: var(--surface-2); padding: 1px 6px; b
   .drawer-head, .drawer-body, .drawer-foot { padding-left: 16px; padding-right: 16px; }
   .tabs { padding: 0 8px; }
 }
+
+.hint { display: block; color: var(--muted); font-size: 13px; margin-top: 4px; line-height: 1.45; }
+.hint a { overflow-wrap: anywhere; }

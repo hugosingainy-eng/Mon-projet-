@@ -6,6 +6,8 @@ const esc = (s = '') => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp
 const STATUS = {
   nouveau: ['Nouveau', ''],
   rejete: ['Écarté par le Boss', 'bad'],
+  verif_site: ['Vérification du site sur Google', 'info'],
+  recherche_email: ['Recherche de l’email', 'info'],
   a_auditer: ['Site à auditer', 'info'],
   audit_en_cours: ['Audit en cours', 'info'],
   qualifie: ['Qualifié', 'accent'],
@@ -175,6 +177,7 @@ function renderSettings() {
     <div class="setting-row"><div><strong>Envoi automatique</strong><p class="muted">Dès que le Boss valide un dossier avec une adresse email, l’email part tout seul. Désactivé : vous cliquez sur « Envoyer » vous-même.</p></div>
       <label class="switch"><input type="checkbox" id="auto-send" ${s.autoSend ? 'checked' : ''} ${s.smtp ? '' : 'disabled'}><span></span></label></div>
     ${line(!s.demoGoogle, 'Google Maps (Places API)', s.demoGoogle ? 'Mode démo : données fictives. Ajoutez <code>GOOGLE_MAPS_API_KEY</code> dans <code>.env</code>.' : 'Recherche réelle sur Google Maps.')}
+    ${line(s.googleSearch || !s.demoAi, 'Recherche Google (sites cachés et emails)', s.googleSearch ? 'Recherche Google réelle via Serper.' : !s.demoAi ? 'Recherche web assurée par Claude. Pour des résultats Google directs, ajoutez <code>SERPER_API_KEY</code>.' : 'Ajoutez <code>SERPER_API_KEY</code> (serper.dev) ou <code>ANTHROPIC_API_KEY</code>.')}
     ${line(!s.demoAi, 'Intelligence artificielle (Claude)', s.demoAi ? 'Sans IA : gabarits et contrôles automatiques uniquement. Ajoutez <code>ANTHROPIC_API_KEY</code>.' : `Modèle : <code>${esc(s.model)}</code>`)}
     ${line(s.smtp, 'Envoi d’emails (SMTP)', s.smtp ? 'Prêt à envoyer.' : 'Renseignez <code>SMTP_HOST</code>, <code>SMTP_USER</code>, <code>SMTP_PASS</code>.')}
     <div class="setting-row"><div><strong>Votre signature</strong><p class="muted">${esc(s.sender.name)} · ${esc(s.sender.company)} · ${esc(s.sender.email || 'email non défini')}<br>Offre : ${esc(s.sender.offer)}<br>À modifier dans <code>.env</code> (SENDER_*).</p></div></div>
@@ -191,11 +194,35 @@ function renderBadges() {
   $('#mode-badges').innerHTML = [
     [!s.demoGoogle, s.demoGoogle ? 'Google Maps : démo' : 'Google Maps : réel'],
     [!s.demoAi, s.demoAi ? 'IA : désactivée' : 'IA : Claude'],
+    [s.googleSearch || !s.demoAi, s.googleSearch ? 'Recherche web : Google' : !s.demoAi ? 'Recherche web : Claude' : 'Recherche web : à configurer'],
     [s.smtp, s.smtp ? 'Emails : prêts' : 'Emails : à configurer'],
   ].map(([ok, t]) => `<span><i class="${ok ? '' : 'off'}"></i>${t}</span>`).join('');
 }
 
 // ---------- Fiche prospect ----------
+function webCheckHtml(l) {
+  const w = l.web_check;
+  if (!w) return '';
+  const social = (w.social || []).map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40))}</a>`).join(', ');
+  const txt = !w.searched
+    ? 'Non vérifié sur Google (aucun moteur de recherche configuré).'
+    : w.website
+      ? `🌐 Site absent de Google Maps mais trouvé sur le web (${esc(w.engine)}, confiance ${w.score}/100).`
+      : `🌐 Vérifié sur le web (${esc(w.engine)}) : aucun site officiel.`;
+  return `<small class="hint">${txt}${social ? `<br>Réseaux sociaux : ${social}` : ''}</small>`;
+}
+
+function emailInfoHtml(l) {
+  const e = l.email_info;
+  if (!e) return '';
+  if (!e.found) return '<small class="hint">📧 Recherché sur le web : aucune adresse publiée trouvée.</small>';
+  const src = e.source && /^https?:/.test(e.source)
+    ? `<a href="${esc(e.source)}" target="_blank" rel="noopener">${esc(e.source.replace(/^https?:\/\/(www\.)?/, '').slice(0, 50))}</a>`
+    : esc(e.source || '');
+  const alts = (e.alternatives || []).map((a) => `${esc(a.email)} (${a.score})`).join(', ');
+  return `<small class="hint">📧 Trouvé via ${esc(e.engine)} sur ${src} · confiance ${e.score}/100${alts ? `<br>Autres pistes : ${alts}` : ''}</small>`;
+}
+
 let current = null;
 let currentTab = 'fiche';
 
@@ -227,9 +254,9 @@ function renderDrawer() {
     body.innerHTML = `<dl class="kv">
       <dt>Adresse</dt><dd>${esc(l.address)}</dd>
       <dt>Téléphone</dt><dd>${esc(l.phone || '—')}</dd>
-      <dt>Email</dt><dd>${esc(l.email || 'non trouvé')}
+      <dt>Email</dt><dd>${esc(l.email || 'non trouvé')}${emailInfoHtml(l)}
         <form class="inline-form" id="email-form"><input name="email" type="email" placeholder="contact@entreprise.fr" value="${esc(l.email || '')}"><button class="btn small">Enregistrer</button></form></dd>
-      <dt>Site actuel</dt><dd>${l.website ? `<a href="${esc(l.website)}" target="_blank" rel="noopener">${esc(l.website)}</a>` : 'Aucun'}</dd>
+      <dt>Site actuel</dt><dd>${l.website ? `<a href="${esc(l.website)}" target="_blank" rel="noopener">${esc(l.website)}</a>` : 'Aucun'}${webCheckHtml(l)}</dd>
       <dt>Google Maps</dt><dd>${l.maps_url ? `<a href="${esc(l.maps_url)}" target="_blank" rel="noopener">Voir la fiche</a>` : '—'}</dd>
       <dt>Note</dt><dd>${l.rating ? `★ ${l.rating} (${l.reviews_count} avis)` : '—'}</dd>
       <dt>Horaires</dt><dd>${(raw.hours || []).map(esc).join('<br>') || '—'}</dd>
@@ -281,6 +308,7 @@ function renderDrawer() {
   $('#d-foot').innerHTML = `
     <button class="btn danger" data-act="delete">Supprimer</button>
     ${l.site_slug && !['site_en_cours', 'email_en_cours'].includes(l.status) && l.status !== 'envoye' ? '<button class="btn" data-act="redo-site">Refaire le site</button>' : ''}
+    ${!['envoye', 'recherche_email', 'verif_site', 'site_en_cours', 'email_en_cours', 'audit_en_cours'].includes(l.status) ? `<button class="btn" data-act="find-email">${l.email ? 'Chercher un autre email' : 'Rechercher l’email sur le web'}</button>` : ''}
     ${canRetry ? `<button class="btn" data-act="retry">${['rejete', 'ecarte'].includes(l.status) ? 'Traiter quand même' : 'Relancer'}</button>` : ''}
     ${l.status === 'pret_a_envoyer' ? `<button class="btn primary" data-act="send" ${canSend ? '' : 'disabled title="Configurez le SMTP"'}>Envoyer l’email</button>` : ''}
     ${l.status === 'envoye' ? `<span class="pill ok">Envoyé ${timeAgo(l.sent_at)}</span>` : ''}`;
@@ -297,6 +325,7 @@ $('#d-foot').addEventListener('click', async (e) => {
       toast('Email envoyé ✉️');
     }
     if (act === 'retry') { await api(`/api/leads/${id}/retry`, { method: 'POST', body: {} }); toast('Dossier renvoyé aux agents'); }
+    if (act === 'find-email') { await api(`/api/leads/${id}/find-email`, { method: 'POST' }); toast('Le Détective email part chercher sur le web 📧'); }
     if (act === 'redo-site') { await api(`/api/leads/${id}/retry`, { method: 'POST', body: { redo: 'site' } }); toast('Le Créateur de site recommence'); }
     if (act === 'delete') {
       if (!confirm('Supprimer ce prospect ?')) return;

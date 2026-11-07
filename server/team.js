@@ -15,6 +15,8 @@ export const TEAM = [
     helpers: [
       { name: 'Éclaireur', ico: '🔭', role: 'Élargit la recherche avec des variantes du métier.' },
       { name: 'Qualificateur', ico: '🎯', role: 'Classe les prospects par priorité commerciale.' },
+      { name: 'Vérificateur de site', ico: '🌐', role: 'Cherche sur Google si le commerce a vraiment aucun site.' },
+      { name: 'Détective email', ico: '📧', role: 'Trouve l’email sur tout le web : Google, annuaires, Facebook…' },
     ],
   },
   {

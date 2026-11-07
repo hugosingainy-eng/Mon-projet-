@@ -59,6 +59,42 @@ export async function askJson({ system, prompt, schema, effort = 'medium', maxTo
   }
 }
 
+/**
+ * Recherche sur le web avec les outils serveur de Claude (web_search + web_fetch).
+ * Renvoie le dernier objet JSON écrit par le modèle dans sa réponse finale.
+ */
+export async function askWeb({ system, prompt, maxSearches = 6, maxFetches = 6, effort = 'medium' }) {
+  const tools = [
+    { type: 'web_search_20260209', name: 'web_search', max_uses: maxSearches, user_location: { type: 'approximate', country: 'FR' } },
+    { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: maxFetches },
+  ];
+  const messages = [{ role: 'user', content: prompt }];
+  let message;
+  // pause_turn : le serveur a mis la recherche en pause, on la relance telle quelle (5 fois max).
+  for (let i = 0; i < 6; i++) {
+    message = await getClient().beta.messages.stream({
+      model: config.model,
+      max_tokens: 32000,
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default',
+      system,
+      tools,
+      output_config: { effort },
+      messages,
+    }).finalMessage();
+    if (message.stop_reason !== 'pause_turn') break;
+    messages.splice(1, messages.length - 1, { role: 'assistant', content: message.content });
+  }
+  if (message.stop_reason === 'refusal') throw new Error('Recherche refusée par le modèle.');
+
+  const text = message.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
+  const blocks = text.match(/\{[\s\S]*\}/g) || [];
+  for (const candidate of blocks.reverse()) {
+    try { return JSON.parse(candidate); } catch { /* bloc suivant */ }
+  }
+  throw new Error('La recherche web n’a pas renvoyé de résultat exploitable.');
+}
+
 // Petit utilitaire : objet JSON Schema strict.
 export function obj(properties, required = Object.keys(properties)) {
   return { type: 'object', properties, required, additionalProperties: false };

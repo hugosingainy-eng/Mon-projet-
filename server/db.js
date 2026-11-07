@@ -70,6 +70,8 @@ CREATE TABLE IF NOT EXISTS settings (
 for (const sql of [
   'ALTER TABLE agent_messages ADD COLUMN level INTEGER NOT NULL DEFAULT 0', // 0 = Boss ↔ chefs, 1 = chef ↔ sous-agents
   'ALTER TABLE leads ADD COLUMN priority INTEGER',
+  'ALTER TABLE leads ADD COLUMN web_check JSON',     // résultat de la vérification « pas de site ? »
+  'ALTER TABLE leads ADD COLUMN email_info JSON',    // source et confiance de l'email trouvé
 ]) {
   try { db.exec(sql); } catch { /* colonne déjà présente */ }
 }
@@ -95,7 +97,7 @@ export function updateLead(id, fields) {
 export function getLead(id) {
   const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(id);
   if (!lead) return null;
-  for (const k of ['raw', 'audit']) {
+  for (const k of ['raw', 'audit', 'web_check', 'email_info']) {
     if (lead[k]) {
       try { lead[k] = JSON.parse(lead[k]); } catch { /* garder la chaîne */ }
     }
