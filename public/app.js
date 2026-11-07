@@ -21,23 +21,12 @@ const STATUS = {
   erreur: ['Erreur', 'bad'],
 };
 const SEGMENT = { sans_site: ['Sans site', 'accent'], mauvais_site: ['Mauvais site', 'warn'], bon_site: ['Bon site', ''] };
-const AGENTS = {
-  Boss: { ico: '👔', role: 'Supervise, vérifie et valide tout. Renvoie le travail s’il n’est pas au niveau.' },
-  Prospecteur: { ico: '🧭', role: 'Cherche les entreprises sur Google Maps et repère celles sans site.' },
-  Auditeur: { ico: '🔎', role: 'Analyse les sites existants et détecte ceux de mauvaise qualité.' },
-  'Créateur de site': { ico: '🎨', role: 'Crée un site vitrine à partir des photos et avis Google Maps.' },
-  Rédacteur: { ico: '✉️', role: 'Rédige l’email personnalisé et la carte numérique.' },
-};
-const BUSY = {
-  Prospecteur: [], Auditeur: ['audit_en_cours'], 'Créateur de site': ['site_en_cours'], Rédacteur: ['email_en_cours'],
-};
-
 const pill = (map, key) => {
   const [label, cls] = map[key] || [key || '—', ''];
   return `<span class="pill ${cls}">${esc(label)}</span>`;
 };
 
-let state = { status: null, leads: [], lastMsgId: 0, messages: [], missions: [] };
+let state = { status: null, leads: [], lastMsgId: 0, messages: [], missions: [], team: [], active: {}, showHelpers: true };
 
 async function api(path, opts = {}) {
   const res = await fetch(path, {
@@ -96,22 +85,25 @@ window.addEventListener('hashchange', route);
 
 // ---------- Rendu ----------
 function renderOrg() {
-  const counts = {};
-  for (const l of state.leads) counts[l.status] = (counts[l.status] || 0) + 1;
-  const missionRunning = state.missions.some((m) => m.running);
-  const card = (name, extraCls = '') => {
-    const busyN = (BUSY[name] || []).reduce((s, st) => s + (counts[st] || 0), 0);
-    const busy = name === 'Prospecteur' ? state.missions.some((m) => m.running && m.leads === 0)
-      : name === 'Boss' ? missionRunning : busyN > 0;
-    const stateTxt = name === 'Boss'
-      ? (missionRunning ? 'en train de superviser' : 'en attente de travail')
-      : busy ? (busyN ? `${busyN} dossier(s) en cours` : 'au travail') : 'disponible';
-    return `<div class="agent ${extraCls} ${busy ? 'busy' : ''}">
-      <div class="agent-top"><div class="agent-ico">${AGENTS[name].ico}</div><h3>${esc(name)}</h3></div>
-      <p>${esc(AGENTS[name].role)}</p><div class="state">${stateTxt}</div></div>`;
+  if (!state.team.length) return;
+  const on = (n) => state.active[n] > 0;
+  const chip = (h) => `<li class="helper ${on(h.name) ? 'busy' : ''}" title="${esc(h.role)}">
+    <span class="helper-ico">${h.ico}</span><span><b>${esc(h.name)}</b><small>${esc(h.role)}</small></span></li>`;
+  const card = (a, cls = '') => {
+    const teamBusy = a.helpers.filter((h) => on(h.name)).length;
+    const busy = on(a.name) || teamBusy > 0;
+    const stateTxt = busy
+      ? (teamBusy ? `${teamBusy} sous-agent(s) au travail` : a.name === 'Boss' ? 'en train de vérifier' : 'au travail')
+      : a.name === 'Boss' ? 'en attente de livrables' : 'disponible';
+    return `<div class="agent ${cls} ${busy ? 'busy' : ''}">
+      <div class="agent-top"><div class="agent-ico">${a.ico}</div><div><h3>${esc(a.name)}</h3><div class="state">${stateTxt}</div></div></div>
+      <p>${esc(a.role)}</p>
+      <div class="team-label">${a.name === 'Boss' ? 'Ses assistants' : 'Son équipe'}</div>
+      <ul class="helpers">${a.helpers.map(chip).join('')}</ul></div>`;
   };
-  $('#org').innerHTML = `<div class="org-boss">${card('Boss', 'boss')}</div><div class="org-line"></div>
-    <div class="org-team">${['Prospecteur', 'Auditeur', 'Créateur de site', 'Rédacteur'].map((n) => card(n)).join('')}</div>`;
+  const [bossA, ...chefs] = state.team;
+  $('#org').innerHTML = `<div class="org-boss">${card(bossA, 'boss')}</div><div class="org-line"></div>
+    <div class="org-team">${chefs.map((a) => card(a)).join('')}</div>`;
 }
 
 async function renderStats() {
@@ -124,6 +116,7 @@ async function renderStats() {
     [(b.pret_a_envoyer || 0) + (b.email_manquant || 0), 'dossiers validés'],
     [b.envoye || 0, 'emails envoyés'],
     [s.rejets, 'renvois du Boss'],
+    [s.corrections, 'corrections en équipe'],
   ];
   $('#stats').innerHTML = items.map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');
 }
@@ -137,30 +130,32 @@ function renderReady() {
 }
 
 function msgHtml(m) {
-  const ico = { validation: '✅', rejet: '↩️', livraison: '📦', erreur: '⚠️', info: '💬' }[m.kind] || '💬';
-  return `<div class="msg ${m.kind}" ${m.lead_id ? `data-lead="${m.lead_id}" style="cursor:pointer"` : ''}>
+  const ico = { validation: '✅', rejet: '↩️', livraison: '📦', erreur: '⚠️', info: '💬', consigne: '📋', 'sous-livraison': '📎', correction: '✏️' }[m.kind] || '💬';
+  return `<div class="msg ${m.kind} ${m.level ? 'sub' : ''}" ${m.lead_id ? `data-lead="${m.lead_id}" style="cursor:pointer"` : ''}>
     <div class="msg-ico">${ico}</div><div>
     <div class="msg-meta"><b>${esc(m.from_agent)} → ${esc(m.to_agent)}</b>${m.lead_name ? `<span>· ${esc(m.lead_name)}</span>` : ''}<span>· ${timeAgo(m.created_at)}</span></div>
     <div class="msg-body">${esc(m.content)}</div></div></div>`;
 }
 
 function renderFeeds() {
-  const recent = state.messages.slice(-8).reverse();
+  const recent = state.messages.filter((m) => !m.level).slice(-8).reverse();
   $('#mini-feed').innerHTML = recent.length ? recent.map(msgHtml).join('') : '<div class="empty">Les échanges entre agents apparaîtront ici.</div>';
-  $('#feed').innerHTML = state.messages.length ? [...state.messages].reverse().map(msgHtml).join('') : '<div class="empty">Aucun échange pour le moment.</div>';
+  const all = state.messages.filter((m) => state.showHelpers || !m.level);
+  $('#feed').innerHTML = all.length ? [...all].reverse().map(msgHtml).join('') : '<div class="empty">Aucun échange pour le moment.</div>';
 }
 
 function renderLeads() {
   const q = $('#lead-search').value.toLowerCase();
   const st = $('#lead-status').value;
   const rows = state.leads.filter((l) => (!st || l.status === st) && (!q || `${l.name} ${l.address} ${l.category}`.toLowerCase().includes(q)));
-  $('#leads-table').innerHTML = `<thead><tr><th>Entreprise</th><th>Situation</th><th>Note Google</th><th>Email</th><th>Statut</th></tr></thead>
+  $('#leads-table').innerHTML = `<thead><tr><th>Entreprise</th><th>Priorité</th><th>Situation</th><th>Note Google</th><th>Email</th><th>Statut</th></tr></thead>
     <tbody>${rows.map((l) => `<tr data-lead="${l.id}">
       <td><strong>${esc(l.name)}</strong><small>${esc(l.category)} · ${esc(l.address)}</small></td>
+      <td class="num">${l.priority != null ? `<span class="prio" style="--p:${l.priority}">${l.priority}</span>` : '—'}</td>
       <td>${l.segment ? pill(SEGMENT, l.segment) : '<span class="muted">—</span>'}${l.audit_score != null ? `<small>audit ${l.audit_score}/100</small>` : ''}</td>
       <td class="num">${l.rating ? `★ ${l.rating} <small>${l.reviews_count} avis</small>` : '—'}</td>
       <td>${esc(l.email || '—')}</td>
-      <td>${pill(STATUS, l.status)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Aucun prospect.</td></tr>'}</tbody>`;
+      <td>${pill(STATUS, l.status)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Aucun prospect.</td></tr>'}</tbody>`;
 }
 
 function renderMissions() {
@@ -341,15 +336,18 @@ $('#mission-form').addEventListener('submit', async (e) => {
 });
 
 $('#lead-search').addEventListener('input', renderLeads);
+$('#show-helpers').addEventListener('change', (e) => { state.showHelpers = e.target.checked; renderFeeds(); });
 $('#lead-status').innerHTML = '<option value="">Tous les statuts</option>' + Object.entries(STATUS).map(([k, [l]]) => `<option value="${k}">${l}</option>`).join('');
 $('#lead-status').addEventListener('change', renderLeads);
 
 // ---------- Rafraîchissement ----------
 async function refresh() {
   try {
-    const [leads, missions, msgs] = await Promise.all([
-      api('/api/leads'), api('/api/missions'), api(`/api/messages?since=${state.lastMsgId}`),
+    const [leads, missions, msgs, team] = await Promise.all([
+      api('/api/leads'), api('/api/missions'), api(`/api/messages?since=${state.lastMsgId}`), api('/api/team'),
     ]);
+    state.team = team.team;
+    state.active = team.active;
     state.leads = leads;
     state.missions = missions;
     if (msgs.length) {

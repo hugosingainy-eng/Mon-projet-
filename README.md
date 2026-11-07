@@ -4,15 +4,37 @@ Application privée (un seul utilisateur, protégée par mot de passe) où **5 a
 Un **Boss** supervise 4 sous-agents. Rien ne part chez un prospect sans sa validation.
 
 ```
-                         👔 BOSS (superviseur)
-        vérifie chaque livrable, valide ou renvoie avec un retour précis
-     ┌───────────────┬──────────────────┬───────────────────┬──────────────┐
- 🧭 Prospecteur   🔎 Auditeur       🎨 Créateur de site   ✉️ Rédacteur
- Google Maps :    Analyse les       Crée un site vitrine   Email personnalisé
- qui n'a pas      sites existants,  avec les photos, avis  + carte numérique
- de site ?        repère les        et horaires Google     (aperçu du site +
-                  mauvais           Maps                   vos coordonnées)
+                               👔 BOSS
+                 assistants : 📏 Contrôleur qualité · 🧐 Relecteur critique
+     ┌────────────────┬───────────────────┬────────────────────┬──────────────────┐
+ 🧭 Prospecteur    🔎 Auditeur         🎨 Créateur de site   ✉️ Rédacteur
+  🔭 Éclaireur      🛠️ Technicien       📷 Photographe        🧩 Analyste prospect
+  🎯 Qualificateur  📈 Analyste SEO     🖋️ Rédacteur web      ✍️ Plume
+                    🕵️ Enquêteur contact 💻 Intégrateur        🔤 Correcteur
+                                                              🪪 Designer carte
 ```
+
+**Trois niveaux de contrôle :**
+1. Chaque **sous-agent** fait une tâche précise.
+2. Son **chef d'équipe** vérifie le résultat et le lui renvoie à corriger si besoin (✏️ « correction »), avant de livrer au Boss. Par exemple, l'Intégrateur reprend son site tant qu'il ne passe pas les contrôles du Boss, et la Plume réécrit l'email tant que le Correcteur y trouve des défauts.
+3. Le **Boss**, aidé de ses deux assistants, valide ou renvoie le livrable au chef (↩️ « rejet »).
+
+| Sous-agent | Rôle |
+|---|---|
+| 🔭 Éclaireur | Élargit la recherche Google Maps avec des variantes du métier (ex. « boulangerie » → « artisan boulanger »). |
+| 🎯 Qualificateur | Note chaque prospect de 0 à 100 : pas de site, bonne note, beaucoup d'avis. Les meilleurs sont traités en premier. |
+| 🛠️ Technicien | Vérifie que le site est accessible, en HTTPS, adapté au mobile et rapide, et repère les technologies obsolètes. |
+| 📈 Analyste SEO | Contrôle les balises title/description, l'Open Graph, les textes alternatifs des images et les scores PageSpeed. |
+| 🕵️ Enquêteur contact | Cherche l'email sur l'accueil, puis sur les pages contact et mentions légales. |
+| 📷 Photographe | Télécharge les photos Google Maps et choisit la meilleure photo d'accueil. |
+| 🖋️ Rédacteur web | Écrit les textes du site à partir des vrais avis, sans prix ni chiffres inventés. |
+| 💻 Intégrateur | Assemble le site (design, mobile, SEO). |
+| 🧩 Analyste prospect | Choisit le meilleur avis client et les faits qui rendent l'email personnel. |
+| ✍️ Plume | Écrit l'objet et le message. |
+| 🔤 Correcteur | Vérifie la longueur, le lien, le vouvoiement, la personnalisation et l'absence de mots « spam ». |
+| 🪪 Designer carte | Met en forme la carte numérique aux couleurs du métier : bleu pour un plombier, brun pour une boulangerie, etc. |
+
+Sur le tableau de bord, l'organigramme montre en direct quel sous-agent travaille. Le **Fil des agents** affiche toutes les consignes et corrections ; une case à cocher permet de ne garder que les échanges avec le Boss.
 
 ## Le circuit
 
@@ -75,6 +97,7 @@ Seuls les sites d'aperçu (`/sites/...`) sont publics, et ils sont marqués `noi
 server/
   index.js            serveur, connexion privée, API
   orchestrator.js     circuit des agents + boucle « livrer → Boss → corriger »
+  team.js             organigramme, activité en direct, délégation chef → sous-agent
   agents/
     supervisor.js     👔 le Boss
     prospector.js     🧭 Prospecteur
@@ -84,5 +107,5 @@ server/
   services/           Google Places, audit de site, SMTP
   llm.js              accès à Claude (sorties JSON structurées)
 public/               tableau de bord
-test/                 tests des contrôles du Boss (npm test)
+test/                 tests du Boss et des sous-agents (npm test)
 ```

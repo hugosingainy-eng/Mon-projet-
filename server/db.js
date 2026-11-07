@@ -66,11 +66,19 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 `);
 
-export function logMessage({ missionId = null, leadId = null, from, to, kind, content }) {
+// Migrations légères (bases créées avant l'arrivée des sous-agents).
+for (const sql of [
+  'ALTER TABLE agent_messages ADD COLUMN level INTEGER NOT NULL DEFAULT 0', // 0 = Boss ↔ chefs, 1 = chef ↔ sous-agents
+  'ALTER TABLE leads ADD COLUMN priority INTEGER',
+]) {
+  try { db.exec(sql); } catch { /* colonne déjà présente */ }
+}
+
+export function logMessage({ missionId = null, leadId = null, from, to, kind, content, level = 0 }) {
   db.prepare(
-    `INSERT INTO agent_messages (mission_id, lead_id, from_agent, to_agent, kind, content)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(missionId, leadId, from, to, kind, String(content));
+    `INSERT INTO agent_messages (mission_id, lead_id, from_agent, to_agent, kind, content, level)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(missionId, leadId, from, to, kind, String(content), level);
 }
 
 export function updateLead(id, fields) {

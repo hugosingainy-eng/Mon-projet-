@@ -4,6 +4,8 @@
 // qui doit corriger et relivrer.
 import { askJson, aiAvailable, obj } from '../llm.js';
 import { config } from '../config.js';
+import { logMessage } from '../db.js';
+import { track } from '../team.js';
 
 export const name = 'Boss';
 
@@ -26,18 +28,29 @@ function verdict(approved, score, feedback) {
   return { approved, score, feedback };
 }
 
-async function aiReview(task, deliverable, hardIssues) {
+/**
+ * Le Boss délègue : 📏 Contrôleur qualité (contrôles automatiques), puis 🧐 Relecteur critique (IA).
+ * Il garde la décision finale.
+ */
+async function aiReview(task, deliverable, hardIssues, ctx) {
+  const log = (from, to, kind, content) => ctx && logMessage({ ...ctx, from, to, kind, content, level: 1 });
+  await track('Contrôleur qualité', async () => {
+    log('Contrôleur qualité', name, 'sous-livraison', hardIssues.length
+      ? `${hardIssues.length} contrôle(s) en échec : ${hardIssues.join(' ; ')}`
+      : 'Tous les contrôles automatiques sont au vert.');
+  });
   if (hardIssues.length) {
     return verdict(false, 3, 'Contrôles automatiques échoués :\n- ' + hardIssues.join('\n- '));
   }
   if (!aiAvailable()) return verdict(true, 8, 'Contrôles automatiques validés (mode sans IA).');
-  const r = await askJson({
+  const r = await track('Relecteur critique', () => askJson({
     system: BOSS_SYSTEM,
     prompt: `${task}\n\nLivrable à vérifier :\n${deliverable}`,
     schema: VERDICT,
     effort: 'high',
     maxTokens: 16000,
-  });
+  }));
+  log('Relecteur critique', name, 'sous-livraison', `Note ${r.note}/10 — ${r.retour}`);
   const ok = r.approuve && r.note >= 8;
   return verdict(ok, r.note, ok ? r.retour : r.retour || 'Qualité insuffisante, améliore le livrable.');
 }
@@ -57,7 +70,7 @@ export function reviewProspect(p) {
 }
 
 // --- 2. Validation d'un audit de site ------------------------------------------
-export async function reviewAudit(lead, audit) {
+export async function reviewAudit(lead, audit, ctx = null) {
   const hard = [];
   if (!audit.problemes?.length && audit.verdict === 'mauvais_site') hard.push('verdict "mauvais site" sans aucun problème listé');
   if (audit.verdict === 'mauvais_site' && audit.tech.score >= 85) {
@@ -69,12 +82,14 @@ export async function reviewAudit(lead, audit) {
     `Vérifie l'audit du site de "${lead.name}" (${lead.website}). Le verdict est-il juste et étayé par les mesures ? ` +
       `Les arguments commerciaux sont-ils exacts et respectueux ? Seuil mauvais site : ${config.badSiteThreshold}/100.`,
     JSON.stringify({ ...audit, tech }, null, 2),
-    hard
+    hard,
+    ctx
   );
 }
 
 // --- 3. Validation d'un site web généré ----------------------------------------
-export async function reviewSite(lead, site) {
+/** Contrôles non négociables (aussi utilisés par le Créateur de site avant de livrer). */
+export function siteIssues(lead, site) {
   const html = site.html || '';
   const hard = [];
   if (html.length < 2500) hard.push('site trop court / incomplet');
@@ -83,22 +98,29 @@ export async function reviewSite(lead, site) {
   if (!html.toLowerCase().includes(lead.name.toLowerCase().slice(0, 12))) hard.push("le nom de l'entreprise n'apparaît pas");
   const digits = (lead.phone || '').replace(/\D/g, '');
   if (digits && !html.replace(/\D/g, '').includes(digits.slice(-8))) hard.push('le numéro de téléphone est absent');
-  if (site.photos.length && !site.photos.some((p) => html.includes(p.file))) hard.push("aucune photo Google Maps n'est utilisée");
+  if (site.photos?.length && !site.photos.some((p) => html.includes(p.file))) hard.push("aucune photo Google Maps n'est utilisée");
   if (/lorem ipsum|\{\{|\[TODO|XX XX|example\.com/i.test(html)) hard.push('texte de remplissage ou placeholder détecté');
   if (/<script[^>]+src=["']https?:/i.test(html)) hard.push('script externe interdit');
+  return hard;
+}
 
+export async function reviewSite(lead, site, ctx = null) {
+  const html = site.html || '';
+  const hard = siteIssues(lead, site);
   return aiReview(
     `Vérifie ce site vitrine créé pour "${lead.name}" (${lead.category}). Critères : design professionnel et adapté au ` +
       `métier, responsive, hiérarchie claire, appel à l'action téléphone visible, aucune information inventée (prix, ` +
       `services, faux avis), français impeccable, SEO local (title/description), accessibilité (alt, contrastes). ` +
       `Vraies données : ${JSON.stringify({ phone: lead.phone, address: lead.address, rating: lead.rating, reviews: lead.raw?.reviews })}`,
     html.slice(0, 60000),
-    hard
+    hard,
+    ctx
   );
 }
 
 // --- 4. Validation de l'email + carte numérique --------------------------------
-export async function reviewEmail(lead, email, siteUrl) {
+/** Contrôles non négociables (aussi utilisés par le Correcteur du Rédacteur). */
+export function emailIssues(lead, email, siteUrl) {
   const hard = [];
   const words = email.body.split(/\s+/).length;
   if (!email.subject || email.subject.length > 90) hard.push('objet absent ou trop long (> 90 caractères)');
@@ -108,12 +130,17 @@ export async function reviewEmail(lead, email, siteUrl) {
   if (!email.body.toLowerCase().includes(lead.name.toLowerCase().slice(0, 10))) hard.push("le nom de l'entreprise n'est pas cité (pas personnalisé)");
   if (/(gratuit\s*!|urgent|100\s*%|cliquez ici|offre limitée|!!)/i.test(email.subject + email.body)) hard.push('formulation spam détectée');
   if (/\btu\b|\bton\b|\btes\b/i.test(email.body)) hard.push('tutoiement : utiliser le vouvoiement');
+  return hard;
+}
 
+export async function reviewEmail(lead, email, siteUrl, ctx = null) {
+  const hard = emailIssues(lead, email, siteUrl);
   return aiReview(
     `Vérifie cet email de prospection pour "${lead.name}" (${lead.segment === 'sans_site' ? "n'a pas de site" : 'a un site de mauvaise qualité'}). ` +
       `Critères : personnalisé, honnête, respectueux, court, une seule demande claire, aucune affirmation inventée, ` +
       `orthographe parfaite, donne envie de cliquer sur l'aperçu.`,
     `OBJET : ${email.subject}\n\n${email.body}`,
-    hard
+    hard,
+    ctx
   );
 }

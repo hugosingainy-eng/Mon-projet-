@@ -9,6 +9,7 @@ import { db, getLead, updateLead, getSetting, setSetting, logMessage } from './d
 import { runMission, processLead, sendLead, isRunning } from './orchestrator.js';
 import { smtpConfigured } from './services/mailer.js';
 import { sitesDir } from './agents/webbuilder.js';
+import { TEAM, activity } from './team.js';
 
 // ---------- Accès privé : un seul utilisateur (vous) ----------
 if (!config.adminPassword) {
@@ -106,6 +107,11 @@ app.post('/api/settings', (req, res) => {
   res.json({ ok: true });
 });
 
+// Organigramme + qui travaille en ce moment.
+app.get('/api/team', (req, res) => {
+  res.json({ team: TEAM, active: activity() });
+});
+
 app.get('/api/stats', (req, res) => {
   const rows = db.prepare('SELECT status, COUNT(*) AS n FROM leads GROUP BY status').all();
   const by = Object.fromEntries(rows.map((r) => [r.status, r.n]));
@@ -113,8 +119,9 @@ app.get('/api/stats', (req, res) => {
     db.prepare("SELECT segment, COUNT(*) AS n FROM leads WHERE status != 'rejete' GROUP BY segment").all().map((r) => [r.segment, r.n])
   );
   const rejets = db.prepare("SELECT COUNT(*) AS n FROM agent_messages WHERE kind = 'rejet'").get().n;
+  const corrections = db.prepare("SELECT COUNT(*) AS n FROM agent_messages WHERE kind = 'correction'").get().n;
   const validations = db.prepare("SELECT COUNT(*) AS n FROM agent_messages WHERE kind = 'validation'").get().n;
-  res.json({ byStatus: by, bySegment: seg, total: rows.reduce((s, r) => s + r.n, 0), rejets, validations });
+  res.json({ byStatus: by, bySegment: seg, total: rows.reduce((s, r) => s + r.n, 0), rejets, corrections, validations });
 });
 
 // ---------- Missions ----------
@@ -151,7 +158,7 @@ app.get('/api/leads', (req, res) => {
   if (req.query.mission) { where.push('mission_id = ?'); args.push(req.query.mission); }
   if (req.query.q) { where.push('(name LIKE ? OR address LIKE ?)'); args.push(`%${req.query.q}%`, `%${req.query.q}%`); }
   const sql = `SELECT id, mission_id, name, category, address, phone, email, website, rating, reviews_count, segment,
-    audit_score, site_slug, status, boss_notes, sent_at, updated_at FROM leads
+    audit_score, priority, site_slug, status, boss_notes, sent_at, updated_at FROM leads
     ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY updated_at DESC LIMIT 500`;
   res.json(db.prepare(sql).all(...args));
 });

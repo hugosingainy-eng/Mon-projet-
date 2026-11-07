@@ -3,6 +3,9 @@
 //  Prospecteur ──► Boss ──► (site ?) ──► Auditeur ──► Boss ──► Créateur de site ──► Boss ──► Rédacteur ──► Boss ──► prêt à envoyer
 //                                   └─ pas de site ─────────────────┘
 //
+// Chaque chef d'équipe (Prospecteur, Auditeur, Créateur de site, Rédacteur) délègue à ses
+// propres sous-agents et contrôle leur travail avant de livrer au Boss (voir team.js).
+//
 // À chaque étape, si le Boss refuse, l'agent reçoit son retour et recommence
 // (jusqu'à MAX_REVISIONS). Au-delà, le prospect est marqué "bloqué" pour vous.
 import fs from 'node:fs';
@@ -16,6 +19,7 @@ import * as webbuilder from './agents/webbuilder.js';
 import * as copywriter from './agents/copywriter.js';
 import * as boss from './agents/supervisor.js';
 import { sendMail, smtpConfigured } from './services/mailer.js';
+import { track } from './team.js';
 
 const running = new Set();
 
@@ -26,12 +30,12 @@ async function supervised({ missionId, leadId, agent, produce, review, summarize
   let feedback = '';
   let previous = null;
   for (let attempt = 1; attempt <= config.maxRevisions; attempt++) {
-    const deliverable = await produce(feedback, previous);
+    const deliverable = await track(agent, () => produce(feedback, previous));
     logMessage({
       missionId, leadId, from: agent, to: boss.name, kind: 'livraison',
       content: `Version ${attempt} : ${summarize(deliverable)}`,
     });
-    const v = await review(deliverable);
+    const v = await track(boss.name, () => review(deliverable));
     if (v.approved) {
       logMessage({ missionId, leadId, from: boss.name, to: agent, kind: 'validation', content: `✅ Validé (${v.score}/10). ${v.feedback}` });
       return { deliverable, verdict: v };
@@ -56,8 +60,8 @@ export async function processLead(leadId) {
       const { deliverable: audit } = await supervised({
         ...ctx,
         agent: auditor.name,
-        produce: (fb) => auditor.run(lead, fb),
-        review: (a) => boss.reviewAudit(lead, a),
+        produce: (fb, prev) => auditor.run(lead, fb, prev, ctx),
+        review: (a) => boss.reviewAudit(lead, a, ctx),
         summarize: (a) => `verdict ${a.verdict}, note ${a.note_globale}/100 — ${a.problemes.slice(0, 3).join(' ; ') || 'aucun problème majeur'}`,
       });
       const { excerpt, ...tech } = audit.tech;
@@ -83,8 +87,8 @@ export async function processLead(leadId) {
       const { deliverable: site } = await supervised({
         ...ctx,
         agent: webbuilder.name,
-        produce: (fb, prev) => webbuilder.run(lead, fb, prev?.html || ''),
-        review: (s) => boss.reviewSite(lead, s),
+        produce: (fb, prev) => webbuilder.run(lead, fb, prev, ctx),
+        review: (s) => boss.reviewSite(lead, s, ctx),
         summarize: (s) => `site généré (${Math.round(s.html.length / 1024)} Ko, ${s.photos.length} photos) — ${s.notes}`,
       });
       updateLead(leadId, { site_slug: site.slug, status: 'site_valide' });
@@ -102,8 +106,8 @@ export async function processLead(leadId) {
     const { deliverable: email } = await supervised({
       ...ctx,
       agent: copywriter.name,
-      produce: (fb) => copywriter.run(lead, { siteUrl, heroUrl }, fb),
-      review: (e) => boss.reviewEmail(lead, e, siteUrl),
+      produce: (fb, prev) => copywriter.run(lead, { siteUrl, heroUrl }, fb, prev, ctx),
+      review: (e) => boss.reviewEmail(lead, e, siteUrl, ctx),
       summarize: (e) => `objet « ${e.subject} » (${e.body.split(/\s+/).length} mots) + carte numérique`,
     });
     updateLead(leadId, {
@@ -140,7 +144,8 @@ export async function runMission(missionId) {
   logMessage({ ...ctx, from: boss.name, to: prospector.name, kind: 'info', content: `Mission : trouve-moi des « ${mission.query} » à ${mission.city} (max ${mission.max_results}).` });
 
   try {
-    const places = await prospector.run({ query: mission.query, city: mission.city, maxResults: mission.max_results });
+    const places = await track(prospector.name, () =>
+      prospector.run({ query: mission.query, city: mission.city, maxResults: mission.max_results }, ctx));
     logMessage({ ...ctx, from: prospector.name, to: boss.name, kind: 'livraison', content: `${places.length} établissements trouvés sur Google Maps.` });
 
     const accepted = [];
@@ -149,11 +154,11 @@ export async function runMission(missionId) {
       if (db.prepare('SELECT 1 FROM leads WHERE place_id = ?').get(p.place_id)) continue; // déjà connu
       const v = boss.reviewProspect(p);
       const info = db.prepare(
-        `INSERT INTO leads (mission_id, place_id, name, category, address, phone, website, maps_url, rating, reviews_count, raw, segment, status, boss_notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO leads (mission_id, place_id, name, category, address, phone, website, maps_url, rating, reviews_count, raw, segment, status, boss_notes, priority)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         missionId, p.place_id, p.name, p.category, p.address, p.phone, p.website, p.maps_url, p.rating, p.reviews_count,
-        JSON.stringify(p), p.website ? null : 'sans_site', v.approved ? (p.website ? 'a_auditer' : 'qualifie') : 'rejete', v.feedback
+        JSON.stringify(p), p.website ? null : 'sans_site', v.approved ? (p.website ? 'a_auditer' : 'qualifie') : 'rejete', v.feedback, p.priority ?? null
       );
       if (v.approved) accepted.push(Number(info.lastInsertRowid));
       else rejected++;
@@ -163,7 +168,7 @@ export async function runMission(missionId) {
       content: `${accepted.length} prospects retenus, ${rejected} écartés (fermés, injoignables, franchises ou trop peu d'avis).`,
     });
 
-    // 2 prospects traités en parallèle
+    // 2 prospects traités en parallèle, les plus prioritaires d'abord (classement du Qualificateur)
     const queue = [...accepted];
     await Promise.all(
       Array.from({ length: 2 }, async () => {
