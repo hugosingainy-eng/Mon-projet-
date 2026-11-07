@@ -65,6 +65,8 @@ npm install
 npm start                # http://localhost:3000
 ```
 
+👉 **Guide pas à pas pour obtenir chaque clé, avec les liens : [docs/CONFIGURATION.md](docs/CONFIGURATION.md)**
+
 Sans clé API, l'application tourne en **mode démo** : prospects fictifs, sites créés à partir d'un gabarit et contrôles automatiques du Boss.
 Cela permet de tout tester avant d'ajouter vos clés.
 
