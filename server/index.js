@@ -13,6 +13,8 @@ import { smtpConfigured } from './services/mailer.js';
 import { sitesDir } from './agents/webbuilder.js';
 import { TEAM, activity } from './team.js';
 import { serperAvailable } from './services/webResearch.js';
+import { startAutopilot, listAutopilots, createAutopilot, expandCities, parseList, autopilotStatus, buildReport } from './autopilot.js';
+import { setting, DEFAULTS } from './sendPolicy.js';
 
 // ---------- Accès privé : un seul utilisateur (vous) ----------
 if (!config.adminPassword) {
@@ -41,11 +43,6 @@ function safeEqual(a, b) {
   return crypto.timingSafeEqual(ha, hb);
 }
 
-// Après un redémarrage, les travaux interrompus sont signalés pour être relancés.
-db.prepare(`UPDATE leads SET status = 'erreur', boss_notes = 'Traitement interrompu par un redémarrage du serveur : cliquez sur Relancer.'
-  WHERE status IN ('audit_en_cours','site_en_cours','email_en_cours','en_file','a_auditer','qualifie','site_valide','verif_site','recherche_email')`).run();
-db.prepare("UPDATE missions SET status = 'erreur' WHERE status = 'en_cours'").run();
-
 const loginAttempts = new Map();
 
 const app = express();
@@ -59,6 +56,9 @@ app.use('/sites', (req, res, next) => {
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   next();
 }, express.static(sitesDir(), { extensions: ['html'], dotfiles: 'deny', index: 'index.html' }));
+
+// Sonde de santé (Docker, hébergeur) : publique, ne révèle rien.
+app.get('/healthz', (req, res) => res.json({ ok: true }));
 
 app.use(express.static(path.join(config.root, 'public')));
 
@@ -100,6 +100,13 @@ app.get('/api/status', (req, res) => {
     smtp: smtpConfigured(),
     googleSearch: serperAvailable(),
     autoSend: getSetting('auto_send') === 'true',
+    sendLimit: Number(setting('send_limit')),
+    sendStart: Number(setting('send_start')),
+    sendEnd: Number(setting('send_end')),
+    sendWeekdaysOnly: setting('send_weekdays_only') === 'true',
+    dailyReport: setting('daily_report') === 'true',
+    reportHour: Number(setting('report_hour')),
+    ownerEmail: getSetting('owner_email') || config.sender.email || '',
     model: config.model,
     sender: config.sender,
     maxRevisions: config.maxRevisions,
@@ -107,7 +114,20 @@ app.get('/api/status', (req, res) => {
 });
 
 app.post('/api/settings', (req, res) => {
-  if ('autoSend' in req.body) setSetting('auto_send', req.body.autoSend ? 'true' : 'false');
+  const b = req.body || {};
+  if ('autoSend' in b) setSetting('auto_send', b.autoSend ? 'true' : 'false');
+  const num = (v, min, max) => Math.min(max, Math.max(min, Math.round(Number(v) || 0)));
+  if ('sendLimit' in b) setSetting('send_limit', num(b.sendLimit, 1, 500));
+  if ('sendStart' in b) setSetting('send_start', num(b.sendStart, 0, 23));
+  if ('sendEnd' in b) setSetting('send_end', num(b.sendEnd, 1, 24));
+  if ('sendWeekdaysOnly' in b) setSetting('send_weekdays_only', b.sendWeekdaysOnly ? 'true' : 'false');
+  if ('dailyReport' in b) setSetting('daily_report', b.dailyReport ? 'true' : 'false');
+  if ('reportHour' in b) setSetting('report_hour', num(b.reportHour, 0, 23));
+  if ('ownerEmail' in b) {
+    const e = String(b.ownerEmail || '').trim();
+    if (e && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return res.status(400).json({ error: 'Adresse email invalide.' });
+    setSetting('owner_email', e);
+  }
   res.json({ ok: true });
 });
 
@@ -127,6 +147,40 @@ app.get('/api/stats', (req, res) => {
   const validations = db.prepare("SELECT COUNT(*) AS n FROM agent_messages WHERE kind = 'validation'").get().n;
   res.json({ byStatus: by, bySegment: seg, total: rows.reduce((s, r) => s + r.n, 0), rejets, corrections, validations });
 });
+
+// ---------- Pilote automatique ----------
+app.get('/api/autopilot', (req, res) => {
+  res.json({ status: autopilotStatus(), programs: listAutopilots() });
+});
+
+app.post('/api/autopilot', wrap(async (req, res) => {
+  const b = req.body || {};
+  const queries = parseList(b.queries);
+  let cities = parseList(b.cities);
+  if (b.expand) cities = await expandCities(cities);
+  const id = createAutopilot({
+    name: String(b.name || '').trim(), queries, cities,
+    resultsPerRun: b.resultsPerRun, intervalMinutes: b.intervalMinutes, dailyLimit: b.dailyLimit,
+  });
+  res.json({ id, cities });
+}));
+
+app.patch('/api/autopilot/:id', wrap((req, res) => {
+  const b = req.body || {};
+  if ('active' in b) {
+    db.prepare('UPDATE autopilots SET active = ?, next_run_at = COALESCE(next_run_at, ?) WHERE id = ?')
+      .run(b.active ? 1 : 0, new Date().toISOString(), req.params.id);
+  }
+  if (b.runNow) db.prepare('UPDATE autopilots SET next_run_at = ?, active = 1 WHERE id = ?').run(new Date().toISOString(), req.params.id);
+  res.json({ ok: true });
+}));
+
+app.delete('/api/autopilot/:id', wrap((req, res) => {
+  db.prepare('DELETE FROM autopilots WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+}));
+
+app.get('/api/report', (req, res) => res.json(buildReport()));
 
 // ---------- Missions ----------
 app.get('/api/missions', (req, res) => {
@@ -271,8 +325,10 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(config.port, () => {
+  startAutopilot();
   console.log(`\n🚀 Agence IA démarrée sur ${config.publicUrl}`);
   console.log(`   Google Maps : ${demoMode.google ? 'MODE DÉMO (pas de clé)' : 'réel'}`);
   console.log(`   IA Claude   : ${demoMode.ai ? 'MODE SANS IA (pas de clé)' : config.model}`);
-  console.log(`   SMTP        : ${smtpConfigured() ? 'configuré' : 'non configuré (envoi désactivé)'}\n`);
+  console.log(`   SMTP        : ${smtpConfigured() ? 'configuré' : 'non configuré (envoi désactivé)'}`);
+  console.log('   Pilote auto : démarré (vérification chaque minute)\n');
 });

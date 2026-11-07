@@ -30,6 +30,7 @@
     <div class="brand"><span class="brand-mark">◆</span> QG des Agents</div>
     <nav>
       <a href="#/" data-view="dashboard" class="active">Tableau de bord</a>
+      <a href="#/autopilot" data-view="autopilot">Pilote auto <span class="nav-dot" id="nav-auto-dot" hidden></span></a>
       <a href="#/leads" data-view="leads">Prospects</a>
       <a href="#/missions" data-view="missions">Missions</a>
       <a href="#/feed" data-view="feed">Fil des agents</a>
@@ -50,6 +51,8 @@
           <p class="muted">Vos agents travaillent pour vous. Le Boss valide tout avant que ça parte.</p>
         </div>
       </header>
+
+      <a href="#/autopilot" class="auto-strip" id="auto-strip"></a>
 
       <form id="mission-form" class="mission-bar">
         <label><span>Activité</span><input name="query" placeholder="ex : boulangerie, plombier, coiffeur" required></label>
@@ -72,6 +75,36 @@
           <div id="mini-feed" class="feed compact"></div>
         </div>
       </div>
+    </section>
+
+    <!-- Pilote automatique -->
+    <section data-page="autopilot" hidden>
+      <header class="page-head">
+        <div>
+          <h1>Pilote automatique</h1>
+          <p class="muted">Vos agents cherchent en continu, 24h/24 et 7j/7. Chaque programme passe en revue toutes les combinaisons métier × ville, puis recommence pour repérer les nouveaux commerces.</p>
+        </div>
+      </header>
+
+      <div class="auto-status" id="auto-status"></div>
+
+      <form id="auto-form" class="panel auto-form">
+        <h2>Nouveau programme</h2>
+        <label class="wide"><span>Nom</span><input name="name" placeholder="ex : Artisans de Lyon"></label>
+        <label class="wide"><span>Métiers recherchés <small>(séparés par des virgules)</small></span>
+          <textarea name="queries" rows="2" required placeholder="boulangerie, plombier, coiffeur, garage automobile, fleuriste"></textarea></label>
+        <label class="wide"><span>Villes ou zones <small>(séparées par des virgules)</small></span>
+          <textarea name="cities" rows="2" required placeholder="Lyon, Villeurbanne, Vénissieux"></textarea></label>
+        <label class="check wide"><input type="checkbox" name="expand" checked> Élargir automatiquement aux arrondissements et communes voisines <small>(avec l’IA)</small></label>
+        <label><span>Recherche toutes les</span><select name="intervalMinutes">
+          <option value="10">10 minutes</option><option value="20">20 minutes</option><option value="30" selected>30 minutes</option>
+          <option value="60">1 heure</option><option value="180">3 heures</option><option value="720">12 heures</option></select></label>
+        <label><span>Résultats par recherche</span><input name="resultsPerRun" type="number" min="1" max="60" value="20"></label>
+        <label><span>Nouveaux prospects max / jour</span><input name="dailyLimit" type="number" min="1" max="2000" value="100"></label>
+        <button class="btn primary" type="submit">Démarrer le programme</button>
+      </form>
+
+      <div id="auto-list" class="auto-list"></div>
     </section>
 
     <!-- Prospects -->

@@ -60,6 +60,27 @@ CREATE TABLE IF NOT EXISTS agent_messages (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS autopilots (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  queries JSON NOT NULL,          -- ["boulangerie", "pâtisserie"]
+  cities JSON NOT NULL,           -- ["Lyon 1er", "Villeurbanne"]
+  results_per_run INTEGER NOT NULL DEFAULT 20,
+  interval_minutes INTEGER NOT NULL DEFAULT 30,
+  daily_limit INTEGER NOT NULL DEFAULT 100,
+  active INTEGER NOT NULL DEFAULT 1,
+  cursor INTEGER NOT NULL DEFAULT 0,  -- prochaine combinaison métier × ville
+  cycle INTEGER NOT NULL DEFAULT 1,
+  day TEXT,                           -- jour (heure de Paris) du compteur ci-dessous
+  leads_today INTEGER NOT NULL DEFAULT 0,
+  total_leads INTEGER NOT NULL DEFAULT 0,
+  runs INTEGER NOT NULL DEFAULT 0,
+  last_run_at TEXT,
+  next_run_at TEXT,
+  last_result TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT
@@ -72,6 +93,7 @@ for (const sql of [
   'ALTER TABLE leads ADD COLUMN priority INTEGER',
   'ALTER TABLE leads ADD COLUMN web_check JSON',     // résultat de la vérification « pas de site ? »
   'ALTER TABLE leads ADD COLUMN email_info JSON',    // source et confiance de l'email trouvé
+  'ALTER TABLE missions ADD COLUMN autopilot_id INTEGER',
 ]) {
   try { db.exec(sql); } catch { /* colonne déjà présente */ }
 }

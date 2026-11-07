@@ -80,14 +80,41 @@ Cela permet de tout tester avant d'ajouter vos clés.
 
 Le modèle par défaut est `claude-opus-5-5`. Le repli automatique côté serveur (`fallbacks: "default"`) est activé : si une requête est refusée, elle est relancée sur un autre modèle.
 
-## Mettre en ligne
+## Pilote automatique : les agents travaillent 24h/24, 7j/7
 
-Les liens des emails doivent pointer vers une adresse publique. Le plus simple est un petit serveur (VPS, Railway, Render, Fly.io) avec le `Dockerfile` fourni :
+Dans **Pilote auto**, créez un programme : la liste des métiers et la liste des villes, par exemple
+« boulangerie, plombier, coiffeur » × « Lyon, Villeurbanne ».
+Cochez « Élargir » : l'IA ajoute les arrondissements et les communes voisines.
+
+À partir de là, sans aucune intervention :
+
+1. **Toutes les X minutes**, le pilote lance la recherche suivante, une combinaison métier × ville à la fois. Les agents font tout le circuit, sous le contrôle du Boss.
+2. **Quand toutes les combinaisons sont faites**, un nouveau cycle commence. Les commerces déjà connus sont ignorés : seuls les **nouveaux** remontent (ouvertures, fiches ajoutées sur Google Maps).
+3. **Une limite de nouveaux prospects par jour** maîtrise vos coûts d'API. Une fois atteinte, le programme reprend à minuit.
+4. **Les emails partent tout seuls** si « Envoi automatique » est activé. Ils sont envoyés seulement aux horaires de bureau, plafonnés par jour (30 par défaut) et espacés de 1 à 3 minutes pour ne pas finir en spam. Les dossiers en attente partent au créneau suivant.
+5. **Chaque matin**, le Boss vous envoie un rapport des dernières 24 h (heure et adresse dans Réglages).
+6. **Après un redémarrage ou une panne**, les dossiers interrompus reprennent automatiquement.
+
+Une seule recherche automatique tourne à la fois, pour garder des coûts prévisibles.
+
+## Mettre en ligne (indispensable pour le 24h/24)
+
+Votre ordinateur s'éteint ; pour tourner en permanence, l'application doit être sur un serveur.
+Le plus simple est un petit serveur privé (VPS : Hetzner, OVH, Scaleway… environ 5 €/mois) avec Docker :
 
 ```bash
-docker build -t qg-agents .
-docker run -d -p 3000:3000 --env-file .env -v qg-data:/app/data qg-agents
+git clone <votre dépôt> && cd Mon-projet-
+cp .env.example .env    # remplissez vos clés + PUBLIC_URL=https://votre-domaine.fr
+docker compose up -d    # démarre, et redémarre tout seul en cas de plantage ou de reboot
+docker compose logs -f  # voir ce que font les agents
 ```
+
+- `restart: unless-stopped` relance le conteneur automatiquement.
+- `/healthz` sert de sonde de santé.
+- Les données (base, sites créés) sont conservées dans le volume `qg-data`.
+- Mettez un nom de domaine en HTTPS devant, par exemple avec Caddy : `caddy reverse-proxy --from votre-domaine.fr --to localhost:3000`.
+
+Autre option : Railway ou Render, en déclarant un **disque persistant** monté sur `/app/data`. Sans ce disque, la base est effacée à chaque redéploiement.
 
 Seuls les sites d'aperçu (`/sites/...`) sont publics, et ils sont marqués `noindex`. Le tableau de bord et l'API exigent votre mot de passe.
 
@@ -103,6 +130,8 @@ Seuls les sites d'aperçu (`/sites/...`) sont publics, et ils sont marqués `noi
 server/
   index.js            serveur, connexion privée, API
   orchestrator.js     circuit des agents + boucle « livrer → Boss → corriger »
+  autopilot.js        pilote automatique 24h/24 : programmes, envois étalés, rapport, reprise
+  sendPolicy.js       règles d'envoi (plafond, horaires, heure de Paris)
   team.js             organigramme, activité en direct, délégation chef → sous-agent
   agents/
     supervisor.js     👔 le Boss
@@ -113,5 +142,5 @@ server/
   services/           Google Places, audit de site, recherche web (sites cachés + emails), SMTP
   llm.js              accès à Claude (sorties JSON structurées)
 public/               tableau de bord
-test/                 tests du Boss et des sous-agents (npm test)
+test/                 tests du Boss, des sous-agents, de la recherche web et du pilote (npm test)
 ```

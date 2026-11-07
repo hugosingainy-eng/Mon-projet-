@@ -28,7 +28,7 @@ const pill = (map, key) => {
   return `<span class="pill ${cls}">${esc(label)}</span>`;
 };
 
-let state = { status: null, leads: [], lastMsgId: 0, messages: [], missions: [], team: [], active: {}, showHelpers: true };
+let state = { auto: { status: {}, programs: [] }, status: null, leads: [], lastMsgId: 0, messages: [], missions: [], team: [], active: {}, showHelpers: true };
 
 async function api(path, opts = {}) {
   const res = await fetch(path, {
@@ -76,7 +76,7 @@ $('#logout').addEventListener('click', async () => { await api('/api/logout', { 
 function route() {
   const [path, qs] = location.hash.slice(2).split('?');
   const view = path || 'dashboard';
-  const page = ['dashboard', 'leads', 'missions', 'feed', 'settings'].includes(view) ? view : 'dashboard';
+  const page = ['dashboard', 'autopilot', 'leads', 'missions', 'feed', 'settings'].includes(view) ? view : 'dashboard';
   $$('[data-page]').forEach((s) => (s.hidden = s.dataset.page !== page));
   $$('.side nav a').forEach((a) => a.classList.toggle('active', a.dataset.view === page));
   const params = new URLSearchParams(qs || '');
@@ -161,10 +161,10 @@ function renderLeads() {
 }
 
 function renderMissions() {
-  const label = { en_attente: ['En attente', ''], en_cours: ['En cours', 'info'], terminee: ['Terminée', 'ok'], erreur: ['Erreur', 'bad'] };
+  const label = { en_attente: ['En attente', ''], en_cours: ['En cours', 'info'], terminee: ['Terminée', 'ok'], erreur: ['Erreur', 'bad'], interrompue: ['Interrompue', 'warn'] };
   $('#missions-table').innerHTML = `<thead><tr><th>Mission</th><th>Lancée</th><th>Prospects</th><th>Validés</th><th>Statut</th><th></th></tr></thead>
     <tbody>${state.missions.map((m) => `<tr data-mission="${m.id}">
-      <td><strong>${esc(m.query)}</strong><small>${esc(m.city)}</small></td><td>${timeAgo(m.created_at)}</td>
+      <td><strong>${esc(m.query)}</strong><small>${esc(m.city)}${m.autopilot_id ? ' · pilote auto' : ''}</small></td><td>${timeAgo(m.created_at)}</td>
       <td class="num">${m.leads}</td><td class="num">${m.ready}</td><td>${pill(label, m.running ? 'en_cours' : m.status)}</td>
       <td><button class="btn small danger" data-del-mission="${m.id}">Supprimer</button></td></tr>`).join('')
       || '<tr><td colspan="6" class="empty">Aucune mission. Lancez-en une depuis le tableau de bord.</td></tr>'}</tbody>`;
@@ -176,12 +176,30 @@ function renderSettings() {
   $('#settings').innerHTML = `
     <div class="setting-row"><div><strong>Envoi automatique</strong><p class="muted">Dès que le Boss valide un dossier avec une adresse email, l’email part tout seul. Désactivé : vous cliquez sur « Envoyer » vous-même.</p></div>
       <label class="switch"><input type="checkbox" id="auto-send" ${s.autoSend ? 'checked' : ''} ${s.smtp ? '' : 'disabled'}><span></span></label></div>
+    <div class="setting-row"><div><strong>Règles d’envoi</strong><p class="muted">Pour ne pas finir en spam, les envois automatiques sont étalés (1 à 3 min entre deux emails) et plafonnés. Les dossiers en attente partent au prochain créneau.</p>
+      <div class="inline"><input type="number" id="send-limit" min="1" max="500" value="${s.sendLimit}"> emails max / jour, de
+      <input type="number" id="send-start" min="0" max="23" value="${s.sendStart}"> h à <input type="number" id="send-end" min="1" max="24" value="${s.sendEnd}"> h
+      <label class="toggle"><input type="checkbox" id="send-weekdays" ${s.sendWeekdaysOnly ? 'checked' : ''}> en semaine seulement</label></div></div></div>
+    <div class="setting-row"><div><strong>Rapport quotidien</strong><p class="muted">Chaque jour, le Boss vous résume les dernières 24 h : nouveaux prospects, sites créés, emails envoyés, dossiers à regarder.</p>
+      <div class="inline">à <input type="number" id="report-hour" min="0" max="23" value="${s.reportHour}"> h, envoyé à <input type="email" id="owner-email" placeholder="vous@exemple.fr" value="${esc(s.ownerEmail)}"></div></div>
+      <label class="switch"><input type="checkbox" id="daily-report" ${s.dailyReport ? 'checked' : ''}><span></span></label></div>
     ${line(!s.demoGoogle, 'Google Maps (Places API)', s.demoGoogle ? 'Mode démo : données fictives. Ajoutez <code>GOOGLE_MAPS_API_KEY</code> dans <code>.env</code>.' : 'Recherche réelle sur Google Maps.')}
     ${line(s.googleSearch || !s.demoAi, 'Recherche Google (sites cachés et emails)', s.googleSearch ? 'Recherche Google réelle via Serper.' : !s.demoAi ? 'Recherche web assurée par Claude. Pour des résultats Google directs, ajoutez <code>SERPER_API_KEY</code>.' : 'Ajoutez <code>SERPER_API_KEY</code> (serper.dev) ou <code>ANTHROPIC_API_KEY</code>.')}
     ${line(!s.demoAi, 'Intelligence artificielle (Claude)', s.demoAi ? 'Sans IA : gabarits et contrôles automatiques uniquement. Ajoutez <code>ANTHROPIC_API_KEY</code>.' : `Modèle : <code>${esc(s.model)}</code>`)}
     ${line(s.smtp, 'Envoi d’emails (SMTP)', s.smtp ? 'Prêt à envoyer.' : 'Renseignez <code>SMTP_HOST</code>, <code>SMTP_USER</code>, <code>SMTP_PASS</code>.')}
     <div class="setting-row"><div><strong>Votre signature</strong><p class="muted">${esc(s.sender.name)} · ${esc(s.sender.company)} · ${esc(s.sender.email || 'email non défini')}<br>Offre : ${esc(s.sender.offer)}<br>À modifier dans <code>.env</code> (SENDER_*).</p></div></div>
     <div class="setting-row"><div><strong>Exigence du Boss</strong><p class="muted">Jusqu’à ${s.maxRevisions} allers-retours par livrable avant de bloquer un dossier (<code>MAX_REVISIONS</code>).</p></div></div>`;
+  const save = async (body, msg) => {
+    try { await api('/api/settings', { method: 'POST', body }); Object.assign(state.status, await api('/api/status')); toast(msg); }
+    catch (err) { toast(err.message); }
+  };
+  $('#send-limit').addEventListener('change', (e) => save({ sendLimit: e.target.value }, 'Plafond d’envoi enregistré'));
+  $('#send-start').addEventListener('change', (e) => save({ sendStart: e.target.value }, 'Horaires enregistrés'));
+  $('#send-end').addEventListener('change', (e) => save({ sendEnd: e.target.value }, 'Horaires enregistrés'));
+  $('#send-weekdays').addEventListener('change', (e) => save({ sendWeekdaysOnly: e.target.checked }, 'Enregistré'));
+  $('#report-hour').addEventListener('change', (e) => save({ reportHour: e.target.value }, 'Heure du rapport enregistrée'));
+  $('#owner-email').addEventListener('change', (e) => save({ ownerEmail: e.target.value }, 'Adresse du rapport enregistrée'));
+  $('#daily-report').addEventListener('change', (e) => save({ dailyReport: e.target.checked }, e.target.checked ? 'Rapport quotidien activé' : 'Rapport quotidien désactivé'));
   $('#auto-send')?.addEventListener('change', async (e) => {
     await api('/api/settings', { method: 'POST', body: { autoSend: e.target.checked } });
     state.status.autoSend = e.target.checked;
@@ -198,6 +216,96 @@ function renderBadges() {
     [s.smtp, s.smtp ? 'Emails : prêts' : 'Emails : à configurer'],
   ].map(([ok, t]) => `<span><i class="${ok ? '' : 'off'}"></i>${t}</span>`).join('');
 }
+
+// ---------- Pilote automatique ----------
+const inMinutes = (iso) => {
+  if (!iso) return '—';
+  const m = Math.round((new Date(iso) - Date.now()) / 60000);
+  if (m <= 0) return 'imminente';
+  if (m < 60) return `dans ${m} min`;
+  return `à ${new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+};
+
+function renderAuto() {
+  const st = state.auto.status || {};
+  const progs = state.auto.programs || [];
+  $('#nav-auto-dot').hidden = !st.active;
+  $('#auto-strip').innerHTML = progs.length
+    ? `<span class="led ${st.active ? 'on' : ''}"></span><b>Pilote auto ${st.active ? 'en marche' : 'à l’arrêt'}</b>
+       <span class="sep">|</span><span>${st.active} programme(s) actif(s)</span>
+       <span class="sep">|</span><span>${st.searching ? 'recherche en cours…' : `prochaine recherche ${inMinutes(st.nextRunAt)}`}</span>
+       <span class="sep">|</span><span>${st.sendsToday}/${st.sendLimit} emails envoyés aujourd’hui${st.sendOk ? '' : ` · envoi en pause : ${esc(st.sendReason)}`}</span>`
+    : `<span class="led"></span><b>Pilote auto</b><span>Faites travailler vos agents 24h/24 : créez un programme →</span>`;
+
+  if ($('[data-page="autopilot"]').hidden) return;
+  const tile = (n, l) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`;
+  $('#auto-status').innerHTML =
+    tile(st.active || 0, 'programmes actifs') +
+    tile(st.searching ? '●' : inMinutes(st.nextRunAt), st.searching ? 'recherche en cours' : 'prochaine recherche') +
+    tile(`${st.sendsToday ?? 0}/${st.sendLimit ?? 0}`, st.sendOk ? 'emails envoyés aujourd’hui' : `envoi en pause : ${esc(st.sendReason || '')}`) +
+    tile(progs.reduce((s, p) => s + p.total_leads, 0), 'prospects trouvés par le pilote');
+
+  $('#auto-list').innerHTML = progs.length ? progs.map((p) => {
+    const pct = p.combos ? Math.round(((p.position - 1) / p.combos) * 100) : 0;
+    const tags = (arr, max) => arr.slice(0, max).map((t) => `<span class="pill">${esc(t)}</span>`).join('') + (arr.length > max ? `<span class="pill">+${arr.length - max}</span>` : '');
+    return `<div class="program ${p.active ? 'on' : ''}">
+      <div class="program-head"><div><h3>${esc(p.name)}</h3>
+        <span class="muted">${p.running ? '● recherche en cours' : !p.active ? 'en pause' : p.leads_today >= p.daily_limit ? 'limite du jour atteinte : reprise à minuit' : `prochaine recherche ${inMinutes(p.next_run_at)}`} · toutes les ${p.interval_minutes} min</span></div>
+        <div class="program-actions">
+          <button class="btn small" data-auto-run="${p.id}">Lancer maintenant</button>
+          <button class="btn small danger" data-auto-del="${p.id}">Supprimer</button>
+          <label class="switch" title="Activer / mettre en pause"><input type="checkbox" data-auto-toggle="${p.id}" ${p.active ? 'checked' : ''}><span></span></label>
+        </div></div>
+      <div class="tags">${tags(p.queries, 8)}</div>
+      <div class="tags">${tags(p.cities, 10)}</div>
+      <div class="progress" title="Avancement du cycle"><i style="width:${pct}%"></i></div>
+      <div class="program-meta">
+        <span>Cycle <b>${p.cycle}</b> · recherche <b>${p.position}/${p.combos}</b></span>
+        <span>Aujourd’hui <b>${p.leads_today}/${p.daily_limit}</b> nouveaux prospects</span>
+        <span>Total <b>${p.total_leads}</b> prospects en <b>${p.runs}</b> recherches</span>
+      </div>
+      ${p.last_result ? `<div class="muted" style="font-size:13px">Dernière recherche : ${esc(p.last_result)}</div>` : ''}
+    </div>`;
+  }).join('') : '<div class="empty">Aucun programme. Créez-en un ci-dessus : vos agents chercheront en continu, même quand vous dormez.</div>';
+}
+
+$('#auto-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const btn = f.querySelector('button[type=submit]');
+  btn.disabled = true;
+  btn.textContent = f.expand.checked ? 'Préparation de la zone…' : 'Démarrage…';
+  try {
+    const r = await api('/api/autopilot', { method: 'POST', body: {
+      name: f.name.value, queries: f.queries.value, cities: f.cities.value, expand: f.expand.checked,
+      intervalMinutes: f.intervalMinutes.value, resultsPerRun: f.resultsPerRun.value, dailyLimit: f.dailyLimit.value,
+    } });
+    toast(`Programme démarré sur ${r.cities.length} zone(s) 🚀`);
+    f.reset();
+    refresh();
+  } catch (err) { toast(err.message); }
+  btn.disabled = false;
+  btn.textContent = 'Démarrer le programme';
+});
+
+$('#auto-list').addEventListener('click', async (e) => {
+  const run = e.target.closest('[data-auto-run]');
+  const del = e.target.closest('[data-auto-del]');
+  try {
+    if (run) { await api(`/api/autopilot/${run.dataset.autoRun}`, { method: 'PATCH', body: { runNow: true } }); toast('Recherche lancée dans la minute'); }
+    if (del && confirm('Supprimer ce programme ? Les prospects déjà trouvés sont conservés.')) {
+      await api(`/api/autopilot/${del.dataset.autoDel}`, { method: 'DELETE' }); toast('Programme supprimé');
+    }
+    if (run || del) refresh();
+  } catch (err) { toast(err.message); }
+});
+$('#auto-list').addEventListener('change', async (e) => {
+  const t = e.target.closest('[data-auto-toggle]');
+  if (!t) return;
+  await api(`/api/autopilot/${t.dataset.autoToggle}`, { method: 'PATCH', body: { active: t.checked } });
+  toast(t.checked ? 'Programme relancé' : 'Programme en pause');
+  refresh();
+});
 
 // ---------- Fiche prospect ----------
 function webCheckHtml(l) {
@@ -372,9 +480,10 @@ $('#lead-status').addEventListener('change', renderLeads);
 // ---------- Rafraîchissement ----------
 async function refresh() {
   try {
-    const [leads, missions, msgs, team] = await Promise.all([
-      api('/api/leads'), api('/api/missions'), api(`/api/messages?since=${state.lastMsgId}`), api('/api/team'),
+    const [leads, missions, msgs, team, auto] = await Promise.all([
+      api('/api/leads'), api('/api/missions'), api(`/api/messages?since=${state.lastMsgId}`), api('/api/team'), api('/api/autopilot'),
     ]);
+    state.auto = auto;
     state.team = team.team;
     state.active = team.active;
     state.leads = leads;
@@ -384,7 +493,7 @@ async function refresh() {
       state.messages = state.messages.slice(-300);
       state.lastMsgId = msgs[msgs.length - 1].id;
     }
-    renderOrg(); renderReady(); renderFeeds(); renderLeads(); renderMissions();
+    renderOrg(); renderReady(); renderFeeds(); renderLeads(); renderMissions(); renderAuto();
     if (!$('[data-page="dashboard"]').hidden) renderStats();
   } catch { /* hors ligne ou déconnecté */ }
 }

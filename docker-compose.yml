@@ -1,0 +1,18 @@
+# Lancement 24h/24 : `docker compose up -d`
+# Le conteneur redémarre tout seul en cas de plantage ou de redémarrage du serveur,
+# et les dossiers interrompus reprennent automatiquement.
+services:
+  qg-agents:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "3000:3000"
+    volumes:
+      - qg-data:/app/data
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  qg-data:

@@ -11,15 +11,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { sitesDir } from './agents/webbuilder.js';
-import { db, logMessage, updateLead, getLead, getSetting } from './db.js';
+import { db, logMessage, updateLead, getLead } from './db.js';
 import { config } from './config.js';
 import * as prospector from './agents/prospector.js';
 import * as auditor from './agents/auditor.js';
 import * as webbuilder from './agents/webbuilder.js';
 import * as copywriter from './agents/copywriter.js';
 import * as boss from './agents/supervisor.js';
-import { sendMail, smtpConfigured } from './services/mailer.js';
+import { sendMail } from './services/mailer.js';
 import { track } from './team.js';
+import { canAutoSend, recordSend } from './sendPolicy.js';
 
 const running = new Set();
 
@@ -176,8 +177,9 @@ export async function processLead(leadId) {
         : `Dossier ${lead.name} validé, mais aucune adresse email trouvée : ajoutez-la pour envoyer.`,
     });
 
-    // Envoi automatique si vous l'avez activé
-    if (lead.email && getSetting('auto_send') === 'true' && smtpConfigured()) {
+    // Envoi automatique si vous l'avez activé, dans les horaires et le plafond du jour.
+    // Sinon le dossier attend : le pilote automatique l'enverra au prochain créneau.
+    if (lead.email && canAutoSend().ok) {
       await sendLead(leadId);
     }
   } catch (err) {
@@ -189,7 +191,8 @@ export async function processLead(leadId) {
 
 /** Lance une mission complète en arrière-plan. */
 export async function runMission(missionId) {
-  if (running.has(missionId)) return;
+  if (running.has(missionId)) return null;
+  const stats = { found: 0, added: 0, accepted: 0 };
   running.add(missionId);
   const mission = db.prepare('SELECT * FROM missions WHERE id = ?').get(missionId);
   const ctx = { missionId };
@@ -201,6 +204,7 @@ export async function runMission(missionId) {
       prospector.run({ query: mission.query, city: mission.city, maxResults: mission.max_results }, ctx));
     logMessage({ ...ctx, from: prospector.name, to: boss.name, kind: 'livraison', content: `${places.length} établissements trouvés sur Google Maps.` });
 
+    stats.found = places.length;
     const accepted = [];
     let rejected = 0;
     for (const p of places) {
@@ -216,6 +220,8 @@ export async function runMission(missionId) {
       if (v.approved) accepted.push(Number(info.lastInsertRowid));
       else rejected++;
     }
+    stats.added = accepted.length + rejected;
+    stats.accepted = accepted.length;
     logMessage({
       ...ctx, from: boss.name, to: prospector.name, kind: 'validation',
       content: `${accepted.length} prospects retenus, ${rejected} écartés (fermés, injoignables, franchises ou trop peu d'avis).`,
@@ -237,6 +243,7 @@ export async function runMission(missionId) {
   } finally {
     running.delete(missionId);
   }
+  return stats;
 }
 
 /** Envoie l'email d'un prospect validé par le Boss. */
@@ -244,7 +251,9 @@ export async function sendLead(leadId) {
   const lead = getLead(leadId);
   if (!lead.email) throw new Error('Aucune adresse email pour ce prospect.');
   if (!lead.card_html) throw new Error("Ce dossier n'a pas encore été validé par le Boss.");
+  if (lead.status === 'envoye') throw new Error('Cet email a déjà été envoyé.');
   await sendMail({ to: lead.email, subject: lead.email_subject, html: lead.card_html, text: lead.email_body });
+  recordSend();
   updateLead(leadId, { status: 'envoye', sent_at: new Date().toISOString() });
   logMessage({ missionId: lead.mission_id, leadId, from: 'Système', to: 'Vous', kind: 'info', content: `Email envoyé à ${lead.name} (${lead.email}).` });
 }
