@@ -308,6 +308,7 @@ function webCheckHtml(l) {
 function emailInfoHtml(l) {
   const e = l.email_info;
   if (!e) return '';
+  if (e.manual) return '<small class="hint">✍️ Adresse saisie par vous.</small>';
   if (!e.found) return '<small class="hint">📧 Recherché sur le web : aucune adresse publiée trouvée.</small>';
   const src = e.source && /^https?:/.test(e.source)
     ? `<a href="${esc(e.source)}" target="_blank" rel="noopener">${esc(e.source.replace(/^https?:\/\/(www\.)?/, '').slice(0, 50))}</a>`

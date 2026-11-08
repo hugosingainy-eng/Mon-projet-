@@ -243,6 +243,7 @@ app.patch('/api/leads/:id', wrap((req, res) => {
     const email = String(req.body.email || '').trim();
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Adresse email invalide.');
     fields.email = email || null;
+    if (email && email !== lead.email) fields.email_info = { found: true, manual: true, source: 'saisi par vous' };
     if (lead.status === 'email_manquant' && email) fields.status = 'pret_a_envoyer';
   }
   updateLead(lead.id, fields);
