@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quantum Edge — Démo</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo">◆</span>
+      <div>
+        <h1>Quantum Edge AI</h1>
+        <p class="sub">Trading multi-agents · budget virtuel 100 $</p>
+      </div>
+    </div>
+    <div class="status">
+      <span id="mode-badge" class="badge">…</span>
+      <span id="conn" class="dot" title="connexion temps réel"></span>
+      <button id="btn-emergency" class="danger">Arrêt d'urgence</button>
+    </div>
+  </header>
+
+  <div id="alert-banner" class="banner hidden"></div>
+
+  <nav class="tabs" role="tablist">
+    <button data-tab="overview" class="active">Vue d'ensemble</button>
+    <button data-tab="market">Marché</button>
+    <button data-tab="agents">Agents</button>
+    <button data-tab="trades">Historique</button>
+    <button data-tab="lab">Laboratoire</button>
+    <button data-tab="risk">Risque</button>
+    <button data-tab="weekly">Semaine</button>
+  </nav>
+
+  <main>
+    <section id="tab-overview" class="tab active">
+      <div class="kpis" id="kpis"></div>
+      <div class="card">
+        <div class="card-h"><h2>Capital du bot</h2><span class="muted" id="equity-note"></span></div>
+        <div id="equity-chart" class="chart"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Positions ouvertes</h2></div>
+        <div id="open-positions"></div>
+      </div>
+    </section>
+
+    <section id="tab-market" class="tab">
+      <div class="card"><div class="card-h"><h2>Opportunités du dernier scan</h2><span class="muted" id="scan-info"></span></div>
+        <div id="opps"></div></div>
+      <div class="card"><div class="card-h"><h2>Derniers prix connus</h2></div><div id="prices"></div></div>
+    </section>
+
+    <section id="tab-agents" class="tab">
+      <p class="muted">La « confiance » est une estimation de cohérence entre agents, pas une probabilité de gain.</p>
+      <div id="agents"></div>
+    </section>
+
+    <section id="tab-trades" class="tab">
+      <div class="card"><div class="card-h"><h2>Trades</h2></div><div id="trades"></div></div>
+      <div class="card"><div class="card-h"><h2>Ordres</h2></div><div id="orders"></div></div>
+    </section>
+
+    <section id="tab-lab" class="tab">
+      <div class="card"><div class="card-h"><h2>Classement des stratégies</h2><span class="muted" id="lab-info"></span></div>
+        <div id="leaderboard"></div></div>
+      <div class="card"><div class="card-h"><h2>Stratégies en production</h2></div><div id="production"></div></div>
+      <div class="card"><div class="card-h"><h2>Dernier backtest hors échantillon</h2></div><div id="backtest"></div></div>
+    </section>
+
+    <section id="tab-risk" class="tab">
+      <div class="kpis" id="risk-kpis"></div>
+      <div class="card"><div class="card-h"><h2>Coupe-circuit</h2></div>
+        <div id="breaker"></div>
+        <form id="resume-form" class="resume hidden">
+          <p>Reprise autorisée uniquement par un humain. Tape exactement : <code id="phrase"></code></p>
+          <input name="phrase" placeholder="phrase de confirmation" autocomplete="off" required>
+          <input name="operator" placeholder="ton nom" required>
+          <input name="note" placeholder="raison (facultatif)">
+          <button type="submit">Autoriser la reprise</button>
+          <span id="resume-msg" class="muted"></span>
+        </form>
+      </div>
+      <div class="card"><div class="card-h"><h2>Portefeuille</h2></div><div id="portfolio"></div></div>
+      <div class="card"><div class="card-h"><h2>Incidents récents</h2></div><div id="events"></div></div>
+    </section>
+
+    <section id="tab-weekly" class="tab">
+      <div id="weekly"></div>
+    </section>
+  </main>
+
+  <footer>Mode DÉMO uniquement · aucun ordre en argent réel n'est possible · les performances passées ou simulées ne préjugent pas des résultats futurs.</footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>

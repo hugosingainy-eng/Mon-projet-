@@ -1,0 +1,7 @@
+# Calendrier des événements macro à haut risque (FOMC, CPI, emploi US...).
+# L'agent macro bloque toute nouvelle position 48 h avant un événement "high".
+# Ne jamais inventer de date : vérifie chaque ligne sur la source officielle.
+#   FOMC : https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+#   CPI / emploi : https://www.bls.gov/schedule/news_release/
+# Mise à jour automatique (best effort) : python scripts/update_macro_calendar.py
+date,event,importance,source

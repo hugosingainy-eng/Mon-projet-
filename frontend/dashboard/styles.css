@@ -1,0 +1,59 @@
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --text: #16191d; --muted: #646b75; --border: #e3e6ea;
+  --accent: #2f5bea; --pos: #11845b; --neg: #c8322f; --warn: #b26a00; --chip: #eef1f5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --surface: #171b21; --text: #e7eaee; --muted: #949ba6; --border: #262c34;
+    --accent: #7c9cff; --pos: #3ccf91; --neg: #ff6b67; --warn: #f0b04a; --chip: #20262e;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 14px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.brand { display: flex; gap: 10px; align-items: center; }
+.logo { font-size: 22px; color: var(--accent); }
+h1 { font-size: 17px; margin: 0; } .sub { margin: 0; color: var(--muted); font-size: 12px; }
+h2 { font-size: 14px; margin: 0; }
+.status { display: flex; gap: 10px; align-items: center; }
+.badge { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--chip); }
+.badge.sim { color: var(--warn); } .badge.demo { color: var(--pos); }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.dot.on { background: var(--pos); }
+button { font: inherit; border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+button.danger { background: var(--neg); color: #fff; border-color: var(--neg); font-weight: 600; }
+.banner { padding: 10px 16px; background: var(--neg); color: #fff; font-weight: 600; }
+.banner.warn { background: var(--warn); }
+.hidden { display: none !important; }
+.tabs { display: flex; gap: 4px; padding: 8px 16px; overflow-x: auto; background: var(--surface);
+  border-bottom: 1px solid var(--border); }
+.tabs button { border: none; background: none; color: var(--muted); white-space: nowrap; }
+.tabs button.active { color: var(--accent); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); border-radius: 0; }
+main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.tab { display: none; } .tab.active { display: block; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+.kpi .l { color: var(--muted); font-size: 12px; } .kpi .v { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pos { color: var(--pos); } .neg { color: var(--neg); } .warn { color: var(--warn); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 14px; }
+.card-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.muted { color: var(--muted); font-size: 12px; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { color: var(--muted); font-weight: 500; font-size: 12px; }
+td.wrap { white-space: normal; min-width: 220px; }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--chip); font-size: 12px; }
+.chip.support { color: var(--pos); } .chip.oppose, .chip.veto { color: var(--neg); } .chip.unavailable { color: var(--warn); }
+.decision { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; background: var(--surface); }
+.decision h3 { margin: 0 0 6px; font-size: 14px; }
+.chart svg { width: 100%; height: 220px; display: block; }
+.empty { color: var(--muted); padding: 18px 4px; }
+.resume { display: grid; gap: 8px; margin-top: 10px; max-width: 520px; }
+input { font: inherit; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
+code { background: var(--chip); padding: 1px 6px; border-radius: 6px; }
+footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px 16px 30px; }
+@media (max-width: 600px) { .kpi .v { font-size: 17px; } main { padding: 12px; } }

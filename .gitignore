@@ -2,7 +2,10 @@ __pycache__/
 *.pyc
 .env
 .venv/
-data/
-state/
-logs/
+venv/
 .pytest_cache/
+data/
+logs/
+reports/
+research/strategy_library/
+!research/README.md
