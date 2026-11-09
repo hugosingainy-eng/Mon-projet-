@@ -25,7 +25,7 @@ Une équipe d'« agents » travaille ensemble :
 | Analyste IA (optionnel) | à chaque sélection | Claude ou Grok lit tous les rapports. **Il peut seulement rendre le bot plus prudent.** |
 | Sentinelle | toutes les 5 min + chaque jour | Coupe une copie qui perd 8 % ou dont le trader change de comportement. Le trader est banni 8 semaines. |
 | Renseignement | chaque semaine / chaque jour | Grands investisseurs (13F), achats du Congrès américain, actualités, et veille X avec Grok. |
-| Simulateur | avant chaque investissement | 10 000 futurs possibles (Monte Carlo). Il donne le feu vert seulement si les chances sont bonnes. |
+| Simulateur | avant chaque investissement | Examine **toutes les équipes possibles** à chaque mise (100 %, 75 %, 50 %), avec **au moins 10 000 futurs simulés pour chaque option** (Monte Carlo). Il donne le feu vert seulement si les chances sont bonnes, et choisit l'option la plus sûre. |
 | Directeur | toujours | Orchestre tout et applique les règles de sécurité. |
 
 ### Les règles de sécurité (codées en dur)

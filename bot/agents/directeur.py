@@ -414,25 +414,47 @@ class Directeur:
             r["ordres"].append({"type": "fermeture", "username": t["username"],
                                 "raison": "moins de place (climat %s)" % climat})
 
-        # 7. Diversification
-        nouveaux, rej = diversification.diversifier(nouveaux, cfg, deja=gardes_actuels)
+        # 7. Diversification : les nouveaux doivent être compatibles avec les copies gardées
+        nouveaux, rej = diversification.diversifier(nouveaux, cfg, deja=gardes_actuels,
+                                                    entre_eux=False)
         r["rejets"] += rej
-        nouveaux = nouveaux[:max(0, n_max - len(gardes_actuels))]
+        pool = nouveaux[:int(cfg["simulateur"].get("max_candidats_explores", 8))]
+        for t in nouveaux[len(pool):]:
+            r["rejets"].append({"username": t["username"], "agent": "Simulateur",
+                                "raison": "hors des %d meilleurs candidats explorés"
+                                % len(pool)})
 
-        # 8. Simulateur
-        equipe = gardes_actuels + nouveaux
-        r["equipe_proposee"] = [t["username"] for t in equipe]
-        mise, alloc, essais = (None, {}, [])
-        if equipe:
-            rendements = self._rendements(equipe, aujourd_hui)
-            usernames = [t["username"] for t in equipe]
+        # 8. Simulateur : TOUTES les équipes possibles x toutes les mises,
+        #    au moins 10 000 futurs simulés pour chacune, avant le moindre ordre.
+        mise, alloc, essais, equipe = None, {}, [], []
+        tous = gardes_actuels + pool
+        if tous and n_max > 0:
+            rendements = self._rendements(tous, aujourd_hui)
+            usernames = [t["username"] for t in tous]
             matrice, _ = simulateur.aligner(rendements, usernames,
                                             cfg["simulateur"]["historique_jours"])
-            mise, alloc, essais = simulateur.decider(
-                matrice, lambda m: self._allocation(equipe, total * m, actuelles), cap, cfg,
-                usernames)
-        r["simulateur"] = essais
+            equipes = simulateur.options_possibles(
+                gardes_actuels, pool, n_max,
+                lambda a, b: diversification.compatibles(a, b, cfg))
+            meilleure, essais = simulateur.explorer(
+                equipes, matrice, usernames,
+                lambda eq, m: self._allocation(eq, total * m, actuelles), cap, cfg)
+            if meilleure:
+                mise, alloc = meilleure["mise"], meilleure["allocation"]
+                equipe = [t for t in tous if t["username"] in alloc]
+        r["equipe_proposee"] = [t["username"] for t in equipe]
+        r["simulateur"] = sorted(essais, key=lambda o: (-o["feu_vert"], -o["mise"],
+                                                        -o.get("pire_5", -9)))
+        r["nb_options"] = len(essais)
+        r["nb_futurs"] = sum(o.get("nb_simulations", 0) for o in essais)
         r["feu_vert"] = mise is not None
+        if mise is not None:
+            # Les copies actuelles qui ne font pas partie de la meilleure option sont fermées
+            for t in gardes_actuels:
+                if t["username"] not in alloc:
+                    self.fermer(actuelles[t["username"]][0], "pas dans la meilleure option")
+                    r["ordres"].append({"type": "fermeture", "username": t["username"],
+                                        "raison": "pas dans la meilleure option"})
 
         # 9. Ordres
         if mise is None:

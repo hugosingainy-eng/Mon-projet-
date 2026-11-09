@@ -36,20 +36,28 @@ def ecrire_rapport(r, chemin):
     if not essais:
         L += ["Aucune simulation (pas d'équipe à tester).", ""]
     else:
-        L += ["| Mise | Chances de gagner | Risque d'arrêt -5 % | Médiane | Pire 5 % | "
-              "Meilleur 5 % | Verdict |", "|---|---|---|---|---|---|---|"]
-        for e in essais:
+        L += ["**%d options examinées, %s futurs simulés au total** (au moins 10 000 par "
+              "option) avant de passer le moindre ordre." % (
+                  r.get("nb_options", len(essais)),
+                  "{:,}".format(r.get("nb_futurs", 0)).replace(",", " ")), "",
+              "Les 10 meilleures options :", "",
+              "| Équipe | Mise | Chances de gagner | Risque d'arrêt -5 % | Médiane | "
+              "Pire 5 % | Meilleur 5 % | Verdict |", "|---|---|---|---|---|---|---|---|"]
+        for e in essais[:10]:
+            equipe = ", ".join(e.get("equipe") or []) or "—"
             if not e.get("valide"):
-                L.append("| %s | — | — | — | — | — | %s |" % (_p(e.get("mise")),
-                                                             e.get("raison", "invalide")))
+                L.append("| %s | %s | — | — | — | — | — | %s |" % (
+                    equipe, _p(e.get("mise")), e.get("raison", "invalide")))
                 continue
-            L.append("| %s | %s | %s | %s | %s | %s | %s |" % (
-                _p(e["mise"]), _p(e["chance_gain"]), _p(e["risque_arret"]), _pct(e["mediane"]),
-                _pct(e["pire_5"]), _pct(e["meilleur_5"]),
+            L.append("| %s | %s | %s | %s | %s | %s | %s | %s |" % (
+                equipe, _p(e["mise"]), _p(e["chance_gain"]), _p(e["risque_arret"]),
+                _pct(e["mediane"]), _pct(e["pire_5"]), _pct(e["meilleur_5"]),
                 "FEU VERT" if e.get("feu_vert") else "refusé"))
         L.append("")
-        L.append("**Décision :** %s" % ("feu vert" if r.get("feu_vert") else
-                                        "feu rouge, aucune nouvelle copie"))
+        if r.get("feu_vert"):
+            L.append("**Décision :** feu vert pour %s." % ", ".join(r.get("equipe_proposee", [])))
+        else:
+            L.append("**Décision :** feu rouge, aucune nouvelle copie.")
         L.append("")
 
     ia = r.get("ia") or {}

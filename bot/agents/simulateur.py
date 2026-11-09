@@ -12,11 +12,15 @@ Sinon on réessaie avec une mise de 75 %, puis 50 %. Sinon : aucune nouvelle cop
 Limite : le passé ne garantit pas l'avenir. Le Monte Carlo ne fait que
 remélanger ce qui est déjà arrivé.
 """
+import itertools
 import logging
 
 import numpy as np
 
 log = logging.getLogger("simulateur")
+
+# Codé en dur : jamais moins de 10 000 futurs simulés par option examinée.
+NB_MIN_SIMULATIONS = 10000
 
 
 def aligner(rendements_par_trader, usernames, max_jours=None):
@@ -37,7 +41,7 @@ def simuler(matrice, montants, budget, cfg_s, perte_max_pct=0.05, nb=None, jours
 
     Renvoie un dict de statistiques en fraction du budget.
     """
-    nb = int(nb or cfg_s.get("nb_simulations", 10000))
+    nb = max(int(nb or cfg_s.get("nb_simulations", NB_MIN_SIMULATIONS)), NB_MIN_SIMULATIONS)
     jours = int(jours or cfg_s.get("jours", 63))
     bloc = int(cfg_s.get("taille_bloc", 20))
     rng = np.random.default_rng(cfg_s.get("graine") if graine is None else graine)
@@ -103,3 +107,56 @@ def decider(matrice, allocation_pour, budget, cfg, usernames):
             return mise, alloc, essais
     log.info("Simulateur : feu ROUGE, aucune nouvelle copie")
     return None, {}, essais
+
+
+def options_possibles(gardes, nouveaux, n_max, compatibles):
+    """Toutes les équipes possibles : les copies gardées + 0 à n places de nouveaux,
+    en respectant la Diversification entre chaque paire."""
+    places = max(0, n_max - len(gardes))
+    vues = []
+    for k in range(min(places, len(nouveaux)), -1, -1):
+        for combo in itertools.combinations(nouveaux, k):
+            equipe = list(gardes) + list(combo)
+            if not equipe:
+                continue
+            ok = all(compatibles(a, b) for a, b in itertools.combinations(equipe, 2))
+            if ok:
+                vues.append(equipe)
+    return vues
+
+
+def explorer(equipes, matrice, usernames, allocation_pour, budget, cfg):
+    """Examine CHAQUE équipe possible à CHAQUE mise (100 %, 75 %, 50 %), avec au moins
+    10 000 futurs simulés à chaque fois, sur les mêmes tirages (comparaison équitable).
+
+    Parmi les options qui ont le feu vert, on garde la plus grosse mise, puis celle
+    dont le « pire 5 % » est le moins mauvais (profil prudent), puis la meilleure
+    chance de gagner. Renvoie (meilleure option ou None, liste de toutes les options).
+    """
+    cfg_s = cfg["simulateur"]
+    perte = cfg["securite"]["perte_max_pct"]
+    examinees = []
+    for equipe in equipes:
+        noms = [t["username"] for t in equipe]
+        for mise in cfg_s.get("mises_essayees", [1.0, 0.75, 0.5]):
+            alloc = allocation_pour(equipe, mise)
+            if not alloc:
+                continue
+            colonnes = [usernames.index(u) for u in alloc]
+            stats = simuler(matrice[:, colonnes], [alloc[u] for u in alloc], budget, cfg_s,
+                            perte)
+            stats.update({"mise": mise, "equipe": list(alloc), "allocation": alloc,
+                          "feu_vert": feu_vert(stats, cfg_s), "proposee": noms})
+            examinees.append(stats)
+    vertes = [o for o in examinees if o["feu_vert"]]
+    total = sum(o.get("nb_simulations", 0) for o in examinees)
+    if not vertes:
+        log.info("Simulateur : %d options examinées (%d futurs simulés), aucune n'a le "
+                 "feu vert", len(examinees), total)
+        return None, examinees
+    meilleure = max(vertes, key=lambda o: (o["mise"], o["pire_5"], o["chance_gain"]))
+    log.info("Simulateur : %d options examinées (%d futurs simulés). Choix : %s à %.0f %% "
+             "(gain %.0f %%, arrêt %.0f %%)", len(examinees), total,
+             ", ".join(meilleure["equipe"]), 100 * meilleure["mise"],
+             100 * meilleure["chance_gain"], 100 * meilleure["risque_arret"])
+    return meilleure, examinees

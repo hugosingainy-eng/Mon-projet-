@@ -76,3 +76,45 @@ def test_aligner_dates():
 def test_historique_trop_court():
     s = stats(np.zeros((5, 3)))
     assert s["valide"] is False
+
+
+def test_minimum_10000_simulations_code_en_dur():
+    s = simulateur.simuler(matrice(0.001, 0.01), [200, 200, 200], 600,
+                           {"nb_simulations": 50, "jours": 63, "taille_bloc": 20, "graine": 1})
+    assert s["nb_simulations"] == 10000
+
+
+def test_toutes_les_options_sont_examinees(cfg):
+    def t(nom, poids):
+        return {"username": nom, "deja_copie": False, "score": 1.0,
+                "portefeuille": {"poids": poids}}
+    a, b, c, d = t("a", {1: 1.0}), t("b", {2: 1.0}), t("c", {3: 1.0}), t("d", {1: 1.0})
+    from bot.agents import diversification
+    equipes = simulateur.options_possibles([], [a, b, c, d], 3,
+                                           lambda x, y: diversification.compatibles(x, y, cfg))
+    noms = sorted(tuple(sorted(x["username"] for x in e)) for e in equipes)
+    # a et d ont 100 % en commun : jamais ensemble
+    assert ("a", "d") not in noms and ("a", "b", "c") in noms and ("b", "c", "d") in noms
+    assert len(noms) == 2 + 5 + 4      # 2 trios, 5 paires, 4 solos
+
+
+def test_explorer_choisit_l_option_la_plus_sure(cfg):
+    rng = np.random.default_rng(5)
+    stable = rng.normal(0.0008, 0.003, size=(504, 2))
+    volatil = rng.normal(0.0015, 0.03, size=(504, 1))
+    m = np.hstack([stable, volatil])
+    usernames = ["s1", "s2", "v"]
+    equipes = [[{"username": u} for u in e] for e in (["s1", "s2", "v"], ["s1", "s2"], ["v"])]
+    meilleure, options = simulateur.explorer(
+        equipes, m, usernames, lambda eq, mise: {x["username"]: 300 * mise / len(eq) * 2
+                                                 for x in eq}, 600, cfg)
+    assert len(options) == 9                                   # 3 équipes x 3 mises
+    assert all(o["nb_simulations"] >= 10000 for o in options)
+    assert meilleure["equipe"] == ["s1", "s2"] and meilleure["mise"] == 1.0
+
+
+def test_aucune_option_verte(cfg):
+    m = matrice(-0.003, 0.02)
+    meilleure, options = simulateur.explorer([[{"username": "a"}]], m[:, :1], ["a"],
+                                             lambda eq, mise: {"a": 200 * mise}, 600, cfg)
+    assert meilleure is None and len(options) == 3
