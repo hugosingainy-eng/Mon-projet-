@@ -1,0 +1,7 @@
+numpy>=1.26
+pandas>=2.1
+requests>=2.31
+python-dotenv>=1.0
+# Optionnel : données historiques gratuites pour le backtest
+yfinance>=0.2.40
+pytest>=8.0
