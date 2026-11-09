@@ -143,3 +143,15 @@ def test_fermeture_ratee_reessayee(directeur, api, aujourd_hui):
     api.copie_fermer = vraie
     directeur.cycle_controle()
     assert directeur.etat.copies_ouvertes() == {} and api.mirrors == {}
+
+
+def test_test_api(tmp_path):
+    api = FausseAPI(bons_traders())
+    code, txt = lancer(tmp_path, api, "--test-api")
+    assert code == 0 and "les clés fonctionnent" in txt and api.appels_ordres() == []
+
+    def refus():
+        raise RuntimeError("401 non autorisé")
+    api.portefeuille = refus
+    code, txt = lancer(tmp_path, api, "--test-api")
+    assert code == 1 and "401" in txt

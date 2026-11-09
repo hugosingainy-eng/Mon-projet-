@@ -8,6 +8,7 @@
   --reset        réarme le bot après un arrêt
   --backtest     rejeu historique + Monte Carlo, sans aucun ordre
   --chat         discuter avec le bot dans le terminal
+  --test-api     vérifie vos clés eToro (lecture seule)
 """
 import argparse
 import datetime as dt
@@ -105,6 +106,37 @@ def afficher_statut(cfg, dry_run, sortie=print):
     sortie(chat.statut())
 
 
+def tester_api(api, cfg, sortie=print):
+    """Lecture seule : vérifie que les clés marchent et affiche les unités reçues."""
+    from .donnees import mirrors, normaliser_trader
+    ok = True
+    sortie("Test de l'API eToro en mode %s (lecture seule, aucun ordre)" % cfg["mode"].upper())
+    try:
+        pf = api.portefeuille()
+        sortie("✅ Portefeuille : OK (crédit %s, %d copie(s) en cours)" % (
+            pf.get("credit"), len(mirrors(pf))))
+    except Exception as exc:  # noqa: BLE001
+        ok = False
+        sortie("❌ Portefeuille : %s" % exc)
+        sortie("   -> Vérifiez les deux clés, et que la clé est bien pour l'environnement "
+               "%s." % ("DEMO" if cfg["mode"] == "demo" else "REAL"))
+    try:
+        lignes = api.classement(page=1, taille=5, periode=cfg["recruteur"]["periode"])
+        sortie("✅ Classement : OK (%d traders lus)" % len(lignes))
+        for l in lignes[:3]:
+            t = normaliser_trader(l, cfg)
+            sortie("   %s : gain brut=%r, chute brute=%r, mois gagnants bruts=%r" % (
+                t["username"], l.get("gain"), l.get("peakToValley"),
+                l.get("profitableMonthsPct")))
+        if lignes:
+            sortie("   Champs reçus : %s" % ", ".join(sorted(lignes[0].keys())))
+    except Exception as exc:  # noqa: BLE001
+        ok = False
+        sortie("❌ Classement : %s" % exc)
+    sortie("Résultat : %s" % ("les clés fonctionnent ✅" if ok else "problème ❌ (voir ci-dessus)"))
+    return 0 if ok else 1
+
+
 def main(argv=None, api=None, outils=None, client_ia=None, sortie=print):
     p = argparse.ArgumentParser(prog="python -m bot.main",
                                 description="Bot de copy trading eToro (démo d'abord).")
@@ -115,6 +147,8 @@ def main(argv=None, api=None, outils=None, client_ia=None, sortie=print):
     p.add_argument("--reset", action="store_true", help="réarme le bot après un arrêt")
     p.add_argument("--backtest", action="store_true", help="rejeu historique + Monte Carlo")
     p.add_argument("--chat", action="store_true", help="discuter avec le bot")
+    p.add_argument("--test-api", action="store_true",
+                   help="vérifie vos clés eToro (lecture seule, aucun ordre)")
     p.add_argument("--config", default="config.yaml")
     p.add_argument("--env", default=".env")
     a = p.parse_args(argv)
@@ -154,6 +188,12 @@ def main(argv=None, api=None, outils=None, client_ia=None, sortie=print):
         sortie("Clés eToro manquantes : copiez .env.example en .env et remplissez "
                "ETORO_API_KEY et ETORO_USER_KEY (voir README).")
         return 2
+
+    if a.test_api:
+        from .etoro_client import EtoroClient
+        api = api or EtoroClient(sec["ETORO_API_KEY"], sec["ETORO_USER_KEY"], cfg["mode"],
+                                 cfg["api"])
+        return tester_api(api, cfg, sortie)
 
     if a.backtest:
         from .backtest import lancer_backtest

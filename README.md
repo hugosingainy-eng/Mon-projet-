@@ -113,6 +113,7 @@ Toutes s'écrivent `python -m bot.main ...` (ou `.venv/bin/python -m bot.main ..
 | `--reset` | Réarme le bot après un arrêt. La limite de −5 % repart de zéro. |
 | `--backtest` | Rejeu historique et Monte Carlo, **sans aucun ordre**. Le rapport va dans `data/backtest.md`. |
 | `--chat` | Discuter avec le bot dans le terminal. |
+| `--test-api` | Vérifie vos clés eToro (lecture seule, aucun ordre). À lancer en premier. |
 
 **Rythme de la boucle :**
 - toutes les 5 minutes : sécurité, Sentinelle et contrôle rapide du marché ;
