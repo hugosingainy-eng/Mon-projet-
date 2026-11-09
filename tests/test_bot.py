@@ -132,3 +132,62 @@ def test_client_refuses_missing_keys_and_real_routes():
     c = EtoroDemoClient("a", "b")
     with pytest.raises(RuntimeError):
         c._req("GET", "/api/v1/trading/info/real/portfolio")
+
+
+# ------------------------------------------------------------------ agent Grok
+from etoro_bot.agents.base import Decision, HistoryReport, MonteCarloReport, RegimeReport
+from etoro_bot.agents.grok import GrokAgent, GrokReport, apply_grok, parse_report
+
+
+def _dec(direction=+1):
+    c = Candidate("NVDA", "turtle_breakout", "Turtles", direction, 100.0, 0.04, 0.08, 0.02, 0.0015, "2026-11-09")
+    return Decision(c, HistoryReport(), MonteCarloReport(), RegimeReport(), approved=True, conviction=0.5)
+
+
+def test_parse_grok_json_with_surrounding_text():
+    rep = parse_report('Voici : {"sentiment": 0.4, "event_risk": "LOW", "earnings_in_days": null,'
+                       ' "key_events": ["a"], "veto": false, "summary": "ok"} fin')
+    assert rep.used and rep.sentiment == 0.4 and rep.event_risk == "low" and rep.earnings_in_days is None
+
+
+def test_grok_veto_on_earnings_and_bad_sentiment():
+    d = _dec()
+    apply_grok(d, GrokReport(used=True, sentiment=0.2, event_risk="low", earnings_in_days=5), 15)
+    assert not d.approved and "résultats" in d.reasons[0]
+    d = _dec(direction=-1)
+    apply_grok(d, GrokReport(used=True, sentiment=0.8, event_risk="low"), 15)
+    assert not d.approved  # short alors que l'actualité est très positive
+
+
+def test_grok_only_adjusts_conviction_when_fine():
+    d = _dec()
+    apply_grok(d, GrokReport(used=True, sentiment=1.0, event_risk="low"), 15)
+    assert d.approved and d.conviction == pytest.approx(0.6)
+    d = _dec()
+    apply_grok(d, GrokReport(used=False, error="down"), 15)
+    assert d.approved and d.conviction == 0.5   # Grok indisponible -> rien ne change
+
+
+def test_grok_agent_calls_responses_api(monkeypatch):
+    sent = {}
+
+    class R:
+        def raise_for_status(self): pass
+        def json(self):
+            return {"output": [
+                {"type": "x_search_call"}, {"type": "web_search_call"},
+                {"type": "message", "content": [{"type": "output_text", "text":
+                    '{"sentiment": -0.1, "event_risk": "medium", "earnings_in_days": 30,'
+                    ' "key_events": [], "veto": false, "summary": "calme"}'}]}]}
+
+    def fake_post(url, json, timeout, headers):
+        sent.update(url=url, body=json, headers=headers)
+        return R()
+
+    monkeypatch.setattr("etoro_bot.agents.grok.requests.post", fake_post)
+    agent = GrokAgent(api_key="k", model="grok-test")
+    rep = agent.ask(_dec().candidate, 15)
+    assert sent["url"].endswith("/responses") and sent["headers"]["Authorization"] == "Bearer k"
+    assert {t["type"] for t in sent["body"]["tools"]} == {"x_search", "web_search"}
+    assert rep.used and rep.event_risk == "medium" and rep.sources == 2
+    assert not GrokAgent(api_key="").enabled

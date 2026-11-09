@@ -72,6 +72,7 @@ class Decision:
     conviction: float = 0.0
     reasons: list = field(default_factory=list)
     amount: float = 0.0               # montant en $ décidé par le risk manager
+    grok: object = None               # avis de l'agent Grok (actualités / sentiment)
 
     def to_dict(self) -> dict:
         d = asdict(self)

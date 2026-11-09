@@ -7,6 +7,7 @@ import time
 from datetime import datetime, timezone
 
 from .agents.committee import Committee, find_candidates
+from .agents.grok import GrokAgent, apply_grok
 from .agents.history import SetupLibrary
 from .agents.risk import PortfolioState, risk_gate, size_position
 from .broker import EtoroDemoBroker, Ledger, PaperBroker
@@ -60,6 +61,7 @@ class TradingBot:
         else:
             self.broker = PaperBroker(ledger)
         self.client = client
+        self.grok = GrokAgent()
         self.last_scan_day = ledger.d.get("last_scan_day", "")
 
     def log(self, msg):
@@ -112,6 +114,7 @@ class TradingBot:
         friday_cutoff = now.weekday() == 4 and now.hour >= cfg.no_new_trades_friday_after_utc
         with Committee(lib, cfg) as com:
             decisions = com.review(cands)
+        self.consult_grok(decisions)
         for d in decisions:
             c = d.candidate
             verdict = "✅ VALIDÉ" if d.approved else "❌ rejeté"
@@ -132,6 +135,25 @@ class TradingBot:
                  f"positions ouvertes : {len(led.positions)} | {com.total_paths:,} simulations "
                  f"Monte-Carlo en {time.time() - t0:.1f}s")
         self.last_scan_day = led.d["last_scan_day"]
+
+    def consult_grok(self, decisions):
+        """Grok n'enquête que sur les trades déjà validés par les chiffres (coût maîtrisé)."""
+        approved = [d for d in decisions if d.approved]
+        if not approved:
+            return
+        if not self.grok.enabled:
+            self.log("  [grok] XAI_API_KEY absente : pas d'analyse des actualités")
+            return
+        for d in approved:
+            rep = self.grok.ask(d.candidate, self.cfg.sim.horizon_bars)
+            apply_grok(d, rep, self.cfg.sim.horizon_bars)
+            c = d.candidate
+            if rep.used:
+                self.log(f"  [grok] {c.symbol}: sentiment {rep.sentiment:+.2f}, risque {rep.event_risk}, "
+                         f"{rep.sources} recherches X/web -> {'OK' if d.approved else 'VETO'} | {rep.summary}")
+            else:
+                self.log(f"  [grok] {c.symbol}: indisponible ({rep.error}), décision inchangée")
+        decisions.sort(key=lambda d: (d.approved, d.conviction, d.mc.expected_r), reverse=True)
 
     def report(self):
         led = self.broker.ledger

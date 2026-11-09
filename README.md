@@ -44,6 +44,11 @@ si l'espérance reste positive même dans les scénarios pessimistes.
  Comité           ── vote : UN seul critère rouge suffit à rejeter
           │
           ▼
+ Agent Grok (xAI) ── enquête en temps réel sur X/Twitter et le web pour chaque trade
+          │           validé : résultats à venir, procès, rumeurs, sentiment.
+          │           Peut mettre un VETO ou ajuster la taille de ±20 %, jamais
+          │           déclencher un trade seul. Facultatif (clé XAI_API_KEY).
+          ▼
  Risk manager     ── taille de position (1 à 2 % de risque, ¼ Kelly, 30 % max/ligne,
                       5 positions max, -6 %/semaine → pause, -20 % → arrêt total)
 ```
@@ -68,6 +73,21 @@ cp .env.example .env      # puis remplis tes clés
 2. Va dans **Paramètres → Trading → API Key Management** et crée une clé.
    Choisis l'environnement **Virtual/Demo** avec la permission **Write**.
 3. Mets `ETORO_API_KEY` et `ETORO_USER_KEY` dans `.env`.
+
+### Activer l'agent Grok (facultatif, recommandé)
+1. Crée une clé API sur https://console.x.ai (payant à l'usage : quelques centimes
+   par trade analysé, car Grok n'est consulté que pour les trades déjà validés).
+2. Mets `XAI_API_KEY` dans `.env`. Tu peux changer de modèle avec `GROK_MODEL`
+   (par défaut `grok-4.7` ; vérifie la liste à jour sur https://docs.x.ai).
+
+Grok bloque un trade si :
+- des résultats trimestriels tombent pendant la durée du trade (risque de gap) ;
+- il voit un risque d'événement élevé ;
+- le sentiment est fortement opposé au trade ;
+- il met lui-même un veto.
+
+Il n'est **pas** utilisé dans le backtest, car il connaît déjà l'issue des dates
+passées : ce serait tricher.
 
 ## Utilisation
 
