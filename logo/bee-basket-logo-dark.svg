@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="ball" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFB627"/>
+      <stop offset="0.55" stop-color="#FF8A00"/>
+      <stop offset="1" stop-color="#F25C05"/>
+    </linearGradient>
+    <linearGradient id="wing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFB627" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FFB627" stop-opacity="0.02"/>
+    </linearGradient>
+    <clipPath id="ballClip"><circle cx="512" cy="500" r="132"/></clipPath>
+  </defs>
+
+  <rect width="1024" height="1024" fill="#121419"/>
+
+  <g transform="translate(512 455) scale(0.84) translate(-512 -490)">
+  <!-- Hexagon frame (honeycomb / technical) -->
+  <g fill="none" stroke="#FFFFFF" stroke-linejoin="round">
+    <polygon points="512,118 834,304 834,676 512,862 190,676 190,304" stroke-width="3" stroke-opacity="0.12"/>
+    <polygon points="512,140 815,315 815,665 512,840 209,665 209,315" stroke-width="2" stroke-opacity="0.08" stroke-dasharray="4 10"/>
+  </g>
+  <!-- corner ticks -->
+  <g stroke="#FF8A00" stroke-width="6" stroke-linecap="round">
+    <line x1="512" y1="104" x2="512" y2="132"/>
+    <line x1="512" y1="848" x2="512" y2="876"/>
+  </g>
+
+  <g stroke="#F4F1EA" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Antennae: angular, circuit-like -->
+    <polyline points="486,300 462,240 418,216" stroke-width="16"/>
+    <polyline points="538,300 562,240 606,216" stroke-width="16"/>
+    <circle cx="410" cy="212" r="14" fill="#FF8A00" stroke-width="10"/>
+    <circle cx="614" cy="212" r="14" fill="#FF8A00" stroke-width="10"/>
+
+    <!-- Wings: geometric hexagonal cells -->
+    <g stroke-width="18" fill="url(#wing)">
+      <!-- upper left -->
+      <path d="M396,430 L300,352 L232,352 L196,410 L232,468 L382,476 Z"/>
+      <!-- lower left -->
+      <path d="M386,520 L282,516 L238,568 L270,624 L340,628 L398,572 Z"/>
+      <!-- upper right -->
+      <path d="M628,430 L724,352 L792,352 L828,410 L792,468 L642,476 Z"/>
+      <!-- lower right -->
+      <path d="M638,520 L742,516 L786,568 L754,624 L684,628 L626,572 Z"/>
+    </g>
+    <!-- wing veins -->
+    <g stroke-width="6" stroke="#FF8A00" stroke-opacity="0.55">
+      <line x1="232" y1="410" x2="360" y2="440"/>
+      <line x1="792" y1="410" x2="664" y2="440"/>
+      <line x1="270" y1="572" x2="372" y2="556"/>
+      <line x1="754" y1="572" x2="652" y2="556"/>
+    </g>
+  </g>
+
+  <!-- Head: hexagon with stripe -->
+  <g stroke="#F4F1EA" stroke-width="18" stroke-linejoin="round">
+    <polygon points="512,268 568,300 568,346 512,378 456,346 456,300" fill="#121419"/>
+    <rect x="462" y="316" width="100" height="14" fill="#FF8A00" stroke="none"/>
+  </g>
+
+  <!-- Body: basketball -->
+  <circle cx="512" cy="500" r="132" fill="url(#ball)"/>
+  <g clip-path="url(#ballClip)" fill="none" stroke="#F4F1EA" stroke-width="14" stroke-linecap="round">
+    <line x1="512" y1="360" x2="512" y2="640"/>
+    <line x1="372" y1="500" x2="652" y2="500"/>
+    <path d="M420,392 C468,440 468,560 420,608"/>
+    <path d="M604,392 C556,440 556,560 604,608"/>
+  </g>
+  <!-- light highlight -->
+  <path d="M430,430 A100,100 0 0 1 480,388" fill="none" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="512" cy="500" r="132" fill="none" stroke="#F4F1EA" stroke-width="18"/>
+
+  <!-- Abdomen: chevron segments + stinger -->
+  <g stroke="#F4F1EA" stroke-width="18" stroke-linejoin="round">
+    <path d="M440,640 L584,640 L556,690 L468,690 Z" fill="#FF8A00"/>
+    <path d="M474,700 L550,700 L512,752 Z" fill="#F4F1EA"/>
+  </g>
+  <line x1="512" y1="752" x2="512" y2="784" stroke="#F4F1EA" stroke-width="10" stroke-linecap="round"/>
+
+  </g>
+
+  <!-- Wordmark -->
+  <text x="512" y="900" text-anchor="middle" font-family="Inter, 'Inter Display', Montserrat, Arial, sans-serif" font-weight="900" font-size="96" letter-spacing="2" fill="#F4F1EA">BEE<tspan fill="#FF8A00" font-weight="900">·</tspan>BASKET</text>
+  <text x="512" y="956" text-anchor="middle" font-family="'JetBrains Mono', 'Roboto Mono', monospace" font-weight="500" font-size="28" letter-spacing="10" fill="#F4F1EA" fill-opacity="0.75">FAMILY / SPORT / SANTÉ</text>
+</svg>
