@@ -94,7 +94,11 @@ def executer_commandes(directeur, dossier):
             continue
         etat = directeur.etat
         if action == "stop":
-            directeur.fermer_tout("stop demandé par le chat")
+            try:
+                directeur.synchroniser()  # copies déjà fermées par --stop : marquées fermées
+            except Exception as exc:  # noqa: BLE001
+                log.warning("Synchronisation avant arrêt impossible (%s)", exc)
+            directeur.fermer_tout("stop demandé")
             etat.declencher_arret("arrêt manuel demandé par le chat")
         elif action == "pause":
             etat.data["pause"] = True

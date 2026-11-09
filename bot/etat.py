@@ -162,6 +162,22 @@ class Etat:
         self.data["arret"] = {"actif": False, "raison": None, "date": None}
         self.data["pnl_realise"] = 0.0
         self.data["pause"] = False
+        self.data["reset_le"] = iso(maintenant())
+
+    def prendre_reset_du_disque(self):
+        """Si `--reset` a été lancé pendant que la boucle tourne, la boucle l'applique
+        (sinon elle écraserait le fichier avec son ancien état)."""
+        try:
+            with open(self.chemin, encoding="utf-8") as fh:
+                disque = json.load(fh)
+        except (OSError, ValueError):
+            return False
+        if (disque.get("reset_le") or "") > (self.data.get("reset_le") or ""):
+            self.reinitialiser_arret()
+            self.data["reset_le"] = disque["reset_le"]
+            log.info("--reset détecté : le bot est réarmé")
+            return True
+        return False
 
     def bannir(self, username, semaines, raison=""):
         fin = maintenant() + dt.timedelta(weeks=semaines)

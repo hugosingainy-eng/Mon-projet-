@@ -211,6 +211,11 @@ class Directeur:
     def cycle_controle(self):
         """Toutes les 5 minutes : sécurité, Sentinelle, contrôle rapide du marché."""
         if self.etat.arret_actif:
+            if self.etat.copies_ouvertes():
+                # Une fermeture a échoué pendant l'arrêt : on réessaie à chaque cycle.
+                self.synchroniser()
+                self.fermer_tout("arrêt d'urgence (nouvel essai)")
+                self.etat.sauvegarder()
             log.info("Bot arrêté (%s). Lancez --reset pour le réarmer.",
                      self.etat.data["arret"]["raison"])
             return

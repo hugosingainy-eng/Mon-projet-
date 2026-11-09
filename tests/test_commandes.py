@@ -110,3 +110,36 @@ def test_telegram_ne_repond_qu_au_proprietaire(tmp_path, directeur):
     assert s.envois == []
     assert "Mode" in tg.traiter({"message": {"chat": {"id": 123}, "text": "statut"}})
     assert s.envois[0]["chat_id"] == "123"
+
+
+def test_stop_et_reset_pendant_que_la_boucle_tourne(tmp_path):
+    """La boucle (processus 1) tourne ; --stop puis --reset sont lancés à côté."""
+    from bot.config import charger_config
+    from bot.main import construire
+    from bot.chat import executer_commandes
+    args = config(tmp_path)
+    api = FausseAPI(bons_traders())
+    cfg = charger_config(args[1], args[3])
+    boucle = construire(cfg, False, api=api, outils=FauxOutils(), client_ia=None)
+    un_cycle(boucle, forcer_selection=True)
+    assert len(boucle.etat.copies_ouvertes()) == 3
+    lancer(tmp_path, api, "--stop")                 # processus 2
+    assert api.mirrors == {}
+    executer_commandes(boucle, str(tmp_path / "data" / "commandes"))
+    un_cycle(boucle)
+    assert boucle.etat.arret_actif                  # la boucle a bien pris l'arrêt
+    lancer(tmp_path, api, "--reset")                # processus 3
+    un_cycle(boucle, forcer_selection=True)
+    assert not boucle.etat.arret_actif
+    assert len(api.mirrors) == 3
+
+
+def test_fermeture_ratee_reessayee(directeur, api, aujourd_hui):
+    directeur.selection(aujourd_hui)
+    vraie = api.copie_fermer
+    api.copie_fermer = lambda *a: (_ for _ in ()).throw(ConnectionError("coupure"))
+    directeur.arret_urgence("test")
+    assert len(directeur.etat.copies_ouvertes()) == 3 and directeur.etat.arret_actif
+    api.copie_fermer = vraie
+    directeur.cycle_controle()
+    assert directeur.etat.copies_ouvertes() == {} and api.mirrors == {}

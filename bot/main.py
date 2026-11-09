@@ -63,6 +63,7 @@ def analyse_due(directeur):
 def un_cycle(directeur, forcer_selection=False):
     """Un tour de boucle. Ne lève jamais : une erreur passagère est journalisée."""
     try:
+        directeur.etat.prendre_reset_du_disque()
         directeur.cycle_controle()
         change = False
         if analyse_due(directeur):
@@ -136,6 +137,8 @@ def main(argv=None, api=None, outils=None, client_ia=None, sortie=print):
         etat = Etat(chemin_data(cfg, "etat", a.dry_run))
         etat.reinitialiser_arret()
         etat.sauvegarder()
+        from .chat import lire_commandes
+        lire_commandes(dossier_cmd)  # oublie un ancien « stop » resté en attente
         sortie("Bot réarmé. La limite de perte de -5 % repart de zéro.")
         return 0
     if a.chat:
@@ -164,6 +167,9 @@ def main(argv=None, api=None, outils=None, client_ia=None, sortie=print):
 
     directeur = construire(cfg, a.dry_run, api, outils, client_ia)
     if a.stop:
+        from .chat import deposer_commande
+        # Si la boucle tourne déjà ailleurs, elle exécutera aussi cet arrêt.
+        deposer_commande(dossier_cmd, "stop")
         directeur.synchroniser()
         directeur.fermer_tout("--stop")
         directeur.etat.declencher_arret("arrêt manuel (--stop)")

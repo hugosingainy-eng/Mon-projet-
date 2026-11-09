@@ -1,0 +1,17 @@
+# Lancer :   docker compose up -d --build
+# Logs :     docker compose logs -f
+# Statut :   docker compose run --rm bot --status
+# Arrêter :  docker compose run --rm bot --stop
+services:
+  bot:
+    build: .
+    container_name: bot-etoro
+    restart: always            # relance automatique si le bot plante ou si le serveur redémarre
+    env_file: .env             # vos clés (jamais dans l'image)
+    command: []                # ex. ["--dry-run"] pour simuler sans ordre
+    volumes:
+      - ./data:/app/data               # état, logs et rapports gardés sur le serveur
+      - ./config.yaml:/app/config.yaml:ro
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
