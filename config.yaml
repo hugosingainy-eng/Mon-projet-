@@ -1,0 +1,199 @@
+# =====================================================================
+#  Configuration du bot de copy trading eToro
+#  Tout est commenté en français. Modifiez les valeurs, pas les noms.
+#  Les règles de sécurité les plus importantes sont AUSSI codées en dur
+#  dans bot/securite.py : ce fichier peut les rendre plus strictes,
+#  jamais plus laxistes.
+# =====================================================================
+
+# --- Environnement ---------------------------------------------------
+# "demo" = argent fictif (recommandé). "real" = argent réel.
+# Pour "real", il faut AUSSI écrire I_ACCEPT_REAL_MONEY_RISK=oui dans .env
+mode: demo
+
+# --- Budget ----------------------------------------------------------
+# Somme maximale que le bot a le droit d'engager, en dollars.
+# Démo de départ : 600 $ = 3 traders x 200 $.
+budget: 600
+
+copie:
+  nb_traders: 3                 # nombre de traders copiés en même temps
+  montant_min_copie: 200        # minimum eToro par copie (en $)
+  # Réajustement : on ne bouge l'argent d'une copie que si l'écart avec
+  # sa cible dépasse ce pourcentage (évite les petits ordres inutiles).
+  seuil_reajustement: 0.10
+  montant_min_ajustement: 25    # pas d'ajout/retrait plus petit que ça (en $)
+  # "Scale" : on donne un peu plus aux copies qui marchent bien.
+  scaling:
+    actif: true
+    bonus_max: 0.25             # une copie gagnante peut recevoir jusqu'à +25 % de sa part
+    gain_pour_bonus_max: 0.10   # bonus maximal atteint quand la copie gagne +10 %
+  # Si true, les gains RÉALISÉS augmentent le budget utilisable.
+  # Par prudence c'est désactivé : le bot ne dépasse jamais "budget".
+  reinvestir_gains: false
+
+securite:
+  perte_max_pct: 0.05           # arrêt total à -5 % du budget (gains réalisés + latents)
+
+# --- Rythme de la boucle 24h/24 --------------------------------------
+boucle:
+  controle_minutes: 5           # sécurité + Sentinelle + contrôle rapide du marché
+  heure_analyse_quotidienne_utc: 21   # analyse du jour (après la clôture US)
+  jours_entre_selections: 7     # nouvelle sélection chaque semaine
+  pause_apres_erreur_secondes: 60
+
+# --- API eToro -------------------------------------------------------
+api:
+  base_url: "https://public-api.etoro.com"
+  timeout_secondes: 30
+  max_tentatives: 5             # nouvelles tentatives sur erreur passagère
+  backoff_base_secondes: 2      # 2, 4, 8, 16 s...
+  pause_min_secondes: 1.1       # pause minimale entre deux appels
+  limite_par_minute: 60
+  limite_trading_par_minute: 20
+  attente_ordre_secondes: 120   # temps max pour qu'un ordre de copie se termine
+
+# --- Unités (à vérifier sur une vraie réponse eToro) -----------------
+# "pourcent" = 12.5 veut dire 12,5 %.  "decimal" = 0.125 veut dire 12,5 %.
+# Le bot affiche un avertissement dans le log si une unité semble fausse.
+unites:
+  gain_classement: decimal
+  peak_to_valley: pourcent      # la chute est prise en valeur absolue
+  mois_gagnants: pourcent       # profitableMonthsPct
+  gain_mensuel: pourcent        # /gain -> monthly[].gain
+  gain_journalier: pourcent     # /daily-gain
+  tradeinfo_pct: pourcent       # highLeveragePct, copyInvestmentPct, activeWeeksPct
+  portefeuille_pct: pourcent    # investmentPct du portefeuille en direct
+
+# --- 1. Recruteur (chaque semaine) -----------------------------------
+recruteur:
+  periode: OneYearAgo
+  nb_traders_lus: 300
+  taille_page: 100
+  tri: "-copiers"
+  risque_max: 4
+  pic_risque_mensuel_max: 5
+  gain_min: 0.08
+  gain_max: 1.50
+  chute_max: 0.20
+  chute_plancher_score: 0.03    # dans le score : max(chute, 3 %)
+  mois_gagnants_min: 0.60
+  copieurs_min: 200
+  trades_min: 30
+  mois_historique_min: 12
+  pire_mois_min: -0.08          # aucun mois pire que -8 % sur les 12 derniers
+  popular_investor_seulement: true
+  types_refuses: ["smart", "portfolio", "fund"]   # pas de Smart Portfolios
+  nb_verifies_en_detail: 15
+  levier_fort_max: 0.10         # > 10 % de trades à fort levier -> rejet
+  copie_autres_max: 0.50        # copie surtout d'autres traders -> rejet
+  semaines_actives_min: 0.70
+  inactivite_max_jours: 14
+
+# --- 2. Inspecteur (chaque semaine) ----------------------------------
+inspecteur:
+  position_max: 0.35            # pas plus de 35 % sur une seule position
+  levier_max: 0.30              # pas plus de 30 % du portefeuille à levier
+  vente_decouvert_max: 0.30     # pas plus de 30 % en ventes à découvert
+
+# --- 3. Diversification ----------------------------------------------
+diversification:
+  recouvrement_max: 0.40        # refuse deux traders qui ont > 40 % en commun
+
+# --- 4. Marché -------------------------------------------------------
+marche:
+  indices_decisifs: ["SPX500", "NSDQ100"]
+  indices_info: ["GOLD", "BTC"]
+  exposition: {calme: 1.0, tendu: 0.7, stress: 0.4}
+  chute_jour_stress: -0.03      # -3 % dans la journée -> stress immédiat
+  seuils:
+    baisse_depuis_plus_haut_tendu: 0.10
+    baisse_depuis_plus_haut_stress: 0.20
+    ratio_vol_tendu: 1.5        # volatilité 20 j / volatilité 1 an
+    ratio_vol_stress: 2.0
+    variation_5j_tendu: -0.05
+  points_tendu: 2               # score >= 2 -> tendu
+  points_stress: 4              # score >= 4 -> stress
+
+# --- 5. Analyste IA (optionnel) --------------------------------------
+# fournisseur : "claude" (clé ANTHROPIC_API_KEY) ou "grok" (clé XAI_API_KEY).
+# Sans clé, l'IA est désactivée et le bot fonctionne normalement.
+# RÈGLE ABSOLUE : l'IA peut seulement rendre le bot plus prudent.
+ia:
+  fournisseur: claude
+  modele_claude: "claude-opus-5-5"
+  modele_grok: "grok-4"
+  effort: medium
+  recherche_web: true
+  max_recherches: 5
+  timeout_secondes: 300
+  exposition_min: 0.2
+
+# --- 6. Sentinelle ---------------------------------------------------
+sentinelle:
+  perte_copie_max: 0.08         # coupe une copie qui perd 8 % de ce qu'elle a reçu
+  marge_risque: 1               # coupe si risque > risque_max + 1
+  facteur_levier: 2.0           # coupe si le levier moyen double
+  chute_jour_max: -0.05         # coupe si le trader perd 5 % en un jour
+  semaines_bannissement: 8
+
+# --- 7. Renseignement (pack trader-skill, dans vendor/) --------------
+renseignement:
+  dossier_pack: "vendor/trader-skill"
+  timeout_secondes: 180
+  grands_investisseurs:
+    actif: true
+    ciks: {Berkshire: "1067983", "Pershing Square": "1336528", Duquesne: "1536411",
+           Appaloosa: "1656456", Baupost: "1061768", Fundsmith: "1569205",
+           Akre: "1112520", Himalaya: "1709323"}
+    top: 25
+    cache_jours: 7
+    bonus_max: 0.30             # jusqu'à +30 % de score
+  congres:
+    actif: true
+    jours: 30
+    max_documents: 25
+  actualites:
+    actif: true
+    heures: 48
+    tags_risque: ["risk", "legal"]
+    malus_max: 0.30             # jusqu'à -30 % de score
+    seuil_enquete: 0.25         # > 25 % du portefeuille touché -> enquête de l'IA
+    max_tickers: 40
+
+# --- Veille X (Grok uniquement) --------------------------------------
+veille_x:
+  actif: true                   # ne fonctionne que si ia.fournisseur = grok
+  heures: 48
+  malus_max: 0.20
+
+# --- 8. Simulateur (Monte Carlo) -------------------------------------
+simulateur:
+  nb_simulations: 10000
+  jours: 63                     # 3 mois de bourse
+  taille_bloc: 20
+  historique_jours: 504         # 2 ans de rendements journaliers
+  chance_gain_min: 0.60
+  risque_arret_max: 0.20
+  mises_essayees: [1.0, 0.75, 0.5]
+  graine: 42
+
+# --- Backtest --------------------------------------------------------
+backtest:
+  nb_traders: 80
+  annees: 4
+  horizons_jours: {"1 mois": 21, "3 mois": 63, "1 an": 252}
+
+# --- Discussion avec le bot ------------------------------------------
+chat:
+  telegram_actif: true          # nécessite TELEGRAM_BOT_TOKEN et TELEGRAM_CHAT_ID
+  confirmation_stop: true       # "stop" demande une confirmation
+
+# --- Fichiers --------------------------------------------------------
+fichiers:
+  dossier_data: data
+  etat: etat.json
+  etat_dry_run: etat_dry_run.json
+  log: bot.log
+  rapport: rapport.md
+  backtest: backtest.md

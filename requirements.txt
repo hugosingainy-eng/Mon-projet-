@@ -1,0 +1,5 @@
+requests>=2.31
+PyYAML>=6.0
+numpy>=1.26
+anthropic>=2.0      # seulement si vous utilisez l'IA Claude
+pytest>=8.0         # pour lancer les tests

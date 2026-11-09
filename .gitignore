@@ -1,0 +1,13 @@
+# Secrets : ne JAMAIS publier ce fichier
+.env
+
+# Données du bot (état, logs, rapports)
+data/*
+!data/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
