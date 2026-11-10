@@ -1,4 +1,6 @@
-# Origine des skills ig-*
+# Origine des skills installés
+
+## Skills ig-*
 
 Copiés depuis https://github.com/Jakeschincariol/instagram-agent-skill (commit d03c56b, licence MIT, voir `LICENCE-instagram-agent-skill.txt`).
 
@@ -12,3 +14,7 @@ Modifications apportées dans ce dépôt :
 3. Correction d'un défaut d'origine dans `hookscore.py` : une ouverture molle était détectée par début de chaîne, si bien que « yo » pénalisait toute accroche commençant par « You ». La comparaison se fait désormais sur des mots entiers ; trois des 26 exemples anglais gagnent 3,6 points, les autres notes anglaises sont inchangées.
 
 Les scripts Python sont locaux (bibliothèque standard uniquement, aucun accès réseau). Les listes de mots françaises sont un point de départ à enrichir ; les messages affichés par les outils restent en anglais.
+
+## find-skills
+
+Copié depuis https://github.com/vercel-labs/skills (`skills/find-skills`, commit d3701c1, licence MIT, voir `LICENCE-find-skills.txt`). Une section « Règles de ce projet » a été ajoutée à la fin du fichier. Le skill s'appuie sur la commande `npx skills` et sur le site skills.sh.

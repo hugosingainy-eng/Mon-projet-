@@ -54,3 +54,6 @@ Treize skills `ig-*` dans `.claude/skills/` (origine et licence : `.claude/skill
 - Leurs scripts notent le français comme l'anglais (accroches, minutage, légendes, style). Les formules d'accroche ont une version française dans `hooks.json` (`template_fr`, `example_fr`).
 - `ig-human` nettoie le style des textes. Il ne dispense pas d'activer l'étiquette « contenu généré par IA » sur les images, voix ou vidéos générées.
 - En cas de conflit, les règles de ce fichier et la fiche de marque l'emportent.
+
+## Recherche de nouveaux skills
+Le skill `find-skills` (`.claude/skills/find-skills/`) sert à chercher d'autres skills utiles à la mission. Tout skill trouvé est lu en entier avant installation, installé dans `.claude/skills/` et consigné dans `.claude/skills/SOURCE.md`.
