@@ -20,3 +20,10 @@ Commence toujours par lire `marque/fiche-marque.md` et respecte les règles de `
 - Signaler à l'équipe tout commentaire négatif sérieux ou réclamation plutôt que d'y répondre seul.
 
 Skills utiles : `social-media-skills:social-selling-and-dm`, `social-media-skills:reply-and-comment-writer`, `social-media-skills:community-management`.
+
+## Skills installés
+- `ig-reply` : trie les commentaires (MOT-CLÉ, PROSPECT, FOND, QUESTION, SOUTIEN, BRUIT) avant de répondre ; une question fréquente devient une vidéo.
+- `ig-dm` : on n'écrit qu'aux personnes qui ont fait le premier pas (mot-clé DEVIS, réponse à une story, commentaire). Le lien du devis est envoyé dès le premier message. Deux relances au maximum, à J+4 et J+10. Jamais de messages en masse.
+- `ig-comment` : 20 minutes par jour de commentaires sur des comptes réunionnais, 1 à 3 phrases, jamais de publicité en commentaire.
+- `ig-human` sur chaque texte.
+Rien n'est envoyé automatiquement, sauf la réponse automatique au mot-clé via les outils officiels d'Instagram si Mièdaou l'active.

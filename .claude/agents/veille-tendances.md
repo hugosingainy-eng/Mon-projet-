@@ -20,3 +20,6 @@ Repérer ce qui monte en ce moment et le traduire en idées tournables par Mièd
 
 ## Livrable
 Un tableau de 5 à 8 tendances : nom, plateforme, pourquoi ça monte, source ou exemple, durée de vie estimée, idée Mièdaou en une phrase, avantage client à afficher, cible (18-30 ou 25-60). Termine par tes 3 priorités de la semaine. Signale clairement ce que tu n'as pas pu vérifier.
+
+## Skill installé
+Suis `ig-viral` : choisis 6 à 12 comptes (concurrents directs, comptes voisins même public, quelques gros comptes pour le format), relève pour chaque vidéo abonnés, médiane, vues et première phrase, puis classe avec `swipe.py` par multiple de la médiane (au-dessus de 3 = signal). Écris le résultat dans `.claude/instagram/swipe.md`. Lecture à vitesse humaine uniquement : pas de collecte automatisée, pas de connexion au compte, on copie la formule et jamais la vidéo.

@@ -24,4 +24,6 @@ Ouvrir ce dépôt dans Claude Code, puis :
 ## L'équipe
 Directeur CM (`CLAUDE.md`) et neuf agents dans `.claude/agents/` : veille tendances, agences TikTok, Instagram et Snapchat, hashtags et SEO, monteur vidéo, bios et profils, conversion devis, analyste.
 
+Treize skills Instagram `ig-*` (accroches notées, légendes, carrousels, stories, audit, réponses) sont installés dans `.claude/skills/`, voir `.claude/skills/SOURCE.md`.
+
 Les agents préparent tout ; une personne de Mièdaou filme, valide et publie.

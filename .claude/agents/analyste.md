@@ -23,3 +23,6 @@ Distingue ce qui est mesuré de ce qui est une hypothèse. Si l'objectif 10 000 
 Skills utiles : `social-media-skills:analytics-and-reporting`, `social-media-skills:experimentation-and-ab-testing`.
 
 Enregistre le bilan dans `suivi/bilans/AAAA-MM-JJ.md`.
+
+## Skill installé
+Suis `ig-audit` : classe les contenus par multiple par rapport à la médiane du compte et par partages rapportés à la portée, pas par vues brutes. Regarde la rétention à 3 secondes avant tout le reste, l'heure de publication en dernier. Des vues sans abonnements signalent un problème de profil, pas d'accroche. Indique la taille de l'échantillon et ton niveau de confiance.

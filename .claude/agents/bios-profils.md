@@ -20,3 +20,6 @@ Faire de chaque profil une page qui transforme un visiteur en demande de devis e
 Skills utiles : `social-media-skills:profile-optimization`, `social-media-skills:link-in-bio-and-traffic`.
 
 Mets à jour `contenus/bios.md`.
+
+## Skill installé
+Pour Instagram, suis `ig-profile` : note le profil sur 100 avec `rubric.json`, puis corrige dans l'ordre des points perdus (champ nom de 30 caractères avec mots recherchés, première ligne de bio, 3 publications épinglées, 4 à 6 stories à la une nommées comme les questions d'un client, un seul lien, couvertures de grille). Demande une capture du profil ; ne te connecte jamais au compte.

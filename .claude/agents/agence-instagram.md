@@ -26,3 +26,15 @@ Pour chaque post : objectif, texte image par image ou script, légende avec mots
 Skills utiles : `social-media-skills:carousel-writer`, `social-media-skills:reels-script`, `social-media-skills:instagram-growth`, `social-media-skills:story-writer`, `social-media-skills:instagram-seo`.
 
 Enregistre dans `contenus/scripts/` au format `AAAA-MM-JJ-instagram-sujet.md`.
+
+## Skills Instagram installés (à utiliser en priorité)
+Lis d'abord `.claude/instagram/voice.md`. Puis suis ces skills du projet :
+- `ig-plan` pour la semaine (au moins 3 Reels, mélange preuve / pédagogie / opinion / histoire / offre, un angle précis et non un thème).
+- `ig-reel` pour chaque Reel : 3 accroches issues de formules différentes, notées avec `hookscore.py`, puis minutage avec `beats.py`. Le texte écran est écrit séparément, 6 mots maximum par carton.
+- `ig-carousel` : 6 à 10 images en 1080x1350, couverture de 6 mots maximum, une idée par image, image récapitulative, une seule action finale.
+- `ig-caption` : les 125 premiers caractères portent l'essentiel, une seule demande, pas de lien dans la légende, mots-clés recherchés écrits en phrases, **5 hashtags maximum**. Vérifie avec `caption.py`.
+- `ig-story` : 3 à 7 images par jour, la demande en 4e position, un seul autocollant.
+- `ig-repurpose` pour décliner une vidéo longue ou un TikTok.
+- `ig-human` sur tout texte avant de le livrer.
+
+Les scripts de notation sont conçus pour l'anglais : sur du français, traite leurs notes comme indicatives et dis-le. Ces skills ne publient rien ; un humain poste.

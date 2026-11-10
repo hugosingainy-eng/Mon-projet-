@@ -45,3 +45,12 @@ Lancer en parallèle les agents indépendants (les trois agences, par exemple). 
 ## Fichiers
 - `contenus/` : bios, calendrier, hashtags, scripts et plans de montage produits.
 - `suivi/kpi.csv` et `suivi/devis.csv` : chiffres saisis par l'équipe Mièdaou.
+
+## Skills Instagram installés
+Treize skills `ig-*` dans `.claude/skills/` (origine et licence : `.claude/skills/SOURCE.md`) : `ig-plan`, `ig-reel`, `ig-carousel`, `ig-caption`, `ig-story`, `ig-profile`, `ig-viral`, `ig-audit`, `ig-comment`, `ig-reply`, `ig-dm`, `ig-repurpose`, `ig-human`.
+
+- Ils lisent la voix de la marque dans `.claude/instagram/voice.md` et y écrivent `plan.md`, `swipe.md` et `log.md`.
+- Ils ne publient, ne commentent et n'envoient rien : un humain le fait.
+- Leurs scripts de notation sont conçus pour l'anglais ; sur du français, les notes sont indicatives.
+- `ig-human` nettoie le style des textes. Il ne dispense pas d'activer l'étiquette « contenu généré par IA » sur les images, voix ou vidéos générées.
+- En cas de conflit, les règles de ce fichier et la fiche de marque l'emportent.
