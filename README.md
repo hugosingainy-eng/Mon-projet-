@@ -11,6 +11,8 @@ Ouvrir ce dépôt dans Claude Code, puis :
 |---|---|
 | `/semaine` | Plan complet de la semaine, scripts, montages, liste de tournage |
 | `/tendances` | Tendances du moment et idée de rebond |
+| `/analyse` | Meilleures vidéos et hashtags, types de vidéos à produire |
+| `/design <sujet>` | Visuel, miniature ou carrousel aux couleurs de Mièdaou |
 | `/video <sujet>` | Une vidéo de A à Z |
 | `/bios` | Bios des trois réseaux, prêtes à copier |
 | `/bilan` | Bilan chiffré et décisions |
@@ -22,7 +24,7 @@ Ouvrir ce dépôt dans Claude Code, puis :
 4. Chaque lundi : saisir les chiffres dans `suivi/kpi.csv`, lancer `/bilan` puis `/semaine`.
 
 ## L'équipe
-Directeur CM (`CLAUDE.md`) et neuf agents dans `.claude/agents/` : veille tendances, agences TikTok, Instagram et Snapchat, hashtags et SEO, monteur vidéo, bios et profils, conversion devis, analyste.
+Directeur CM (`CLAUDE.md`) et onze agents dans `.claude/agents/` : stratège contenu, veille tendances, agences TikTok, Instagram et Snapchat, hashtags et SEO, monteur vidéo, directeur artistique, bios et profils, conversion devis, analyste.
 
 Treize skills Instagram `ig-*` (accroches notées, légendes, carrousels, stories, audit, réponses) sont installés dans `.claude/skills/`, voir `.claude/skills/SOURCE.md`.
 
