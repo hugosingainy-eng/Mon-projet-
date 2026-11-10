@@ -51,6 +51,6 @@ Treize skills `ig-*` dans `.claude/skills/` (origine et licence : `.claude/skill
 
 - Ils lisent la voix de la marque dans `.claude/instagram/voice.md` et y écrivent `plan.md`, `swipe.md` et `log.md`.
 - Ils ne publient, ne commentent et n'envoient rien : un humain le fait.
-- Leurs scripts de notation sont conçus pour l'anglais ; sur du français, les notes sont indicatives.
+- Leurs scripts notent le français comme l'anglais (accroches, minutage, légendes, style). Les formules d'accroche ont une version française dans `hooks.json` (`template_fr`, `example_fr`).
 - `ig-human` nettoie le style des textes. Il ne dispense pas d'activer l'étiquette « contenu généré par IA » sur les images, voix ou vidéos générées.
 - En cas de conflit, les règles de ce fichier et la fiche de marque l'emportent.

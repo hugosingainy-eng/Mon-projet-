@@ -37,4 +37,4 @@ Lis d'abord `.claude/instagram/voice.md`. Puis suis ces skills du projet :
 - `ig-repurpose` pour décliner une vidéo longue ou un TikTok.
 - `ig-human` sur tout texte avant de le livrer.
 
-Les scripts de notation sont conçus pour l'anglais : sur du français, traite leurs notes comme indicatives et dis-le. Ces skills ne publient rien ; un humain poste.
+Les scripts notent le français : écris à partir des champs `template_fr` et `example_fr` de `hooks.json`, et vise une accroche notée 70 ou plus. Ces skills ne publient rien ; un humain poste.

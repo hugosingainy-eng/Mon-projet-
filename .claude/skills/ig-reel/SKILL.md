@@ -145,3 +145,22 @@ HOOKS  (scored)
 Shooting #5: the ratio is believable, it reads in one glance on screen,
 and the number is yours.
 ```
+
+## Français
+
+Les outils de ce dossier notent aussi le français, sans réglage : une ligne est
+reconnue comme française à ses accents et à ses mots outils.
+
+- `hooks.json` : chaque formule a `template_fr`, `example_fr`, `on_screen_fr` et
+  `match_fr`. Écris en français à partir de ces champs. Les exemples laissent en
+  `{{...}}` tout chiffre absent de `marque/fiche-marque.md`.
+- `hookscore.py` : comprend les euros (`25 €`, `12,50 €`), les heures, jours et
+  mois, les nombres dits (`moitié`, `deux`, `mille`), les mots de tension
+  (`jamais`, `gratuit`, `moitié prix`, `trop cher`, `personne ne`), les élisions
+  (`n'est`, `t'as`), le tutoiement et le vouvoiement, les impératifs, et refuse
+  les ouvertures molles (`Bonjour`, `Alors`, `Dans cette vidéo je vais vous
+  montrer`).
+- `beats.py` : minutage identique, mots vides français ignorés pour la boucle
+  de fin.
+- Les messages des outils restent en anglais ; les notes s'appliquent au texte
+  français.

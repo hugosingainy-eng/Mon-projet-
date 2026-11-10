@@ -26,15 +26,24 @@ import json
 import re
 import sys
 
-WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
+WORD_RE = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿŒœ0-9$€%'’-]+")
 SENT_RE = re.compile(r"[^.!?]+[.!?]*")
-CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+CONCRETE_RE = re.compile(r"[$€]\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zà-öø-ÿ]{2,}\b", re.MULTILINE)
 STOPWORDS = {
     "the", "a", "an", "and", "or", "but", "if", "of", "to", "in", "on", "for",
     "with", "that", "this", "it", "is", "are", "was", "were", "be", "been",
     "you", "your", "i", "my", "me", "we", "our", "they", "them", "he", "she",
     "so", "just", "not", "no", "do", "did", "does", "have", "has", "had",
     "will", "can", "at", "as", "by", "from", "out", "up", "off", "one", "all",
+    # French
+    "le", "la", "les", "l", "un", "une", "des", "du", "de", "d", "et", "ou",
+    "mais", "si", "à", "au", "aux", "en", "dans", "sur", "pour", "avec", "par",
+    "que", "qu", "qui", "ce", "c", "cette", "ces", "ça", "il", "elle", "ils",
+    "elles", "est", "sont", "était", "être", "été", "tu", "t", "ton", "ta",
+    "tes", "toi", "vous", "votre", "vos", "je", "j", "mon", "ma", "mes", "moi",
+    "nous", "notre", "nos", "on", "se", "s", "ne", "n", "pas", "plus", "non",
+    "oui", "a", "as", "ai", "ont", "avez", "avons", "fait", "fais", "tout",
+    "tous", "toute", "y", "là", "chez", "même", "aussi", "très", "bien",
 }
 
 HOOK_WINDOW = 3.0        # seconds. Past this, the thumb has already decided.
@@ -146,8 +155,13 @@ def analyse(raw, wpm=165, target=None):
             run, start = 0, None
 
     # Does the last line hand you back to the first one?
-    first = {w.lower() for w in words(rows[0]["text"]) if w.lower() not in STOPWORDS}
-    last = {w.lower() for w in words(rows[-1]["text"]) if w.lower() not in STOPWORDS}
+    def content(text):
+        # Split elisions so "l'heure" and "heure" count as the same word.
+        toks = [p for w in words(text) for p in re.split(r"['’]", w.lower()) if p]
+        return {t for t in toks if t not in STOPWORDS}
+
+    first = content(rows[0]["text"])
+    last = content(rows[-1]["text"])
     loop = sorted(pretty(w) for w in first & last)
     if loop:
         notes.append(f"Loops: the last beat repeats \"{', '.join(loop[:3])}\" from the hook. "

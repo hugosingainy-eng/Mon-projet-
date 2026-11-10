@@ -35,12 +35,12 @@ HASHTAG_LIMIT = 5        # Instagram's cap per post or reel since 18 Dec 2025,
                          # rather than many generic ones, can improve both your
                          # content's performance and people's experience".
 
-HASHTAG_RE = re.compile(r"(?:^|\s)(#[A-Za-z0-9_]+)")
+HASHTAG_RE = re.compile(r"(?:^|\s)(#\w+)")
 MENTION_RE = re.compile(r"(?:^|\s)(@[A-Za-z0-9_.]+)")
-LINK_RE = re.compile(r"https?://\S+|\bwww\.\S+|\b[a-z0-9-]+\.(?:com|co|io|net|org|ai|app)/\S*",
+LINK_RE = re.compile(r"https?://\S+|\bwww\.\S+|\b[a-z0-9-]+\.(?:com|co|io|net|org|ai|app|fr|re)(?:/\S*|\b)",
                      re.IGNORECASE)
 EMOJI_RE = re.compile(r"[\U0001F300-\U0001FAFF☀-➿←-⇿️]")
-CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+CONCRETE_RE = re.compile(r"[$€]\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zà-öø-ÿ]{2,}\b", re.MULTILINE)
 
 ASKS = [
     (re.compile(r"(?i)\bcomment (?:the word |\")?[A-Z0-9]{2,}\b"), "comment a keyword"),
@@ -51,11 +51,24 @@ ASKS = [
     (re.compile(r"(?i)\blink in (?:my )?bio\b"), "link in bio"),
     (re.compile(r"(?i)\b(?:swipe|tap) (?:through|left|right|for|to)\b"), "swipe or tap"),
     (re.compile(r"(?i)\btell me\b|\bwhat would you\b|\bwhich one\b"), "answer a question"),
+    # French. Same names, so an ask counts once whatever the language.
+    (re.compile(r"(?i)\b(?:commente|commentez|écris|écrivez|mets|mettez|tape|tapez)\s+"
+                r"(?:le mot\s+)?[«\"]?\s?[A-ZÀ-Þ0-9]{2,}\b(?=\s*[»\"]?\s*(?:en|dans|ici|$|[.,!]))"),
+     "comment a keyword"),
+    (re.compile(r"(?i)\b(?:écris|écrivez|envoie|envoyez)[- ](?:moi|nous)\b"
+                r"|\ben (?:dm|mp|message privé)\b"), "DM me"),
+    (re.compile(r"(?i)\b(?:enregistre|enregistrez|sauvegarde|sauvegardez)\b"), "save this"),
+    (re.compile(r"(?i)\bpartage(?:z)?\b"), "share this"),
+    (re.compile(r"(?i)\babonne[- ]toi\b|\babonnez[- ]vous\b|\bsui(?:s|vez)[- ]nous\b"), "follow"),
+    (re.compile(r"(?i)\blien (?:en|dans (?:la|notre|ma)) bio\b"), "link in bio"),
+    (re.compile(r"(?i)\b(?:glisse|glissez|balaie|balayez|fai(?:s|tes) défiler)\b"), "swipe or tap"),
+    (re.compile(r"(?i)\bdi(?:s|tes)[- ](?:moi|nous)\b|\bet (?:toi|vous)\s?\?"), "answer a question"),
 ]
 
 FILLER_TAGS = {"#viral", "#fyp", "#explore", "#explorepage", "#foryou", "#foryoupage",
                "#trending", "#instagood", "#love", "#follow", "#like4like", "#reels",
-               "#reelsinstagram", "#viralreels", "#instadaily"}
+               "#reelsinstagram", "#viralreels", "#instadaily",
+               "#pourtoi", "#pourtoipage", "#tendance", "#abonnetoi", "#viralvideo"}
 
 
 def visible_window(text, cut):
@@ -88,7 +101,7 @@ def analyse(text, cut=TRUNCATE, keywords=None):
     emoji = EMOJI_RE.findall(stripped)
     window = visible_window(stripped, cut)
     truncated = chars > cut
-    asks = [name for pattern, name in ASKS if pattern.search(stripped)]
+    asks = list(dict.fromkeys(name for pattern, name in ASKS if pattern.search(stripped)))
     filler = [t for t in tags if t.lower() in FILLER_TAGS]
     keywords = [k.strip() for k in (keywords or []) if k.strip()]
 

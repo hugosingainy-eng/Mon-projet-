@@ -630,6 +630,86 @@
       "find": "hack",
       "replace": "trick",
       "family": "nouns"
+    },
+    {
+      "find": "incontournable",
+      "replace": "utile",
+      "family": "adjectives"
+    },
+    {
+      "find": "crucial",
+      "replace": "important",
+      "family": "adjectives"
+    },
+    {
+      "find": "cruciale",
+      "replace": "importante",
+      "family": "adjectives"
+    },
+    {
+      "find": "primordial",
+      "replace": "important",
+      "family": "adjectives"
+    },
+    {
+      "find": "primordiale",
+      "replace": "importante",
+      "family": "adjectives"
+    },
+    {
+      "find": "optimiser",
+      "replace": "améliorer",
+      "family": "verbs"
+    },
+    {
+      "find": "optimisez",
+      "replace": "améliorez",
+      "family": "verbs"
+    },
+    {
+      "find": "booster",
+      "replace": "augmenter",
+      "family": "verbs"
+    },
+    {
+      "find": "boostez",
+      "replace": "augmentez",
+      "family": "verbs"
+    },
+    {
+      "find": "sublimer",
+      "replace": "embellir",
+      "family": "verbs"
+    },
+    {
+      "find": "néanmoins",
+      "replace": "mais",
+      "family": "connectives"
+    },
+    {
+      "find": "toutefois",
+      "replace": "mais",
+      "family": "connectives"
+    },
+    {
+      "find": "cependant",
+      "replace": "mais",
+      "family": "connectives"
+    },
+    {
+      "find": "véritablement",
+      "replace": "vraiment",
+      "family": "connectives"
+    },
+    {
+      "find": "considérablement",
+      "replace": "beaucoup",
+      "family": "connectives"
+    },
+    {
+      "find": "grandement",
+      "replace": "beaucoup",
+      "family": "connectives"
     }
   ],
   "phrases": [
@@ -922,6 +1002,146 @@
       "find": "go viral overnight",
       "replace": "get reach",
       "family": "nouns"
+    },
+    {
+      "find": "dans le monde d'aujourd'hui",
+      "replace": "aujourd'hui",
+      "family": "openers"
+    },
+    {
+      "find": "à l'ère du numérique",
+      "replace": "aujourd'hui",
+      "family": "openers"
+    },
+    {
+      "find": "dans un monde où tout va vite",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "dans un monde en constante évolution",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "il est important de noter que",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "il convient de noter que",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "il convient de souligner que",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "force est de constater que",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "il est essentiel de",
+      "replace": "il faut",
+      "family": "openers"
+    },
+    {
+      "find": "il est crucial de",
+      "replace": "il faut",
+      "family": "openers"
+    },
+    {
+      "find": "il est primordial de",
+      "replace": "il faut",
+      "family": "openers"
+    },
+    {
+      "find": "sans plus attendre",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "en fin de compte",
+      "replace": "au final",
+      "family": "closers"
+    },
+    {
+      "find": "plongeons dans",
+      "replace": "regardons",
+      "family": "verbs"
+    },
+    {
+      "find": "tirer parti de",
+      "replace": "utiliser",
+      "family": "verbs"
+    },
+    {
+      "find": "mettre en lumière",
+      "replace": "montrer",
+      "family": "verbs"
+    },
+    {
+      "find": "jouer un rôle clé",
+      "replace": "compter",
+      "family": "verbs"
+    },
+    {
+      "find": "faire toute la différence",
+      "replace": "tout changer",
+      "family": "verbs"
+    },
+    {
+      "find": "un véritable atout",
+      "replace": "un atout",
+      "family": "nouns"
+    },
+    {
+      "find": "une véritable",
+      "replace": "une",
+      "family": "adjectives"
+    },
+    {
+      "find": "un véritable",
+      "replace": "un",
+      "family": "adjectives"
+    },
+    {
+      "find": "de manière significative",
+      "replace": "nettement",
+      "family": "connectives"
+    },
+    {
+      "find": "de manière efficace",
+      "replace": "bien",
+      "family": "connectives"
+    },
+    {
+      "find": "en un clin d'œil",
+      "replace": "vite",
+      "family": "connectives"
+    },
+    {
+      "find": "par ailleurs",
+      "replace": "aussi",
+      "family": "connectives"
+    },
+    {
+      "find": "en outre",
+      "replace": "en plus",
+      "family": "connectives"
+    },
+    {
+      "find": "de surcroît",
+      "replace": "en plus",
+      "family": "connectives"
+    },
+    {
+      "find": "afin de",
+      "replace": "pour",
+      "family": "connectives"
     }
   ],
   "structures": [
@@ -1020,6 +1240,85 @@
       "regex": "(?i)\\b(?:follow for more|tag someone who|double tap if|share this if|comment below if)\\b",
       "name": "Reflex follow or tag bait",
       "fix": "Ask for the one action this post actually earns. The generic ask trains the audience to ignore every ask."
+    },
+    {
+      "id": "fr-pas-juste",
+      "regex": "(?i)\\bce n['’]est pas (?:juste|seulement|qu['’])[^.!?\\n]{2,60}[,.] c['’]est\\b",
+      "name": "« Ce n'est pas juste X, c'est Y »",
+      "fix": "Dis la seule chose que tu veux dire. Supprime la première moitié."
+    },
+    {
+      "id": "fr-non-seulement",
+      "regex": "(?i)\\bnon seulement\\b[^.!?\\n]{2,80}\\bmais (?:aussi|également)\\b",
+      "name": "« Non seulement X mais aussi Y »",
+      "fix": "Coupe en deux phrases, ou garde la moitié la plus forte."
+    },
+    {
+      "id": "fr-le-resultat",
+      "regex": "(?i)^\\s*(?:le résultat|résultat|le meilleur|la bonne nouvelle|le secret)\\s?\\?\\s*$",
+      "name": "Question rhétorique d'un mot (« Le résultat ? »)",
+      "fix": "Donne directement la réponse."
+    },
+    {
+      "id": "fr-triade",
+      "regex": "(?i)\\b[\\wÀ-ÿ]+, [\\wÀ-ÿ]+ et [\\wÀ-ÿ]+\\.",
+      "name": "Triade (« X, Y et Z. »)",
+      "fix": "Garde un seul élément, ou cite un fait précis à la place."
+    },
+    {
+      "id": "fr-en-resume",
+      "regex": "(?i)^\\s*(?:en résumé|en conclusion|pour conclure|pour résumer|en somme)\\b",
+      "name": "Ouverture de conclusion scolaire",
+      "fix": "Supprime l'annonce et termine sur le fait ou la demande."
+    },
+    {
+      "id": "fr-appat",
+      "regex": "(?i)\\b(?:d['’]accord\\s?\\?|vous en pensez quoi\\s?\\?|t['’]en penses quoi\\s?\\?|qui d['’]autre\\b)\\s*$",
+      "name": "Appât à réaction réflexe",
+      "fix": "Pose une vraie question à laquelle on répond en quatre mots."
+    },
+    {
+      "id": "fr-stop-scroll",
+      "regex": "(?im)^\\s*(?:arrête(?:z)? de scroller|ne scrolle(?:z)? pas|stop au scroll)\\b",
+      "name": "Ouverture « arrête de scroller »",
+      "fix": "Ouvre sur le fait ou le chiffre."
+    },
+    {
+      "id": "fr-dans-cette-video",
+      "regex": "(?i)\\b(?:dans (?:cette|la) vidéo|dans ce reel|(?:je vais|on va) (?:te|vous) (?:montrer|expliquer))\\b",
+      "name": "Préambule vidéo (« dans cette vidéo je vais vous montrer »)",
+      "fix": "Supprime-le et commence par ce que tu montres."
+    },
+    {
+      "id": "fr-abonne-appat",
+      "regex": "(?i)\\b(?:abonne-toi pour plus|abonnez-vous pour plus|identifie quelqu['’]un qui|double tap si|partage si)\\b",
+      "name": "Appât à abonnement ou identification",
+      "fix": "Donne une raison précise de s'abonner, ou une seule demande."
+    },
+    {
+      "id": "fr-nhesitez-pas",
+      "regex": "(?i)\\bn['’]hésite(?:z)? pas à\\b",
+      "name": "« N'hésitez pas à »",
+      "fix": "Passe à l'impératif : « Demande ton devis gratuit »."
+    },
+    {
+      "id": "fr-que-vous-soyez",
+      "regex": "(?i)\\bque (?:vous soyez|tu sois)\\b[^.!?\\n]{2,60}\\bou\\b",
+      "name": "« Que vous soyez X ou Y »",
+      "fix": "Parle à une seule personne précise."
+    },
+    {
+      "id": "fr-superlatifs",
+      "regex": "(?i)\\b(?:révolutionnaire|incroyable|exceptionnel(?:le)?s?|inégalée?s?|ultime|époustouflante?s?)\\b",
+      "name": "Superlatif creux",
+      "fix": "Remplace par un chiffre ou un fait vérifiable."
+    },
+    {
+      "id": "fr-en-tant-qu-ia",
+      "regex": "(?i)\\ben tant qu['’](?:ia|intelligence artificielle|modèle de langage)\\b",
+      "name": "Auto-référence du modèle",
+      "fix": "Supprime la phrase."
     }
-  ]
+  ],
+  "note_fr": "Les entrées françaises sont à la fin de `phrases`, `words` et `structures` (identifiants `fr-`). Modifie-les librement."
 }

@@ -36,14 +36,28 @@ import re
 import statistics
 import sys
 
-WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
+WORD_RE = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿŒœ0-9$€%'’-]+")
 NUMBER_RE = re.compile(
-    r"\$\s?\d[\d,]*(?:\.\d+)?"                       # money, whole
+    r"[$€]\s?\d[\d,]*(?:\.\d+)?"                     # money, whole
     r"|\b\d[\d,]*(?:\.\d+)?\s?"                      # a figure, with or
-    r"(?:%|k\b|x\b|hrs?\b|hours?\b|mins?\b|minutes?\b"  # without a unit
-    r"|days?\b|weeks?\b|months?\b|years?\b)?",
+    r"(?:%|€|k\b|x\b|hrs?\b|hours?\b|mins?\b|minutes?\b"  # without a unit
+    r"|days?\b|weeks?\b|months?\b|years?\b"
+    r"|h\b|heures?\b|jours?\b|semaines?\b|mois\b|ans?\b|euros?\b|fois\b)?",
     re.IGNORECASE)
-PROPER_RE = re.compile(r"(?<!^)\b[A-Z][a-z]{2,}\b")
+PROPER_RE = re.compile(r"(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zà-öø-ÿ]{2,}\b")
+
+# French support. A line is treated as French when it carries an accented
+# letter or a common French function word; French-only cues ("on", "ne")
+# are applied only then, so English scoring is unchanged.
+FR_HINT_RE = re.compile(
+    r"[àâçéèêëîïôùûœ]|\b(?:le|les|du|et|un|une|pas|que|ton|tes|vous|ça"
+    r"|chez|avec|sur|dans|c['’]est|j['’]ai|qu['’]\w+|l['’]\w+|d['’]\w+)\b", re.IGNORECASE)
+
+
+def is_french(text):
+    return bool(FR_HINT_RE.search(text))
+
+
 HASHTAG_RE = re.compile(r"(?:^|\s)#\w+")
 EMOJI_RE = re.compile(r"[\U0001F300-\U0001FAFF☀-➿]")
 
@@ -56,10 +70,18 @@ SPOKEN_NUMBERS = {
     "ten", "eleven", "twelve", "fifteen", "twenty", "thirty", "forty", "fifty",
     "sixty", "seventy", "eighty", "ninety", "hundred", "thousand", "million",
     "billion", "dozen", "half", "twice", "triple",
+    # French
+    "zéro", "deux", "trois", "quatre", "cinq", "sept", "huit", "neuf", "dix",
+    "onze", "douze", "quinze", "vingt", "trente", "quarante", "cinquante",
+    "soixante", "cent", "mille", "millions", "milliard", "milliards",
+    "douzaine", "moitié", "demi", "double", "quart",
 }
 MONEY_WORDS = {
     "dollars", "dollar", "bucks", "grand", "percent", "cents",
     "millionaire", "billionaire", "revenue", "profit", "salary", "rent",
+    # French
+    "euros", "euro", "balles", "centimes", "pourcent", "prix", "tarif",
+    "tarifs", "salaire", "loyer", "facture", "impôt", "impôts", "combien",
 }
 
 # Words that put something on the line. A hook with none of these is a
@@ -78,6 +100,24 @@ STAKES = {
     "still", "already", "only", "without", "versus", "vs", "actually",
 }
 
+# The same idea in French. Looked up on whole tokens and on the halves of an
+# elision, so "n'est" and "t'as" count. Only applied to French lines.
+STAKES_FR = {
+    "arrête", "arrêtez", "jamais", "rien", "personne", "aucun", "aucune",
+    "pas", "ne", "n", "non", "sans", "erreur", "erreurs", "faute", "perdu",
+    "perdre", "perds", "perdez", "coûte", "coûté", "coûter", "cher", "chère",
+    "trop", "raté", "ratée", "échec", "viré", "supprimé", "supprime",
+    "remplacé", "remplace", "gratuit", "gratuite", "gratuitement", "payé",
+    "payer", "paie", "paies", "payez", "facturé", "économisé", "économise",
+    "économiser", "interdit", "illégal", "légal", "pire", "déteste",
+    "gaspillé", "gaspiller", "arnaque", "mensonge", "menti", "vérité",
+    "secret", "caché", "cachée", "volé", "avant", "jusqu", "plutôt", "mais",
+    "sauf", "problème", "risque", "danger", "attention", "regret", "regrette",
+    "devrais", "devriez", "encore", "déjà", "seulement", "seul", "seule",
+    "vraiment", "contre", "faux", "fausse", "piège", "galère", "marre",
+    "fini", "finie", "premier", "première",
+}
+
 # Openers that spend the first second saying nothing.
 WEAK_OPENERS = [
     "so", "ok", "okay", "hey", "hi", "hello", "guys", "yo", "alright",
@@ -86,6 +126,13 @@ WEAK_OPENERS = [
     "have you", "did you", "do you", "are you", "in this", "in today",
     "the thing", "a lot", "there is", "there are", "this is", "it is",
     "as a", "when it", "if you've", "you know",
+    # French
+    "alors", "bon", "ben", "bah", "salut", "bonjour", "coucou", "bienvenue",
+    "aujourd'hui", "aujourd’hui", "en fait", "du coup", "franchement",
+    "écoute", "écoutez", "euh", "juste", "donc", "voilà", "je voulais",
+    "je veux", "je vais", "est-ce que", "avez-vous", "as-tu", "savez-vous",
+    "sais-tu", "dans cette", "dans ce", "il y", "c'est", "c’est", "ce sont",
+    "en tant", "les gars", "la team", "vous savez", "tu sais",
 ]
 
 # Imperatives that earn the front position.
@@ -93,6 +140,13 @@ IMPERATIVES = {
     "stop", "steal", "copy", "delete", "try", "watch", "read", "save",
     "use", "build", "make", "write", "send", "take", "start", "quit",
     "never", "always", "don't", "dont", "do", "put", "run", "check",
+    # French
+    "arrête", "arrêtez", "pique", "vole", "copie", "copiez", "supprime",
+    "essaie", "essaye", "essayez", "regarde", "regardez", "lis", "garde",
+    "enregistre", "utilise", "utilisez", "fais", "faites", "écris", "envoie",
+    "prends", "prenez", "commence", "jamais", "toujours", "mets", "vérifie",
+    "demande", "demandez", "délègue", "déléguez", "oublie", "oubliez",
+    "payez", "compare", "comparez", "calcule", "calculez",
 }
 
 DEALBREAKERS = [
@@ -102,6 +156,13 @@ DEALBREAKERS = [
      "Video preamble. Delete it and open on the payoff."),
     (re.compile(r"(?i)^\s*(?:hey |hi |what'?s up |welcome )"),
      "Greeting. Nobody came to the feed to be greeted."),
+    (re.compile(r"(?i)^\s*(?:arrête(?:z)? de scroller|ne scrolle(?:z)? pas|stop au scroll)"),
+     "Opens with \"arrête de scroller\". Asking for attention proves you have not earned it."),
+    (re.compile(r"(?i)\b(?:dans (?:cette|la) vidéo|dans ce reel"
+                r"|je vais (?:te|vous) (?:montrer|expliquer)|on va (?:te|vous) (?:montrer|expliquer))\b"),
+     "Video preamble (French). Delete it and open on the payoff."),
+    (re.compile(r"(?i)^\s*(?:salut|bonjour|coucou|bienvenue|hello)\b"),
+     "Greeting (French). Nobody came to the feed to be greeted."),
     (HASHTAG_RE,
      "Hashtag in the hook. Hashtags belong at the bottom of the caption, if anywhere."),
     (EMOJI_RE,
@@ -116,6 +177,20 @@ def clamp(n):
 def words(text):
     # "$18,000" is one word when it is spoken, so it is one word here too.
     return WORD_RE.findall(re.sub(r"(?<=\d),(?=\d)", "", text))
+
+
+def parts(token):
+    """A token plus the halves of an elision: "n'est" -> n'est, n, est."""
+    token = token.lower().strip("'’")
+    return [token] + [p for p in re.split(r"['’]", token) if p and p != token]
+
+
+def has(token, vocab):
+    return any(p in vocab for p in parts(token))
+
+
+def stakes_for(text):
+    return STAKES | STAKES_FR if is_french(text) else STAKES
 
 
 def check_length(text):
@@ -140,7 +215,7 @@ def check_specificity(text):
     nums = [n.strip() for n in NUMBER_RE.findall(text) if n.strip()]
     propers = set(PROPER_RE.findall(text))
     low = [w.lower().strip("'’") for w in words(text)]
-    spoken = [w for w in low if w in SPOKEN_NUMBERS or w in MONEY_WORDS]
+    spoken = [w for w in low if has(w, SPOKEN_NUMBERS) or has(w, MONEY_WORDS)]
     hits = len(nums) + len(propers) + len(spoken)
     score = 15.0 if hits == 0 else clamp(45 + hits * 30)
     found = ", ".join(nums[:2] + sorted(propers)[:2] + spoken[:2])
@@ -151,9 +226,10 @@ def check_specificity(text):
 def check_stakes(text):
     """Tension, cost, negation. Something the viewer might lose."""
     w = [x.lower().strip("'’") for x in words(text)]
-    hits = [x for x in w if x in STAKES]
+    vocab = stakes_for(text)
+    hits = [p for x in w for p in parts(x) if p in vocab]
     markers = sorted(set(hits))
-    if re.search(r"\$\s?\d", text):
+    if re.search(r"[$€]\s?\d|\d\s?(?:€|euros?\b)", text):
         markers.append("a price")
     n = len(markers)
     score = {0: 20.0, 1: 70.0}.get(n, 100.0)
@@ -172,12 +248,14 @@ def check_frontload(text):
     penalty = 0
     hit_opener = None
     for weak in WEAK_OPENERS:
-        if opener.startswith(weak) or low[0] == weak:
+        # Whole words only: "so" must not match "some", nor "bon" "bonne".
+        if opener == weak or opener.startswith(weak + " ") or low[0] == weak:
             penalty, hit_opener = 30, weak
             break
     payload = None
+    vocab = stakes_for(text)
     for i, token in enumerate(low):
-        if (token in STAKES or token in SPOKEN_NUMBERS or token in MONEY_WORDS
+        if (has(token, vocab) or has(token, SPOKEN_NUMBERS) or has(token, MONEY_WORDS)
                 or NUMBER_RE.match(w[i]) or (i and PROPER_RE.match(w[i]))):
             payload = i
             break
@@ -205,7 +283,13 @@ def check_address(text):
         return 100.0, "speaks to the viewer"
     if w and w[0] in IMPERATIVES:
         return 90.0, f"imperative opener (\"{w[0]}\")"
+    if is_french(text) and re.search(
+            r"\b(?:tu|toi|ton|ta|tes|vous|votre|vos)\b|\bt['’]", low):
+        return 100.0, "speaks to the viewer"
     if re.search(r"\b(i|my|me|we|our)\b", low):
+        return 70.0, "first person, no viewer named"
+    if is_french(text) and re.search(
+            r"\b(?:je|moi|mon|ma|mes|nous|notre|nos|on)\b|\bj['’]", low):
         return 70.0, "first person, no viewer named"
     return 35.0, "third person, nobody in the room"
 

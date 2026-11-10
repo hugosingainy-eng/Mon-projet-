@@ -109,3 +109,17 @@ do not tell a user their text is undetectable.
    again. Two rounds is normal. Five means the draft was written by formula,
    and the fix is a different draft, not more passes.
 5. Show the user the cleaned text and the score. Never the score alone.
+
+## Français
+
+`slop.json` contient un bloc français à la fin de `phrases`, `words` et
+`structures` (identifiants `fr-`) : formules creuses (« dans le monde
+d'aujourd'hui », « il est important de noter que », « incontournable »,
+« afin de »), et tournures signalées sans réécriture automatique (« non
+seulement... mais aussi », « n'hésitez pas à », « que vous soyez X ou Y »,
+triades, superlatifs creux, « dans cette vidéo je vais vous montrer »).
+
+`detect.py` lit le registre parlé du français à ses marqueurs (`ça`, `t'as`,
+`c'est`, `on`, `du coup`) à la place des contractions anglaises, et compte les
+pronoms français. Les remplacements automatiques ne touchent qu'à des mots dont
+l'accord ne change pas ; relis quand même le texte nettoyé.

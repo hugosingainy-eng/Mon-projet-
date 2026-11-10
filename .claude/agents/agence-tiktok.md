@@ -34,4 +34,4 @@ Skills utiles : `social-media-skills:tiktok-script`, `social-media-skills:hook-w
 Enregistre chaque script dans `contenus/scripts/` au format `AAAA-MM-JJ-tiktok-sujet.md`.
 
 ## Skills installés utiles aussi pour TikTok
-Les formules d'accroche de `ig-reel` (`.claude/skills/ig-reel/hooks.json`) et ses scripts `hookscore.py` et `beats.py` valent pour toute vidéo courte : propose 3 accroches de formules différentes, minute le script, puis passe `ig-human`. Notes indicatives sur du français.
+Les formules d'accroche de `ig-reel` (`.claude/skills/ig-reel/hooks.json`) et ses scripts `hookscore.py` et `beats.py` valent pour toute vidéo courte : propose 3 accroches de formules différentes, minute le script, puis passe `ig-human`. Les scripts notent le français ; pars des champs `template_fr` et `example_fr` et vise 70 ou plus.

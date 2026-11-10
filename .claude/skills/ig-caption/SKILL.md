@@ -117,3 +117,10 @@ linter:     READY
 ```
 
 Nothing is posted. The user pastes it.
+
+## Français
+
+`caption.py` reconnaît les demandes en français (« Écris DEVIS en
+commentaire », « lien en bio », « enregistre », « partage », « abonne-toi »,
+« dis-nous »), les hashtags accentués, les montants en euros et les liens en
+`.fr` et `.re`.

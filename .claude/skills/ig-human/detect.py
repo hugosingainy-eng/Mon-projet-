@@ -33,11 +33,32 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 LEX = os.path.join(HERE, "slop.json")
 
 SENT_RE = re.compile(r"[^.!?\n]+[.!?]*")
-WORD_RE = re.compile(r"[A-Za-z']+")
+WORD_RE = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿŒœ'’]+")
 CONTRACTIONS = re.compile(r"\b\w+'(?:s|t|re|ve|ll|d|m)\b", re.IGNORECASE)
 PRONOUNS = re.compile(r"\b(i|me|my|mine|we|us|our|you|your)\b", re.IGNORECASE)
-NUMBERS = re.compile(r"\b\d[\d,.]*%?\b|\$\d")
-PROPER = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+NUMBERS = re.compile(r"\b\d[\d,.]*%?\b|[$€]\d")
+PROPER = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zà-öø-ÿ]{2,}\b", re.MULTILINE)
+
+# French support. A line is treated as French when it carries an accented
+# letter or a common French function word; French-only cues ("on", "ne")
+# are applied only then, so English scoring is unchanged.
+FR_HINT_RE = re.compile(
+    r"[àâçéèêëîïôùûœ]|\b(?:le|les|du|et|un|une|pas|que|ton|tes|vous|ça"
+    r"|chez|avec|sur|dans|c['’]est|j['’]ai|qu['’]\w+|l['’]\w+|d['’]\w+)\b", re.IGNORECASE)
+
+
+def is_french(text):
+    return bool(FR_HINT_RE.search(text))
+
+# French has no optional contractions, so the spoken register is read from
+# the markers people drop in speech and a formal draft never uses.
+CASUAL_FR = re.compile(
+    r"\b(?:ça|t['’]\w+|y['’ ]a|c['’]est|j['’]\w+|on|ouais|bah|ben|hein"
+    r"|franchement|genre|du coup|en vrai|trop)\b", re.IGNORECASE)
+PRONOUNS_FR = re.compile(
+    r"\b(?:je|moi|mon|ma|mes|nous|notre|nos|on|tu|toi|ton|ta|tes|vous|votre|vos)\b"
+    r"|\b[jt]['’]", re.IGNORECASE)
+
 
 
 def clamp(n):
@@ -124,8 +145,12 @@ def check_voice(text, lex):
     if len(w) < 25:
         return 50.0, "too short to judge"
     per100 = 100 / len(w)
-    contractions = len(CONTRACTIONS.findall(text)) * per100
-    person = len(PRONOUNS.findall(text)) * per100
+    if is_french(text):
+        contractions = len(CASUAL_FR.findall(text)) * per100
+        person = len(PRONOUNS_FR.findall(text)) * per100
+    else:
+        contractions = len(CONTRACTIONS.findall(text)) * per100
+        person = len(PRONOUNS.findall(text)) * per100
     tells = 0
     names = []
     for s in lex["structures"]:
