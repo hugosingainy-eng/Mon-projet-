@@ -34,7 +34,7 @@ Devis gratuit 👇
 ```
 **Lien :** `https://www.miedaou.fr/?utm_source=instagram&utm_medium=bio`
 
-**Catégorie :** Service à domicile. **Boutons :** Appeler, Itinéraire, E-mail.
+**Catégorie :** Service à domicile. **Boutons :** Appeler (0262 30 36 37), E-mail.
 
 **Stories à la une :** -50 % expliqué, Ménage, Jardin, Marmailles, Seniors, Avis, Recrutement.
 
@@ -48,5 +48,6 @@ Ménage, repassage, jardin, garde d'enfants, aide aux seniors à La Réunion �
 **Lien :** `https://www.miedaou.fr/?utm_source=snapchat&utm_medium=bio`
 
 ## Commun aux trois
+- Téléphone de contact : 0262 30 36 37. Zone : toute La Réunion.
 - Même photo de profil : le logo Mièdaou, lisible en petit.
 - Mention à placer en légende ou sur le site : « *Selon conditions et plafonds en vigueur ».

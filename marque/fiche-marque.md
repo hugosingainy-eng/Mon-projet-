@@ -6,6 +6,8 @@ Source unique de vérité pour tous les agents. Ne rien affirmer sur Mièdaou qu
 - **Nom :** Mièdaou Services (« Particuliers et professionnels »)
 - **Lieu :** La Réunion (974)
 - **Site :** https://www.miedaou.fr — lien obligatoire dans chaque bio et chaque appel à l'action
+- **Téléphone :** 0262 30 36 37 — à afficher sur le carton final des vidéos et dans les boutons de contact
+- **Zone d'intervention :** toute La Réunion
 - **TikTok :** @miedaou — 7 488 abonnés, 22,7 K j'aime (relevé du 10/11/2026)
 - **Facebook :** facebook.com/miedaou
 
@@ -63,7 +65,6 @@ Les 25-60 ans regroupent : jeunes parents actifs, cadres débordés, enfants adu
 - Devis venant des réseaux : 10 à 30.
 
 ## À confirmer par Mièdaou
-- Numéro de téléphone et WhatsApp à afficher.
-- Communes couvertes.
+- Si le 0262 30 36 37 répond aussi sur WhatsApp.
 - Comptes Instagram et Snapchat existants (identifiants).
 - Offre de bienvenue ou parrainage éventuel.

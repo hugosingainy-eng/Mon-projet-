@@ -25,7 +25,7 @@ Si un outil n'est pas connecté dans la session, dis-le clairement et livre à l
 - Coupes toutes les 1,5 à 3 s, suppression des silences et hésitations, zooms légers sur les mots-clés.
 - Sous-titres français mot à mot, 2 lignes maximum, dans la zone sûre (éviter les 15 % du bas et la colonne de boutons à droite).
 - Musique à -18 dB sous la voix. Effets sonores discrets sur les transitions.
-- Carton final de 2 s : logo, « Devis gratuit », miedaou.fr, « lien en bio ».
+- Carton final de 2 s : logo, « Devis gratuit », 0262 30 36 37, miedaou.fr, « lien en bio », « Toute La Réunion ».
 - Mention « selon conditions » lisible près de toute mention du -50 %.
 - Miniature : visage ou avant/après + 3 à 5 mots en gros.
 

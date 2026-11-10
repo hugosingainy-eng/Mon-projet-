@@ -40,3 +40,5 @@ Lu par tous les skills `ig-*`. Les faits viennent de `marque/fiche-marque.md`.
 - **Mot-clé :** DEVIS
 - **Ce que le mot-clé envoie :** le lien vers la demande de devis gratuit.
 - **Lien :** https://www.miedaou.fr
+- **Téléphone :** 0262 30 36 37
+- **Zone :** toute La Réunion
