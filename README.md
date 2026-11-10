@@ -1,1 +1,27 @@
-# Mon-projet-
+# Community manager IA — Mièdaou Services
+
+Une équipe d'agents Claude Code qui gère la communication de Mièdaou Services (La Réunion) sur TikTok, Instagram et Snapchat.
+
+**Objectifs à 30 jours :** 10 000 abonnés TikTok et 10 à 30 devis venant des réseaux.
+
+## Utilisation
+Ouvrir ce dépôt dans Claude Code, puis :
+
+| Commande | Résultat |
+|---|---|
+| `/semaine` | Plan complet de la semaine, scripts, montages, liste de tournage |
+| `/tendances` | Tendances du moment et idée de rebond |
+| `/video <sujet>` | Une vidéo de A à Z |
+| `/bios` | Bios des trois réseaux, prêtes à copier |
+| `/bilan` | Bilan chiffré et décisions |
+
+## Pour démarrer
+1. Relire et compléter `marque/fiche-marque.md` (section « À confirmer »).
+2. Copier les bios de `contenus/bios.md` sur chaque réseau.
+3. Suivre `contenus/calendrier-30-jours.md`.
+4. Chaque lundi : saisir les chiffres dans `suivi/kpi.csv`, lancer `/bilan` puis `/semaine`.
+
+## L'équipe
+Directeur CM (`CLAUDE.md`) et neuf agents dans `.claude/agents/` : veille tendances, agences TikTok, Instagram et Snapchat, hashtags et SEO, monteur vidéo, bios et profils, conversion devis, analyste.
+
+Les agents préparent tout ; une personne de Mièdaou filme, valide et publie.
