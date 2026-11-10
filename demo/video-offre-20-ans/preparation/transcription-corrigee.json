@@ -1,0 +1,265 @@
+{
+  "segments": [
+    {
+      "debut": 0.2,
+      "fin": 2.9,
+      "texte": "Attends, vous faites encore votre ménage vous-même ?",
+      "mots": [
+        {
+          "mot": "Attends,",
+          "debut": 0.2,
+          "fin": 0.66
+        },
+        {
+          "mot": "vous",
+          "debut": 0.66,
+          "fin": 0.91
+        },
+        {
+          "mot": "faites",
+          "debut": 0.91,
+          "fin": 1.27
+        },
+        {
+          "mot": "encore",
+          "debut": 1.27,
+          "fin": 1.63
+        },
+        {
+          "mot": "votre",
+          "debut": 1.63,
+          "fin": 1.93
+        },
+        {
+          "mot": "ménage",
+          "debut": 1.93,
+          "fin": 2.29
+        },
+        {
+          "mot": "vous-même",
+          "debut": 2.29,
+          "fin": 2.8
+        },
+        {
+          "mot": "?",
+          "debut": 2.8,
+          "fin": 2.9
+        }
+      ]
+    },
+    {
+      "debut": 2.9,
+      "fin": 7.6,
+      "texte": "Et si je vous disais que vous pouvez vous en débarrasser tout en profitant d'un cadeau ?",
+      "mots": [
+        {
+          "mot": "Et",
+          "debut": 2.9,
+          "fin": 3.06
+        },
+        {
+          "mot": "si",
+          "debut": 3.06,
+          "fin": 3.22
+        },
+        {
+          "mot": "je",
+          "debut": 3.22,
+          "fin": 3.38
+        },
+        {
+          "mot": "vous",
+          "debut": 3.38,
+          "fin": 3.64
+        },
+        {
+          "mot": "disais",
+          "debut": 3.64,
+          "fin": 4.01
+        },
+        {
+          "mot": "que",
+          "debut": 4.01,
+          "fin": 4.22
+        },
+        {
+          "mot": "vous",
+          "debut": 4.22,
+          "fin": 4.48
+        },
+        {
+          "mot": "pouvez",
+          "debut": 4.48,
+          "fin": 4.85
+        },
+        {
+          "mot": "vous",
+          "debut": 4.85,
+          "fin": 5.12
+        },
+        {
+          "mot": "en",
+          "debut": 5.12,
+          "fin": 5.28
+        },
+        {
+          "mot": "débarrasser",
+          "debut": 5.28,
+          "fin": 5.91
+        },
+        {
+          "mot": "tout",
+          "debut": 5.91,
+          "fin": 6.17
+        },
+        {
+          "mot": "en",
+          "debut": 6.17,
+          "fin": 6.33
+        },
+        {
+          "mot": "profitant",
+          "debut": 6.33,
+          "fin": 6.86
+        },
+        {
+          "mot": "d'un",
+          "debut": 6.86,
+          "fin": 7.12
+        },
+        {
+          "mot": "cadeau",
+          "debut": 7.12,
+          "fin": 7.49
+        },
+        {
+          "mot": "?",
+          "debut": 7.49,
+          "fin": 7.6
+        }
+      ]
+    },
+    {
+      "debut": 7.6,
+      "fin": 9.5,
+      "texte": "Mièdaou fête ses 20 ans,",
+      "mots": [
+        {
+          "mot": "Mièdaou",
+          "debut": 7.6,
+          "fin": 8.21
+        },
+        {
+          "mot": "fête",
+          "debut": 8.21,
+          "fin": 8.59
+        },
+        {
+          "mot": "ses",
+          "debut": 8.59,
+          "fin": 8.89
+        },
+        {
+          "mot": "20",
+          "debut": 8.89,
+          "fin": 9.12
+        },
+        {
+          "mot": "ans,",
+          "debut": 9.12,
+          "fin": 9.5
+        }
+      ]
+    },
+    {
+      "debut": 9.6,
+      "fin": 10.8,
+      "texte": "et on a quelque chose pour vous.",
+      "mots": [
+        {
+          "mot": "et",
+          "debut": 9.6,
+          "fin": 9.71
+        },
+        {
+          "mot": "on",
+          "debut": 9.71,
+          "fin": 9.82
+        },
+        {
+          "mot": "a",
+          "debut": 9.82,
+          "fin": 9.89
+        },
+        {
+          "mot": "quelque",
+          "debut": 9.89,
+          "fin": 10.18
+        },
+        {
+          "mot": "chose",
+          "debut": 10.18,
+          "fin": 10.4
+        },
+        {
+          "mot": "pour",
+          "debut": 10.4,
+          "fin": 10.58
+        },
+        {
+          "mot": "vous.",
+          "debut": 10.58,
+          "fin": 10.8
+        }
+      ]
+    },
+    {
+      "debut": 10.8,
+      "fin": 12.85,
+      "texte": "À l'occasion des 20 ans, Mièdaou vous offre…",
+      "mots": [
+        {
+          "mot": "À",
+          "debut": 10.8,
+          "fin": 10.89
+        },
+        {
+          "mot": "l'occasion",
+          "debut": 10.89,
+          "fin": 11.39
+        },
+        {
+          "mot": "des",
+          "debut": 11.39,
+          "fin": 11.57
+        },
+        {
+          "mot": "20",
+          "debut": 11.57,
+          "fin": 11.71
+        },
+        {
+          "mot": "ans,",
+          "debut": 11.71,
+          "fin": 11.94
+        },
+        {
+          "mot": "Mièdaou",
+          "debut": 11.94,
+          "fin": 12.3
+        },
+        {
+          "mot": "vous",
+          "debut": 12.3,
+          "fin": 12.53
+        },
+        {
+          "mot": "offre…",
+          "debut": 12.53,
+          "fin": 12.85
+        }
+      ]
+    }
+  ],
+  "note": "Transcription automatique corrigée à la main (« minage » → « ménage », « caldo » → « cadeau », « Mais là où » → « Mièdaou »). Fin coupée par l'enregistrement d'écran."
+}

@@ -26,6 +26,7 @@ Position : centre de l'écran, légèrement sous les yeux du sujet, jamais dans 
 | `TIT-4` | Compteur | Nombre qui défile de 25 € à 12,50 € en 0,8 s, barre du premier prix | Explication du crédit d'impôt |
 | `TIT-5` | Pastille de série | Pastille orange en haut à gauche, apparition par rebond | Séries : « Mièdaou i explik #3 » |
 | `TIT-6` | Titre de chapitre | Étiquette bleue « ÉTAPE 1/3 » qui glisse du haut | Tutoriels, devis gratuit en 3 étapes |
+| `TIT-7` | Offre en ouverture | L'affiche ou le chiffre de l'offre plein écran de 0:00 à 0:01, puis la vidéo explique ; l'offre reste en bandeau (`TIT-2`) | Toute vidéo promotionnelle (offre 20 ans). Ajouté le 10/11/2026 par le stratège : la vidéo offre 20 ans de @miedaou (0,37x la médiane) montrait l'offre à 11 s |
 
 ## Mouvement d'image
 | Code | Effet | Réglages | Quand |
@@ -35,6 +36,8 @@ Position : centre de l'écran, légèrement sous les yeux du sujet, jamais dans 
 | `MOV-3` | Recadrage sauté (jump cut) | Coupe + recadrage 110 % pour cacher la coupe | Suppression des silences en face caméra |
 | `MOV-4` | Accéléré | ×4 à ×8 avec musique rythmée | Ménage, rangement, jardin, repassage |
 | `MOV-5` | Gel d'image + texte | Image figée 0,8 s, texte par-dessus, son « pause » | Moment clé, « et là… » |
+| `MOV-6` | Plan POV « mains au travail » | Téléphone à hauteur des yeux, on voit les mains (clavier, téléphone, fer, sécateur), pas de visage nécessaire, 1-2 s par plan | Ouverture des coulisses. Origine : @miedaou, coulisses bureau, 37,8 K vues (7,1x la médiane du compte) |
+| `MOV-7` | Cadrage « caméra de surveillance » | Plan fixe en plongée depuis un coin de la pièce, texte « POV : » en haut, horodatage façon caméra | Humour de bureau sur une petite gêne du quotidien, jamais pour surveiller ou moquer un salarié. Origine : cabinet d'orthodontie au Texas, 3,3 M de vues selon WorkLife (source secondaire, vidéo non vue) |
 
 ## Transitions
 | Code | Effet | Réglages | Quand |

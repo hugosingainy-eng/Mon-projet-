@@ -20,6 +20,16 @@ Source unique de vérité pour tous les agents. Ne rien affirmer sur Mièdaou qu
 - Remise en état de logement
 - Offres pour les professionnels
 
+## Offre en cours — 20 ans de Mièdaou
+Relevée sur l'affiche de la vidéo TikTok de l'offre anniversaire (novembre 2026).
+- **Mièdaou fête ses 20 ans.**
+- **Offre anniversaire : 50 € offerts pour tout contrat régulier de ménage et repassage.**
+- Cumulable avec : **payez -50 % de votre facture tous les mois avec l'avance immédiate du crédit d'impôt** (Urssaf).
+- Mention obligatoire : « *Voir conditions en agence ».
+- À confirmer par Mièdaou : date de fin de l'offre.
+
+C'est le message prioritaire du mois : il donne une raison d'agir maintenant.
+
 ## Avantages client — À DIRE ET À MONTRER EN GROS
 Chaque contenu doit afficher au moins un de ces avantages, en texte grand format à l'écran dans les 3 premières secondes ou sur la première image.
 
@@ -59,6 +69,8 @@ Les 25-60 ans regroupent : jeunes parents actifs, cadres débordés, enfants adu
 - Les vidéos de recrutement font de bonnes vues (9 345).
 - « Une remise en état chez Mièdaou c'est quoi ? » : 5 535 vues, le format explicatif est valable.
 - La bio n'a ni lien ni appel au devis : à corriger en priorité.
+- Le compte a déjà la fonction « Abonnement » TikTok et a fait un jeu concours.
+- Vidéos visibles le 10/11/2026 : coulisses bureau 37,8 K ; recrutement gestionnaire de paie 9 345 ; remise en état 5 536 ; duo « mais demain c'est mon… » 5 059 ; offre anniversaire face caméra 1 935 ; duo seniors 1 843. Médiane des 6 : environ 5 300 vues.
 
 ## Objectifs à 30 jours
 - TikTok : 10 000 abonnés (+2 512, soit environ 84 par jour).
@@ -67,4 +79,5 @@ Les 25-60 ans regroupent : jeunes parents actifs, cadres débordés, enfants adu
 ## À confirmer par Mièdaou
 - Si le 0262 30 36 37 répond aussi sur WhatsApp.
 - Comptes Instagram et Snapchat existants (identifiants).
-- Offre de bienvenue ou parrainage éventuel.
+- Date de fin de l'offre anniversaire des 20 ans.
+- Parrainage éventuel.

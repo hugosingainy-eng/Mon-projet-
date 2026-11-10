@@ -1,0 +1,229 @@
+{
+  "segments": [
+    {
+      "debut": 0.23,
+      "fin": 9.47,
+      "texte": "Attends, vous faites encore votre minage vous-même ? Et si je vous disais que vous pouvez vous en débarasser tout en profitant d'un caldo ? Mais là où faites-y 20 ans,",
+      "mots": [
+        {
+          "mot": "Attends,",
+          "debut": 0.23,
+          "fin": 0.72
+        },
+        {
+          "mot": "vous",
+          "debut": 0.72,
+          "fin": 1.0
+        },
+        {
+          "mot": "faites",
+          "debut": 1.0,
+          "fin": 1.38
+        },
+        {
+          "mot": "encore",
+          "debut": 1.38,
+          "fin": 1.77
+        },
+        {
+          "mot": "votre",
+          "debut": 1.77,
+          "fin": 2.1
+        },
+        {
+          "mot": "minage",
+          "debut": 2.1,
+          "fin": 2.48
+        },
+        {
+          "mot": "vous-même",
+          "debut": 2.48,
+          "fin": 3.03
+        },
+        {
+          "mot": "?",
+          "debut": 3.03,
+          "fin": 3.14
+        },
+        {
+          "mot": "Et",
+          "debut": 3.14,
+          "fin": 3.31
+        },
+        {
+          "mot": "si",
+          "debut": 3.31,
+          "fin": 3.47
+        },
+        {
+          "mot": "je",
+          "debut": 3.47,
+          "fin": 3.64
+        },
+        {
+          "mot": "vous",
+          "debut": 3.64,
+          "fin": 3.91
+        },
+        {
+          "mot": "disais",
+          "debut": 3.91,
+          "fin": 4.3
+        },
+        {
+          "mot": "que",
+          "debut": 4.3,
+          "fin": 4.52
+        },
+        {
+          "mot": "vous",
+          "debut": 4.52,
+          "fin": 4.79
+        },
+        {
+          "mot": "pouvez",
+          "debut": 4.79,
+          "fin": 5.18
+        },
+        {
+          "mot": "vous",
+          "debut": 5.18,
+          "fin": 5.45
+        },
+        {
+          "mot": "en",
+          "debut": 5.45,
+          "fin": 5.62
+        },
+        {
+          "mot": "débarasser",
+          "debut": 5.62,
+          "fin": 6.22
+        },
+        {
+          "mot": "tout",
+          "debut": 6.22,
+          "fin": 6.5
+        },
+        {
+          "mot": "en",
+          "debut": 6.5,
+          "fin": 6.66
+        },
+        {
+          "mot": "profitant",
+          "debut": 6.66,
+          "fin": 7.21
+        },
+        {
+          "mot": "d'un",
+          "debut": 7.21,
+          "fin": 7.49
+        },
+        {
+          "mot": "caldo",
+          "debut": 7.49,
+          "fin": 7.82
+        },
+        {
+          "mot": "?",
+          "debut": 7.82,
+          "fin": 7.93
+        },
+        {
+          "mot": "Mais",
+          "debut": 7.93,
+          "fin": 8.2
+        },
+        {
+          "mot": "là",
+          "debut": 8.2,
+          "fin": 8.37
+        },
+        {
+          "mot": "où",
+          "debut": 8.37,
+          "fin": 8.53
+        },
+        {
+          "mot": "faites-y",
+          "debut": 8.53,
+          "fin": 9.03
+        },
+        {
+          "mot": "20",
+          "debut": 9.03,
+          "fin": 9.19
+        },
+        {
+          "mot": "ans,",
+          "debut": 9.19,
+          "fin": 9.47
+        }
+      ]
+    },
+    {
+      "debut": 9.64,
+      "fin": 12.86,
+      "texte": "On a quelque chose pour vous. À l'occasion, végantons en demi",
+      "mots": [
+        {
+          "mot": "On",
+          "debut": 9.64,
+          "fin": 9.79
+        },
+        {
+          "mot": "a",
+          "debut": 9.79,
+          "fin": 9.9
+        },
+        {
+          "mot": "quelque",
+          "debut": 9.9,
+          "fin": 10.31
+        },
+        {
+          "mot": "chose",
+          "debut": 10.31,
+          "fin": 10.63
+        },
+        {
+          "mot": "pour",
+          "debut": 10.63,
+          "fin": 10.89
+        },
+        {
+          "mot": "vous.",
+          "debut": 10.89,
+          "fin": 11.2
+        },
+        {
+          "mot": "À",
+          "debut": 11.2,
+          "fin": 11.3
+        },
+        {
+          "mot": "l'occasion,",
+          "debut": 11.3,
+          "fin": 11.93
+        },
+        {
+          "mot": "végantons",
+          "debut": 11.93,
+          "fin": 12.45
+        },
+        {
+          "mot": "en",
+          "debut": 12.45,
+          "fin": 12.6
+        },
+        {
+          "mot": "demi",
+          "debut": 12.6,
+          "fin": 12.86
+        }
+      ]
+    }
+  ],
+  "note": "Temps des mots estimés ; à corriger si besoin."
+}

@@ -16,6 +16,7 @@ Ouvrir ce dépôt dans Claude Code, puis :
 | `/video <sujet>` | Une vidéo de A à Z |
 | `/bios` | Bios des trois réseaux, prêtes à copier |
 | `/bilan` | Bilan chiffré et décisions |
+| `/traiter-video <fichier>` | Automatisation : vidéo brute → vidéo habillée + miniature + légende + hashtags + réponses + contrôle qualité |
 
 ## Pour démarrer
 1. Relire et compléter `marque/fiche-marque.md` (section « À confirmer »).

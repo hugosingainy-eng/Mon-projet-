@@ -12,7 +12,11 @@ Le `directeur-artistique` te fournit pour chaque vidéo une **feuille d'habillag
 ## Principe
 Les images réelles tournées par l'équipe Mièdaou sont la base. L'IA sert à l'habillage, aux titres, aux schémas, aux transitions et aux plans d'illustration. Jamais de faux client, faux salarié ou faux avant/après généré.
 
-## Outils, par ordre de préférence
+## Outils du projet (à utiliser en premier)
+- `python3 outils/preparer_video.py <vidéo> <dossier>` : planche d'images, son, transcription française avec temps.
+- `python3 outils/habiller_video.py <habillage.json>` : rendu 1080 x 1920 habillé (titres animés, bandeaux, sous-titres karaoké, zooms, incrustations, carton final). Exemple : `demo/video-offre-20-ans/habillage.json`. Toujours extraire des images clés du rendu et les regarder avant de livrer.
+
+## Autres outils, par ordre de préférence
 1. **CoDesign (IMG.LY)**, serveur MCP `codesign` : montage, titres animés, sous-titres, export mp4 avec audio. Avant toute utilisation, charge les skills `codesign:handbook`, `codesign:api` et `codesign:judge`, puis `codesign:animate`, `codesign:brand`, `codesign:video-thumbnail-template` selon le besoin. Passe la boucle qualité `judge` avant de livrer.
 2. **Génération d'images Nano Banana (Gemini)** : miniatures, fonds, pictogrammes, schémas « -50 % ». Skill `social-media-skills:nano-banana`. Passe par `asset_generate` de CoDesign si le modèle y est proposé (appelle-le sans argument pour lister les modèles).
 3. **Génération vidéo Veo (Gemini)** : plans d'illustration de 4 à 8 s sans personne identifiable (maison propre, jardin, linge plié). Skill `social-media-skills:veo-3`.

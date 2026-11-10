@@ -1,0 +1,335 @@
+{
+  "segments": [
+    {
+      "debut": 0.2,
+      "fin": 0.55,
+      "texte": "Attends,",
+      "mots": [
+        {
+          "mot": "Attends,",
+          "debut": 0.2,
+          "fin": 0.55
+        }
+      ]
+    },
+    {
+      "debut": 0.55,
+      "fin": 1.35,
+      "texte": "vous faites encore",
+      "mots": [
+        {
+          "mot": "vous",
+          "debut": 0.55,
+          "fin": 0.76
+        },
+        {
+          "mot": "faites",
+          "debut": 0.76,
+          "fin": 1.06
+        },
+        {
+          "mot": "encore",
+          "debut": 1.06,
+          "fin": 1.35
+        }
+      ]
+    },
+    {
+      "debut": 1.35,
+      "fin": 2.2,
+      "texte": "votre ménage vous-même ?",
+      "mots": [
+        {
+          "mot": "votre",
+          "debut": 1.35,
+          "fin": 1.55
+        },
+        {
+          "mot": "ménage",
+          "debut": 1.55,
+          "fin": 1.79
+        },
+        {
+          "mot": "vous-même",
+          "debut": 1.79,
+          "fin": 2.13
+        },
+        {
+          "mot": "?",
+          "debut": 2.13,
+          "fin": 2.2
+        }
+      ]
+    },
+    {
+      "debut": 2.2,
+      "fin": 2.65,
+      "texte": "Et si je",
+      "mots": [
+        {
+          "mot": "Et",
+          "debut": 2.2,
+          "fin": 2.35
+        },
+        {
+          "mot": "si",
+          "debut": 2.35,
+          "fin": 2.5
+        },
+        {
+          "mot": "je",
+          "debut": 2.5,
+          "fin": 2.65
+        }
+      ]
+    },
+    {
+      "debut": 2.65,
+      "fin": 3.1,
+      "texte": "vous disais",
+      "mots": [
+        {
+          "mot": "vous",
+          "debut": 2.65,
+          "fin": 2.84
+        },
+        {
+          "mot": "disais",
+          "debut": 2.84,
+          "fin": 3.1
+        }
+      ]
+    },
+    {
+      "debut": 3.1,
+      "fin": 3.75,
+      "texte": "que vous pouvez",
+      "mots": [
+        {
+          "mot": "que",
+          "debut": 3.1,
+          "fin": 3.26
+        },
+        {
+          "mot": "vous",
+          "debut": 3.26,
+          "fin": 3.47
+        },
+        {
+          "mot": "pouvez",
+          "debut": 3.47,
+          "fin": 3.75
+        }
+      ]
+    },
+    {
+      "debut": 3.75,
+      "fin": 4.65,
+      "texte": "vous en débarrasser",
+      "mots": [
+        {
+          "mot": "vous",
+          "debut": 3.75,
+          "fin": 3.98
+        },
+        {
+          "mot": "en",
+          "debut": 3.98,
+          "fin": 4.11
+        },
+        {
+          "mot": "débarrasser",
+          "debut": 4.11,
+          "fin": 4.65
+        }
+      ]
+    },
+    {
+      "debut": 4.65,
+      "fin": 5.45,
+      "texte": "tout en profitant",
+      "mots": [
+        {
+          "mot": "tout",
+          "debut": 4.65,
+          "fin": 4.87
+        },
+        {
+          "mot": "en",
+          "debut": 4.87,
+          "fin": 5.01
+        },
+        {
+          "mot": "profitant",
+          "debut": 5.01,
+          "fin": 5.45
+        }
+      ]
+    },
+    {
+      "debut": 5.45,
+      "fin": 6.2,
+      "texte": "d'un cadeau ?",
+      "mots": [
+        {
+          "mot": "d'un",
+          "debut": 5.45,
+          "fin": 5.72
+        },
+        {
+          "mot": "cadeau",
+          "debut": 5.72,
+          "fin": 6.09
+        },
+        {
+          "mot": "?",
+          "debut": 6.09,
+          "fin": 6.2
+        }
+      ]
+    },
+    {
+      "debut": 6.2,
+      "fin": 7.1,
+      "texte": "Mièdaou fête",
+      "mots": [
+        {
+          "mot": "Mièdaou",
+          "debut": 6.2,
+          "fin": 6.75
+        },
+        {
+          "mot": "fête",
+          "debut": 6.75,
+          "fin": 7.1
+        }
+      ]
+    },
+    {
+      "debut": 7.1,
+      "fin": 8.2,
+      "texte": "ses 20 ans…",
+      "mots": [
+        {
+          "mot": "ses",
+          "debut": 7.1,
+          "fin": 7.47
+        },
+        {
+          "mot": "20",
+          "debut": 7.47,
+          "fin": 7.74
+        },
+        {
+          "mot": "ans…",
+          "debut": 7.74,
+          "fin": 8.2
+        }
+      ]
+    },
+    {
+      "debut": 8.2,
+      "fin": 8.75,
+      "texte": "et on a",
+      "mots": [
+        {
+          "mot": "et",
+          "debut": 8.2,
+          "fin": 8.41
+        },
+        {
+          "mot": "on",
+          "debut": 8.41,
+          "fin": 8.61
+        },
+        {
+          "mot": "a",
+          "debut": 8.61,
+          "fin": 8.75
+        }
+      ]
+    },
+    {
+      "debut": 8.75,
+      "fin": 9.25,
+      "texte": "quelque chose pour vous.",
+      "mots": [
+        {
+          "mot": "quelque",
+          "debut": 8.75,
+          "fin": 8.91
+        },
+        {
+          "mot": "chose",
+          "debut": 8.91,
+          "fin": 9.03
+        },
+        {
+          "mot": "pour",
+          "debut": 9.03,
+          "fin": 9.13
+        },
+        {
+          "mot": "vous.",
+          "debut": 9.13,
+          "fin": 9.25
+        }
+      ]
+    },
+    {
+      "debut": 9.25,
+      "fin": 9.85,
+      "texte": "À l'occasion des 20 ans,",
+      "mots": [
+        {
+          "mot": "À",
+          "debut": 9.25,
+          "fin": 9.3
+        },
+        {
+          "mot": "l'occasion",
+          "debut": 9.3,
+          "fin": 9.56
+        },
+        {
+          "mot": "des",
+          "debut": 9.56,
+          "fin": 9.66
+        },
+        {
+          "mot": "20",
+          "debut": 9.66,
+          "fin": 9.73
+        },
+        {
+          "mot": "ans,",
+          "debut": 9.73,
+          "fin": 9.85
+        }
+      ]
+    },
+    {
+      "debut": 9.85,
+      "fin": 10.2,
+      "texte": "Mièdaou vous offre…",
+      "mots": [
+        {
+          "mot": "Mièdaou",
+          "debut": 9.85,
+          "fin": 9.99
+        },
+        {
+          "mot": "vous",
+          "debut": 9.99,
+          "fin": 10.08
+        },
+        {
+          "mot": "offre…",
+          "debut": 10.08,
+          "fin": 10.2
+        }
+      ]
+    }
+  ],
+  "note": "Groupes et temps de la feuille d'habillage (temps de sortie = source - 0,8 s). Fusion des groupes 14 et 15 comme prévu."
+}

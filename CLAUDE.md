@@ -45,6 +45,7 @@ Ordre : stratège contenu et veille (en parallèle) → trois agences (en parall
 - `/video <sujet>` : une vidéo de A à Z (script, montage, légende, hashtags).
 - `/bios` : met à jour les bios des trois réseaux.
 - `/bilan` : bilan chiffré et décisions.
+- `/traiter-video <fichier>` : automatisation complète d'une vidéo brute → vidéo habillée, miniature, légende, hashtags, réponses, contrôle qualité. Outils : `outils/` (voir `outils/README.md`).
 
 ## Fichiers
 - `contenus/` : bios, calendrier, hashtags, scripts, plans de montage, design (`contenus/design/`) et stratégie (`contenus/strategie/`).
