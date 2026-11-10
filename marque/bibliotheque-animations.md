@@ -7,6 +7,17 @@ Chaque effet a un code (ex. `SUB-1`) à utiliser dans les feuilles d'habillage.
 ## Règle d'or
 Un effet sert à **garder l'attention ou à faire lire l'avantage**. Si un effet ne fait ni l'un ni l'autre, on l'enlève. Au maximum un effet « fort » toutes les 3 secondes.
 
+## Temps de lecture (règle de l'équipe)
+| Élément | Durée minimale à l'écran |
+|---|---|
+| Titre, bandeau, mot géant | 1 s + 0,3 s par mot, après la fin de l'entrée |
+| Machine à écrire (`TIT-3`) | frappe terminée, puis 1 s + 0,3 s par mot |
+| Groupe de sous-titres | 0,8 s, 2 à 5 mots |
+| Mention légale | 2 s à chaque apparition |
+| Carton final (`GFX-5`) | 3 s |
+
+Entrées en 0,3 s maximum. Pas plus de 2 nouveaux blocs de texte à la fois. Si ça ne tient pas, on coupe des mots ou on allonge le plan.
+
 ## Sous-titres animés
 | Code | Effet | Réglages | Quand |
 |---|---|---|---|
@@ -54,7 +65,7 @@ Position : centre de l'écran, légèrement sous les yeux du sujet, jamais dans 
 | `GFX-2` | Flèche / cercle dessinés | Trait orange qui se dessine en 0,3 s | Montrer un détail (tache, pli, recoin) |
 | `GFX-3` | Coche de validation | Coche verte qui apparaît avec un « ding » | Liste « inclus », étapes terminées |
 | `GFX-4` | Capture de commentaire | Bulle du commentaire auquel on répond, en haut de l'écran | Réponses vidéo aux commentaires |
-| `GFX-5` | Carton final | Fond bleu, logo, « DEVIS GRATUIT » orange qui pulse, 0262 30 36 37, miedaou.fr, 2 s | Fin de chaque vidéo |
+| `GFX-5` | Carton final | Fond bleu, logo, « DEVIS GRATUIT » orange qui pulse, 0262 30 36 37, miedaou.fr, 3 s minimum | Fin de chaque vidéo |
 
 ## Son
 | Code | Effet | Réglages |
@@ -62,7 +73,13 @@ Position : centre de l'écran, légèrement sous les yeux du sujet, jamais dans 
 | `SON-1` | Whoosh | Sous chaque titre qui entre, -12 dB |
 | `SON-2` | Pop / clic | Sous chaque emoji ou coche, -15 dB |
 | `SON-3` | Ding | Sur l'avantage ou le résultat |
-| `SON-4` | Musique | Sons commerciaux de la plateforme ou sous licence, -18 dB sous la voix, montée sur l'avant/après |
+| `SON-4` | Musique | Choisie selon ce qui marche (sons des vidéos qui surperforment, relevés par la veille et le stratège) et selon la vidéo ; bibliothèque commerciale de la plateforme ou fichier sous licence ; -18 dB sous la voix, baissée automatiquement quand quelqu'un parle, montée sur l'avant/après |
+
+### Choisir la musique
+1. Partir des sons qui reviennent dans les vidéos qui surperforment cette semaine (`contenus/strategie/`, veille), et vérifier qu'ils sont disponibles dans la bibliothèque commerciale (compte professionnel).
+2. Les filtrer selon la vidéo : tempo calé sur le rythme des coupes, ambiance (énergique pour un avant/après, chaleureux pour les seniors, léger pour les coulisses), public (18-30 ou 25-60).
+3. Livrer 1 son recommandé + 2 alternatives, avec la raison, et le moment fort où la musique doit tomber (ex. la révélation de l'avant/après).
+4. Jamais de musique sans licence, même tendance.
 
 ## Recettes prêtes à l'emploi
 - **Explicatif « moitié prix » (20-30 s)** : `TIT-1` → `TIT-2` → `SUB-1` tout du long → `TIT-4` → `SUB-3` « 12,50 € » + `MOV-1` → `GFX-5`.

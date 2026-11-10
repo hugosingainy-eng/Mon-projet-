@@ -38,3 +38,8 @@ Lis d'abord `.claude/instagram/voice.md`. Puis suis ces skills du projet :
 - `ig-human` sur tout texte avant de le livrer.
 
 Les scripts notent le français : écris à partir des champs `template_fr` et `example_fr` de `hooks.json`, et vise une accroche notée 70 ou plus. Ces skills ne publient rien ; un humain poste.
+
+
+## Texte à l'écran et musique
+- Le texte écran doit pouvoir être lu : au moins 1 s + 0,3 s par mot affiché, 6 mots maximum par carton. Si le script prévoit plus de texte que le temps ne permet, coupe des mots ou allonge le plan.
+- Pour chaque vidéo, propose le son de fond : celui qui marche le mieux en ce moment sur la plateforme (d'après `contenus/strategie/` et la veille) et qui colle à la vidéo, disponible pour un compte professionnel, avec 2 alternatives.

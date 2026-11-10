@@ -30,7 +30,8 @@ Pour chaque vidéo au-dessus de 3 fois la médiane de son compte, relève :
 - **Rythme** : nombre de coupes, durée moyenne d'un plan, temps avant le premier changement d'image.
 - **Mouvement** : zooms, jump cuts, accélérés, gels d'image.
 - **Transitions et graphismes** : volets avant/après, flèches, barres de progression, captures de commentaires.
-- **Son** : musique, effets sonores, voix off ou face caméra.
+- **Son** : quel son ou quelle musique (nom exact si visible), tempo, ambiance, effets sonores, voix off ou face caméra. Classe les sons qui reviennent dans les surperformances et vérifie s'ils sont dans la bibliothèque commerciale.
+- **Temps de lecture** : combien de temps chaque texte reste à l'écran ; relève ce qui se lit confortablement.
 Rapproche chaque technique d'un code de `marque/bibliotheque-animations.md`. Si une technique efficace n'y figure pas, **ajoute-la** à la bibliothèque (code, réglages, quand l'utiliser, compte d'origine).
 
 ### 3. Classer par surperformance, pas par vues brutes
@@ -50,8 +51,9 @@ Pour chaque format retenu : pourquoi il marche (preuve + nombre de vidéos), la 
 3. **Formats gagnants** : classement avec preuves.
 4. **Hashtags** : à utiliser / à tester / à abandonner, et mots-clés recherchés.
 5. **Style de montage qui marche en ce moment** : les 5 techniques les plus présentes dans les surperformances, avec leur code, à transmettre au `directeur-artistique` et au `monteur-video`.
-6. **Répartition recommandée** pour la semaine ou le mois (ex. 40 % coulisses, 25 % explicatif avantage…), qui remplace celle de l'agence TikTok si les preuves le justifient.
-7. **5 idées de vidéos prêtes à briefer**, avec accroche française notée par `hookscore.py` et la recette d'habillage conseillée.
+6. **Sons qui marchent** : top 5 des sons ou styles de musique des vidéos qui surperforment, disponibles pour un compte professionnel, avec le type de vidéo où chacun fonctionne.
+7. **Répartition recommandée** pour la semaine ou le mois (ex. 40 % coulisses, 25 % explicatif avantage…), qui remplace celle de l'agence TikTok si les preuves le justifient.
+8. **5 idées de vidéos prêtes à briefer**, avec accroche française notée par `hookscore.py` et la recette d'habillage conseillée.
 
 Transmets la liste de hashtags à `hashtags-seo`, la répartition aux trois agences, et le style de montage au `directeur-artistique` et au `monteur-video`.
 

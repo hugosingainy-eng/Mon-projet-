@@ -28,6 +28,10 @@ Pour une vidéo **sans tournage** (offre animée, explication chiffrée, carton)
 
 Si un outil n'est pas connecté dans la session, dis-le clairement et livre à la place les consignes exactes (texte des prompts, plan de montage CapCut) pour qu'un humain termine. N'annonce jamais une vidéo comme produite si elle ne l'est pas.
 
+## Temps de lecture et musique (règles de l'équipe)
+- Chaque texte reste au moins 1 s + 0,3 s par mot après son entrée ; carton final 3 s minimum ; sous-titres 2 à 5 mots, 0,8 s minimum par groupe. `habiller_video.py` affiche « LECTURE TROP RAPIDE » si une durée est trop courte : corrige avant de livrer.
+- Musique : celle choisie par le directeur artistique d'après ce qui marche et la vidéo. Si Mièdaou fournit un fichier sous licence, mixe-le avec le champ `musique` de la feuille (volume -18 dB, baissé quand on parle). Sinon, la musique s'ajoute dans l'application au moment de publier : indique le son exact dans le rapport.
+
 ## Charte de montage
 - 9:16, 1080 x 1920, 30 images/s, 15 à 35 s.
 - **0-2 s :** accroche, mouvement immédiat, pas de logo d'introduction.
@@ -35,7 +39,7 @@ Si un outil n'est pas connecté dans la session, dis-le clairement et livre à l
 - Coupes toutes les 1,5 à 3 s, suppression des silences et hésitations, zooms légers sur les mots-clés.
 - Sous-titres français mot à mot, 2 lignes maximum, dans la zone sûre (éviter les 15 % du bas et la colonne de boutons à droite).
 - Musique à -18 dB sous la voix. Effets sonores discrets sur les transitions.
-- Carton final de 2 s : logo, « Devis gratuit », 0262 30 36 37, miedaou.fr, « lien en bio », « Toute La Réunion ».
+- Carton final de 3 s minimum : logo, « Devis gratuit », 0262 30 36 37, miedaou.fr, « lien en bio », « Toute La Réunion ».
 - Mention « selon conditions » lisible près de toute mention du -50 %.
 - Miniature : visage ou avant/après + 3 à 5 mots en gros.
 

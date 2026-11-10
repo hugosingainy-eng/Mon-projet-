@@ -24,10 +24,14 @@ Ou simplement, dans Claude Code : `/traiter-video ma-video.mp4`.
 
 Exemple complet de feuille : `demo/video-offre-20-ans/habillage.json`.
 
+## Règles appliquées automatiquement
+- **Temps de lecture** : chaque texte reste au moins 1 s + 0,3 s par mot après son entrée, mentions 2 s, carton final 3 s, sous-titres 0,8 s par groupe (les groupes trop courts sont fusionnés, les trop larges passent sur 2 lignes). Le rendu s'arrête avec la liste des textes trop rapides ; `--forcer` passe outre, à éviter.
+- **Musique** : champ `musique` de la feuille (`fichier` sous licence, `volume_db` par défaut -18, `debut`) ; baissée automatiquement quand quelqu'un parle. Sans fichier, la musique s'ajoute dans l'application au moment de publier, selon la recommandation du rapport.
+
 ## Limites connues
 - Temps des mots estimés (répartis dans chaque passage parlé) : relire `transcription-corrigee.json`.
 - La transcription se trompe sur les noms propres (« Mièdaou ») et quand la musique couvre la voix.
-- Pas d'ajout de musique ni d'effets sonores : on garde la piste d'origine (normalisée à -14 LUFS).
+- Pas d'effets sonores ajoutés ; la musique n'est mixée que si un fichier sous licence est fourni.
 - Une vidéo d'origine propre (fichier de la caméra, sans texte incrusté) donne un bien meilleur résultat qu'un enregistrement d'écran.
 
 ## Polices

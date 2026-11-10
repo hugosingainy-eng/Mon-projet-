@@ -7,7 +7,7 @@ Rien n'a été publié. Tout est à valider par Mièdaou.
 ## 1. La vidéo refaite (sans nouveau tournage)
 | Fichier | Contenu |
 |---|---|
-| `video-offre-20-ans/rendu/offre-20-ans-habillee.mp4` | La vidéo habillée : 15,6 s, 1080 x 1920, 12 Mb/s |
+| `video-offre-20-ans/rendu/offre-20-ans-habillee.mp4` | La vidéo habillée : 16,6 s, 1080 x 1920, 12 Mb/s, temps de lecture vérifié |
 | `video-offre-20-ans/rendu/avant-apres.jpg` | Comparaison image par image avant / après |
 | `video-offre-20-ans/rendu/miniature.jpg` | Miniature « 50 € OFFERTS* / SUR VOTRE MÉNAGE » |
 | `video-offre-20-ans/feuille-habillage.md` | Le plan du directeur artistique, seconde par seconde, avec son diagnostic (3/10 pour l'original) |
@@ -34,7 +34,9 @@ Ce qui change :
 | Agence TikTok | `../contenus/scripts/2026-11-10-tiktok-offre-20-ans.md` | Script de la vidéo à re-tourner (offre dite en moins de 3 s) et 3 déclinaisons : avant/après, coulisses des 20 ans, « c'est quoi l'avance immédiate ? ». |
 | Conversion devis | `../contenus/scripts/2026-11-10-conversion-offre-20-ans.md` | Appel à l'action « Écris DEVIS », 12 réponses types, parcours en message privé, hashtags. |
 
-## 3. Légende et hashtags proposés pour publier la vidéo refaite
+## 3. Légende, hashtags et musique proposés pour publier la vidéo refaite
+Musique : à ajouter dans TikTok au moment de publier, un son de la bibliothèque commerciale parmi ceux qui marchent cette semaine, ambiance festive et chaleureuse (les 20 ans), volume bas sous la voix. La liste précise des sons viendra de la prochaine veille (`/tendances`), Virlo et Manifold n'étant pas joignables dans cette session.
+
 > Mièdaou fête ses 20 ans à La Réunion : 50 € offerts sur un contrat régulier ménage et repassage (voir conditions en agence). Toi, tu dirais quoi en 1 mot ? Devis gratuit, lien en bio.
 
 `#974 #lareunion #menageadomicile #creditdimpot #bonplan974 #miedaou`
@@ -43,7 +45,7 @@ Ce qui change :
 | Artefact | Lien |
 |---|---|
 | Système de design Mièdaou (couleurs, polices, zones sûres, logo) | https://claude.ai/artifact/GSguYQPSVk5mj48M2zgyPp |
-| Film Claude Motion « Offre 20 ans » (15 s, vertical, musique originale, export MP4 depuis la page) | https://claude.ai/artifact/KvXpHFrgVp6NciYU5WnD2z |
+| Film Claude Motion « Offre 20 ans » (20 s, vertical, musique originale, export MP4 depuis la page) | https://claude.ai/artifact/KvXpHFrgVp6NciYU5WnD2z |
 | Carrousel Claude Design « Le -50 % expliqué » (7 planches 1080 x 1350) | https://claude.ai/artifact/XZkc8bs8ywS85otbDCChPM |
 
 Ces pages sont privées : partage-les depuis leur menu Partager si quelqu'un d'autre doit les voir.

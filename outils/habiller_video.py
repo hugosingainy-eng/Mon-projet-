@@ -11,6 +11,9 @@ Ce que l'outil sait faire (codes de marque/bibliotheque-animations.md) :
   - vignette tirée d'une image de la vidéo (ex. l'affiche de l'offre) incrustée plus tôt
   - prolongation de la dernière image et carton final (GFX-5)
   - barre de progression (GFX-1)
+  - musique sous licence mixée sous la voix (champ « musique » : fichier, volume_db, debut ; baissée quand on parle)
+  - vérification du temps de lecture : 1 s + 0,3 s par mot, carton 3 s, sous-titres 0,8 s ;
+    le rendu s'arrête si un texte passe trop vite (--forcer pour passer outre)
 
 Usage :
   python3 outils/habiller_video.py feuille.json
@@ -151,6 +154,11 @@ def evenements_titre(t):
     return lignes
 
 
+def vrais(g):
+    """Nombre de vrais mots d'un groupe (la ponctuation seule ne compte pas)."""
+    return len([m for m in g if re.search(r"[\wÀ-ÿ€%]", m["mot"])])
+
+
 def groupes(mots, maxi=3):
     g, out = [], []
     for m in mots:
@@ -160,6 +168,16 @@ def groupes(mots, maxi=3):
             g = []
     if g:
         out.append(g)
+    # Un groupe affiché moins de 0,8 s se lit mal : on le fusionne avec son voisin (6 mots au plus).
+    i = len(out) - 1                     # de la fin vers le début : une fin de phrase rejoint sa phrase
+    while i >= 0:
+        g = out[i]
+        if g[-1]["fin"] - g[0]["debut"] < 0.8 and len(out) > 1:
+            if i > 0 and vrais(out[i - 1]) + vrais(g) <= 6:
+                out[i - 1] += g; del out[i]; i -= 1; continue
+            if i + 1 < len(out) and vrais(out[i + 1]) + vrais(g) <= 6:
+                out[i + 1] = g + out[i + 1]; del out[i]
+        i -= 1
     return out
 
 
@@ -182,8 +200,20 @@ def evenements_sous_titres(st, masques):
                 b = (g[i + 1]["debut"] if i + 1 < len(g) else actif["fin"]) + decal
                 if cache(a, b) or b <= a:
                     continue
+                # Trop large pour la zone sûre (790 px) : passage sur 2 lignes, coupé au milieu.
+                taille = st.get("taille") or STYLES["sous"][1]
+                largeur = police_pil(TEXTE, taille).getlength(" ".join(m["mot"].upper() for m in g)) * 1.12
+                coupe = None
+                if largeur > st.get("largeur_max", 790) and len(g) > 1:
+                    tot = sum(len(m["mot"]) for m in g); acc = 0
+                    for j, m in enumerate(g):
+                        acc += len(m["mot"])
+                        if acc >= tot / 2:
+                            coupe = min(j + 1, len(g) - 1); break
                 parts = []
                 for j, m in enumerate(g):
+                    if j == coupe:
+                        parts.append("\\N")
                     mot = m["mot"]
                     propre = re.sub(r"[^\wÀ-ÿ€%]", "", mot.lower())
                     if j == i:
@@ -193,7 +223,7 @@ def evenements_sous_titres(st, masques):
                     else:
                         parts.append(mot.upper())
                 pop = "{\\fscx92\\fscy92\\t(0,90,\\fscx100\\fscy100)}" if i == 0 else ""
-                lignes.append(f"Dialogue: 3,{tc(a)},{tc(b)},sous,,0,0,0,,{{\\an5\\pos({xs},{y}){fs}}}{pop}{' '.join(parts)}")
+                lignes.append(f"Dialogue: 3,{tc(a)},{tc(b)},sous,,0,0,0,,{{\\an5\\pos({xs},{y}){fs}}}{pop}{' '.join(parts).replace(' \\N ', '\\N')}")
     return lignes
 
 
@@ -247,6 +277,49 @@ Style: fond,Arial,20,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100
     open(chemin, "w", encoding="utf-8").write(entete + "\n".join(ev) + "\n")
 
 
+def nb_mots(texte):
+    brut = re.sub(r"[*~]|\\N", " ", texte)
+    return len([m for m in brut.split() if re.search(r"[\wÀ-ÿ€%]", m)])
+
+
+def verifier_lecture(f, total):
+    """Règle de l'équipe : 1 s + 0,3 s par mot après l'entrée, carton 3 s, sous-titres 0,8 s par groupe."""
+    alertes = []
+    for t in f.get("titres", []):
+        if t.get("style") == "mention" or not t.get("texte", "").strip():
+            continue
+        n = nb_mots(t["texte"])
+        if not n:
+            continue
+        entree = 0.3
+        if t.get("anim") == "machine":
+            entree = min(t["fin"] - t["debut"], len(t["texte"]) / t.get("vitesse", 22))
+        dispo = t["fin"] - t["debut"] - entree
+        besoin = 1 + 0.3 * n
+        if dispo + 1e-6 < besoin:
+            alertes.append(f"« {re.sub(r'[*~]', '', t['texte']).replace(chr(92) + 'N', ' ')} » {t['debut']:.2f}-{t['fin']:.2f} s : "
+                           f"{dispo:.1f} s de lecture pour {n} mot(s), il en faut {besoin:.1f}")
+    for t in f.get("titres", []):
+        if t.get("style") == "mention" and t["fin"] - t["debut"] < 2:
+            alertes.append(f"mention « {t['texte']} » {t['debut']:.2f}-{t['fin']:.2f} s : moins de 2 s")
+    c = f.get("carton_final")
+    if c and c["duree"] < 3:
+        alertes.append(f"carton final de {c['duree']} s : 3 s minimum")
+    st = f.get("sous_titres")
+    if st:
+        data = json.load(open(st["fichier"], encoding="utf-8"))
+        masques = [tuple(m) for m in st.get("masquer", [])]
+        dec = st.get("decalage", 0)
+        for seg in data["segments"]:
+            for g in groupes(seg["mots"], st.get("mots_par_ligne", 3)):
+                a, b = g[0]["debut"] + dec, g[-1]["fin"] + dec
+                if any(a < m1 and b > m0 for m0, m1 in masques):
+                    continue
+                if b - a < 0.8:
+                    alertes.append(f"sous-titre « {' '.join(m['mot'] for m in g)} » {a:.2f}-{b:.2f} s : moins de 0,8 s")
+    return alertes
+
+
 def expr_zoom(zooms):
     """Facteur de zoom en fonction du temps t, sous forme d'expression ffmpeg."""
     e = "1"
@@ -277,10 +350,10 @@ def duree_source(src):
 
 
 def main():
-    if len(sys.argv) != 2:
+    if len([a for a in sys.argv[1:] if not a.startswith("--")]) != 1:
         print(__doc__)
         sys.exit(2)
-    feuille = os.path.abspath(sys.argv[1])
+    feuille = os.path.abspath([a for a in sys.argv[1:] if not a.startswith("--")][0])
     base = os.path.dirname(feuille)
     f = json.load(open(feuille, encoding="utf-8"))
     chem = lambda p: p if os.path.isabs(p) else os.path.normpath(os.path.join(base, p))
@@ -293,6 +366,13 @@ def main():
     prolong = f.get("prolongation", 0)
     carton = f.get("carton_final")
     total = fin_src + prolong + (carton["duree"] if carton else 0)
+
+    alertes = verifier_lecture(f, total)
+    for a in alertes:
+        print("LECTURE TROP RAPIDE  " + a, file=sys.stderr)
+    if alertes and f.get("lecture_stricte", True) and "--forcer" not in sys.argv:
+        print(f"{len(alertes)} texte(s) trop rapide(s) : allonge-les ou coupe des mots (ou relance avec --forcer).", file=sys.stderr)
+        sys.exit(3)
 
     tmp = tempfile.mkdtemp(prefix="habillage-")
     ass_path = os.path.join(tmp, "habillage.ass")
@@ -381,8 +461,23 @@ def main():
         cur = "vl"
     filtres.append(f"[{cur}]format=yuv420p[vout]")
     norm = "loudnorm=I=-14:TP=-1.5:LRA=11," if f.get("normaliser_son", True) else ""
-    filtres.append(f"[0:a]atrim={deb_src}:{deb_src + fin_src},asetpts=PTS-STARTPTS,{norm}aresample=48000,apad=whole_dur={total},"
-                   f"afade=t=out:st={max(0, total - 0.8)}:d=0.8[aout]")
+    mus = f.get("musique") or {}
+    voix_vol = mus.get("volume_source", 1.0)
+    filtres.append(f"[0:a]atrim={deb_src}:{deb_src + fin_src},asetpts=PTS-STARTPTS,aresample=48000,"
+                   f"volume={voix_vol},apad=whole_dur={total}[voix]")
+    if mus.get("fichier"):
+        # Musique sous licence : -18 dB sous la voix, baissée automatiquement quand quelqu'un parle.
+        n = len([x for x in entrees if x == "-i"])
+        entrees += ["-stream_loop", "-1", "-i", chem(mus["fichier"])]
+        db = mus.get("volume_db", -18)
+        filtres.append(f"[{n}:a]atrim={mus.get('debut', 0)}:{mus.get('debut', 0) + total},asetpts=PTS-STARTPTS,"
+                       f"aresample=48000,volume={db}dB[mus0]")
+        filtres.append("[voix]asplit=2[voixa][voixb]")
+        filtres.append("[mus0][voixb]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=400[mus1]")
+        filtres.append(f"[voixa][mus1]amix=inputs=2:duration=first:normalize=0,{norm}"
+                       f"afade=t=out:st={max(0, total - 0.8)}:d=0.8[aout]")
+    else:
+        filtres.append(f"[voix]{norm}afade=t=out:st={max(0, total - 0.8)}:d=0.8[aout]")
 
     cmd = ["ffmpeg", "-v", "error", "-y", *entrees, "-filter_complex", ";".join(filtres),
            "-map", "[vout]", "-map", "[aout]", "-t", str(total),

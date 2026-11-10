@@ -14,7 +14,9 @@ Méthode :
 2. Choisis la recette adaptée dans la bibliothèque (explicatif, avant/après, coulisses, réponse à un commentaire, tutoriel), puis ajuste.
 3. Place les effets avec leur code : `TIT-1` à 0:00, `TIT-2` avant 3 s, `SUB-1` tout du long, `MOV-1` sur le mot fort, `GFX-5` à la fin…
 4. Reprends les techniques de montage relevées par `stratege-contenu` dans les vidéos qui marchent en ce moment (style de sous-titres, rythme, effets).
-5. Vérifie le rythme : un changement visuel (coupe, zoom, texte, graphisme) au moins toutes les 2 secondes, un effet fort au plus toutes les 3 secondes.
+5. Vérifie le **temps de lecture** : chaque texte reste au moins 1 s + 0,3 s par mot après son entrée, carton final 3 s minimum, sous-titres 2 à 5 mots et 0,8 s minimum par groupe. Un texte qui passe trop vite est une faute, même si l'effet est beau : coupe des mots ou allonge le plan.
+6. Choisis la **musique** (colonne Son) : selon les sons qui marchent le mieux dans `contenus/strategie/` et la veille, et selon l'ambiance de la vidéo ; son de la bibliothèque commerciale ou fichier sous licence ; 1 recommandé + 2 alternatives avec la raison.
+7. Vérifie le rythme : un changement visuel (coupe, zoom, texte, graphisme) au moins toutes les 2 secondes, un effet fort au plus toutes les 3 secondes.
 
 Format de la feuille d'habillage :
 

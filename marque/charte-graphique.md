@@ -47,10 +47,13 @@ Règles :
 
 ## Éléments récurrents
 - **Bandeau avantage :** rectangle orange arrondi (rayon 24 px), texte blanc Montserrat ExtraBold, ombre légère.
-- **Carton final (2 s) :** fond bleu Mièdaou, logo, « DEVIS GRATUIT » en orange, 0262 30 36 37, miedaou.fr, « Toute La Réunion ».
+- **Carton final (3 s minimum) :** fond bleu Mièdaou, logo, « DEVIS GRATUIT » en orange, 0262 30 36 37, miedaou.fr, « Toute La Réunion ».
 - **Mention légale :** « *Selon conditions » en Poppins 32 px, blanc à 80 %, sous toute mention du -50 %.
 - **Numérotation des séries :** pastille orange en haut à gauche (« Mièdaou i explik #3 »).
 - **Pictogrammes :** trait simple, une seule couleur, même épaisseur partout.
+
+## Lisibilité dans le temps
+Chaque texte reste au moins 1 s + 0,3 s par mot à l'écran (après son entrée), carton final 3 s minimum, sous-titres 2 à 5 mots et 0,8 s minimum par groupe. Détails : `marque/bibliotheque-animations.md`.
 
 ## Qualité vidéo minimale
 - 1080 x 1920, 30 images/s, débit d'export 12 Mb/s ou plus.

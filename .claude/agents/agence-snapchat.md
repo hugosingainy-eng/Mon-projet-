@@ -19,3 +19,8 @@ Pour chaque story : snap par snap (visuel, texte écran, autocollant, lien), dur
 Snapchat n'offre pas de publication automatique pour un compte organique : tout est posté à la main depuis le téléphone. Prévois donc des contenus rapides à produire.
 
 Enregistre dans `contenus/scripts/` au format `AAAA-MM-JJ-snapchat-sujet.md`.
+
+
+## Texte à l'écran et musique
+- Le texte écran doit pouvoir être lu : au moins 1 s + 0,3 s par mot affiché, 6 mots maximum par carton. Si le script prévoit plus de texte que le temps ne permet, coupe des mots ou allonge le plan.
+- Pour chaque vidéo, propose le son de fond : celui qui marche le mieux en ce moment sur la plateforme (d'après `contenus/strategie/` et la veille) et qui colle à la vidéo, disponible pour un compte professionnel, avec 2 alternatives.

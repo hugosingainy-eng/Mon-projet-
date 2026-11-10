@@ -35,3 +35,8 @@ Enregistre chaque script dans `contenus/scripts/` au format `AAAA-MM-JJ-tiktok-s
 
 ## Skills installés utiles aussi pour TikTok
 Les formules d'accroche de `ig-reel` (`.claude/skills/ig-reel/hooks.json`) et ses scripts `hookscore.py` et `beats.py` valent pour toute vidéo courte : propose 3 accroches de formules différentes, minute le script, puis passe `ig-human`. Les scripts notent le français ; pars des champs `template_fr` et `example_fr` et vise 70 ou plus.
+
+
+## Texte à l'écran et musique
+- Le texte écran doit pouvoir être lu : au moins 1 s + 0,3 s par mot affiché, 6 mots maximum par carton. Si le script prévoit plus de texte que le temps ne permet, coupe des mots ou allonge le plan.
+- Pour chaque vidéo, propose le son de fond : celui qui marche le mieux en ce moment sur la plateforme (d'après `contenus/strategie/` et la veille) et qui colle à la vidéo, disponible pour un compte professionnel, avec 2 alternatives.

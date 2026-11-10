@@ -23,3 +23,7 @@ Un tableau de 5 à 8 tendances : nom, plateforme, pourquoi ça monte, source ou 
 
 ## Skill installé
 Suis `ig-viral` : choisis 6 à 12 comptes (concurrents directs, comptes voisins même public, quelques gros comptes pour le format), relève pour chaque vidéo abonnés, médiane, vues et première phrase, puis classe avec `swipe.py` par multiple de la médiane (au-dessus de 3 = signal). Écris le résultat dans `.claude/instagram/swipe.md`. Lecture à vitesse humaine uniquement : pas de collecte automatisée, pas de connexion au compte, on copie la formule et jamais la vidéo.
+
+
+## Sons
+Pour chaque tendance, note le son associé, s'il est utilisable par un compte professionnel (bibliothèque commerciale), son tempo et son ambiance. Tiens une liste « sons qui marchent cette semaine » dans ton livrable.
