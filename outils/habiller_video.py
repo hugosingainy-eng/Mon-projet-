@@ -41,6 +41,12 @@ def ass(hexa, alpha=0):
 BLEU, BLEU_NUIT, ORANGE, OR, BLANC, NOIR, ANTHRACITE = (
     "#0070A0", "#00557A", "#E89838", "#F8C860", "#FFFFFF", "#000000", "#1E2A33")
 
+# libass met à l'échelle la hauteur totale de la police (ascendante + descendante) :
+# à taille égale, les lettres sortent environ 30 % plus petites qu'en PAO.
+# Les tailles de ce fichier et des feuilles sont des tailles « PAO » (hauteur de capitale ≈ 0,7 x taille),
+# converties ici. Mesuré sur le rendu : hauteur de capitale Montserrat ExtraBold ≈ 0,5 x taille ASS.
+ECHELLE_ASS = 1.4
+
 TITRE = "Montserrat ExtraBold"
 TEXTE = "Poppins SemiBold"
 
@@ -49,7 +55,7 @@ STYLES = {
     "accroche": (TITRE, 112, BLANC, NOIR, 10, 3),
     "geant":    (TITRE, 190, ORANGE, NOIR, 11, 4),
     "bandeau":  (TITRE, 78, BLANC, ORANGE, 0, 0),
-    "mention":  (TEXTE, 40, BLANC, NOIR, 4, 0),
+    "mention":  (TEXTE, 40, BLANC, NOIR, 5, 3),
     "pastille": (TITRE, 52, BLANC, ORANGE, 0, 0),
     "etiquette": (TITRE, 56, BLANC, BLEU, 0, 0),
     "sous":     (TEXTE, 74, BLANC, NOIR, 8, 2),
@@ -102,9 +108,9 @@ def entree(anim, x, y, debut_ms=0):
     if anim == "fondu":
         return "{\\fad(180,180)}"
     if anim == "pulse":
-        return ("{\\fad(100,0)\\t(0,300,\\fscx112\\fscy112)\\t(300,600,\\fscx100\\fscy100)"
-                "\\t(600,900,\\fscx112\\fscy112)\\t(900,1200,\\fscx100\\fscy100)"
-                "\\t(1200,1500,\\fscx112\\fscy112)\\t(1500,1800,\\fscx100\\fscy100)}")
+        return ("{\\fad(100,0)\\t(0,300,\\fscx108\\fscy108)\\t(300,600,\\fscx100\\fscy100)"
+                "\\t(600,900,\\fscx108\\fscy108)\\t(900,1200,\\fscx100\\fscy100)"
+                "\\t(1200,1500,\\fscx108\\fscy108)\\t(1500,1800,\\fscx100\\fscy100)}")
     return ""
 
 
@@ -114,7 +120,7 @@ def evenements_titre(t):
     anim = t.get("anim", "pop")
     d0, d1 = t["debut"], t["fin"]
     base = ass(t["couleur"]) if t.get("couleur") else ass(STYLES[style][2])
-    fs = f"\\fs{t['taille']}" if t.get("taille") else ""
+    fs = f"\\fs{round(t['taille'] * ECHELLE_ASS)}" if t.get("taille") else ""
     if t.get("couleur"):
         fs += f"\\c{base}"
     lignes = []
@@ -161,7 +167,7 @@ def evenements_sous_titres(st, masques):
     data = json.load(open(st["fichier"], encoding="utf-8"))
     y = st.get("y", 1250)
     xs = st.get("x", W // 2)
-    fs = f"\\fs{st['taille']}" if st.get("taille") else ""
+    fs = f"\\fs{round(st['taille'] * ECHELLE_ASS)}" if st.get("taille") else ""
     cles = [c.lower() for c in st.get("mots_cles", [])]
     decal = st.get("decalage", 0)
     lignes = []
@@ -200,7 +206,7 @@ def evenements_carton(c, debut, fin):
         anim = l.get("anim", "pop")
         cx = c.get("x", W // 2)
         lignes.append(f"Dialogue: 4,{tc(debut + l.get('retard', 0))},{tc(fin)},{style},,0,0,0,,"
-                      f"{{\\an5\\pos({cx},{y})" + (f"\\fs{l['taille']}" if l.get("taille") else "") + f"}}{entree(anim, cx, y)}{couleurs(l['texte'], ass(STYLES[style][2]))}")
+                      f"{{\\an5\\pos({cx},{y})" + (f"\\fs{round(l['taille'] * ECHELLE_ASS)}" if l.get("taille") else "") + f"}}{entree(anim, cx, y)}{couleurs(l['texte'], ass(STYLES[style][2]))}")
         y += l.get("espace", 130)
     return lignes
 
@@ -219,7 +225,7 @@ Style: fond,Arial,20,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100
 """
     for nom, (pol, taille, coul, cont, ep, omb) in STYLES.items():
         contour = ass(cont) if ep else ass(NOIR)
-        entete += (f"Style: {nom},{pol},{taille},{ass(coul)},{ass(coul)},{contour},{ass(NOIR, 0x80)},"
+        entete += (f"Style: {nom},{pol},{round(taille * ECHELLE_ASS)},{ass(coul)},{ass(coul)},{contour},{ass(NOIR, 0x80)},"
                    f"0,0,0,0,100,100,0,0,1,{ep},{omb},5,40,40,0,1\n")
     ev = ["", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"]
     masques = [(t["debut"], t["fin"]) for t in f.get("titres", []) if t.get("masque_sous_titres")]
@@ -301,7 +307,7 @@ def main():
         else:
             subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(v["image_a"]), "-i", src,
                             "-frames:v", "1", img], check=True)
-        entrees += ["-loop", "1", "-t", str(total), "-i", img]
+        entrees += ["-loop", "1", "-framerate", "30", "-t", str(total), "-i", img]
 
     z = expr_zoom(f.get("zooms", []))
     zx = expr_centre(f.get("zooms", []), 0, W // 2)
@@ -323,9 +329,31 @@ def main():
         recad = v.get("recadrage")
         crop = f"crop={recad},"if recad else ""
         bord = v.get("bord", 8)
+        zp = ""
+        if v.get("zoom"):
+            # Zoom animé dans la vignette : clés [temps, zoom, centre_x, centre_y] (centre en fraction de l'image).
+            def piece(k):
+                e = str(v["zoom"][-1][k])
+                for a, b in reversed(list(zip(v["zoom"], v["zoom"][1:]))):
+                    e = (f"if(between(T,{a[0]},{b[0]}),{a[k]}+({b[k]}-{a[k]})*(T-{a[0]})/({b[0]}-{a[0]}),{e})")
+                return f"if(lt(T,{v['zoom'][0][0]}),{v['zoom'][0][k]},{e})"
+            Z, CX, CY = (piece(k).replace("T", "(in/30)") for k in (1, 2, 3))
+            lw0 = v.get("largeur", W)
+            zp = (f"scale=iw*2:-2,zoompan=z='{Z}':x='max(0,min(iw-iw/zoom,({CX})*iw-iw/zoom/2))':"
+                  f"y='max(0,min(ih-ih/zoom,({CY})*ih-ih/zoom/2))':d=1:fps=30:s={lw0}x{{H_VIGNETTE}},")
         if v.get("plein_ecran"):
             fond = v.get("fond", BLEU).lstrip("#")
-            if v.get("largeur"):
+            if zp:
+                from PIL import Image
+                src_img = chem(v["image"]) if v.get("image") else os.path.join(tmp, f"vignette{i}.png")
+                with Image.open(src_img) as im0:
+                    cw, ch = im0.size
+                if v.get("recadrage"):
+                    cw, ch = (int(x) for x in v["recadrage"].split(":")[:2])
+                hv = int(round(v["largeur"] * ch / cw / 2) * 2)
+                filtres.append(f"[{i+1}:v]{crop}{zp.replace('{H_VIGNETTE}', str(hv))}pad={W}:{H}:{v.get('x', 0)}:{v.get('y', 0)}"
+                               f":color=0x{fond},format=rgba[vg{i}]")
+            elif v.get("largeur"):
                 filtres.append(f"[{i+1}:v]{crop}scale={v['largeur']}:-2,pad={W}:{H}:{v.get('x', 0)}:{v.get('y', 0)}"
                                f":color=0x{fond},format=rgba[vg{i}]")
             else:
@@ -359,7 +387,8 @@ def main():
     cmd = ["ffmpeg", "-v", "error", "-y", *entrees, "-filter_complex", ";".join(filtres),
            "-map", "[vout]", "-map", "[aout]", "-t", str(total),
            "-c:v", "libx264", "-preset", "medium", "-b:v", f.get("debit", "12M"),
-           "-maxrate", "16M", "-bufsize", "24M", "-r", "30",
+           "-minrate", f.get("debit", "12M"), "-maxrate", f.get("debit", "12M"), "-bufsize", "24M",
+           "-x264-params", "nal-hrd=cbr", "-r", "30",
            "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", sortie]
     os.makedirs(os.path.dirname(sortie), exist_ok=True)
     subprocess.run(cmd, check=True)

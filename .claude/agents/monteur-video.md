@@ -16,6 +16,9 @@ Les images réelles tournées par l'équipe Mièdaou sont la base. L'IA sert à 
 - `python3 outils/preparer_video.py <vidéo> <dossier>` : planche d'images, son, transcription française avec temps.
 - `python3 outils/habiller_video.py <habillage.json>` : rendu 1080 x 1920 habillé (titres animés, bandeaux, sous-titres karaoké, zooms, incrustations, carton final). Exemple : `demo/video-offre-20-ans/habillage.json`. Toujours extraire des images clés du rendu et les regarder avant de livrer.
 
+## Claude Motion
+Pour une vidéo **sans tournage** (offre animée, explication chiffrée, carton), crée un film Claude Motion (type « Motion », 1080 x 1920) avec le système de design Mièdaou (https://claude.ai/artifact/GSguYQPSVk5mj48M2zgyPp). Exemple : https://claude.ai/artifact/KvXpHFrgVp6NciYU5WnD2z. Une séquence Motion peut aussi servir d'ouverture ou de carton final, exportée en MP4 puis assemblée.
+
 ## Autres outils, par ordre de préférence
 1. **CoDesign (IMG.LY)**, serveur MCP `codesign` : montage, titres animés, sous-titres, export mp4 avec audio. Avant toute utilisation, charge les skills `codesign:handbook`, `codesign:api` et `codesign:judge`, puis `codesign:animate`, `codesign:brand`, `codesign:video-thumbnail-template` selon le besoin. Passe la boucle qualité `judge` avant de livrer.
 2. **Génération d'images Nano Banana (Gemini)** : miniatures, fonds, pictogrammes, schémas « -50 % ». Skill `social-media-skills:nano-banana`. Passe par `asset_generate` de CoDesign si le modèle y est proposé (appelle-le sans argument pour lister les modèles).

@@ -2,13 +2,13 @@
   "_note": "Feuille d'habillage du directeur artistique (feuille-habillage.md) traduite pour outils/habiller_video.py. Temps de sortie.",
   "source": "/root/.claude/uploads/5b1f3cf5-ea3d-5a7f-89f3-5f689294dc9d/029e3d94-ScreenRecording_11-07-2026_02-26-54_1.mov",
   "sortie": "rendu/offre-20-ans-habillee.mp4",
-  "debut_source": 0.8,
+  "debut_source": 0.2,
   "prerecadrage": "996:1948:42:84",
   "prolongation": 0.9,
   "zooms": [
     {
-      "debut": 0.8,
-      "fin": 2.2,
+      "debut": 1.4,
+      "fin": 2.8,
       "de": 1.0,
       "a": 1.04,
       "centre": [
@@ -17,8 +17,8 @@
       ]
     },
     {
-      "debut": 2.2,
-      "fin": 3.6,
+      "debut": 2.8,
+      "fin": 4.2,
       "de": 1.04,
       "a": 1.04,
       "centre": [
@@ -27,8 +27,8 @@
       ]
     },
     {
-      "debut": 3.6,
-      "fin": 4.7,
+      "debut": 4.2,
+      "fin": 5.3,
       "de": 1.04,
       "a": 1.12,
       "type": "coup",
@@ -38,8 +38,8 @@
       ]
     },
     {
-      "debut": 4.7,
-      "fin": 5.5,
+      "debut": 5.3,
+      "fin": 6.1,
       "de": 1.18,
       "a": 1.18,
       "centre": [
@@ -48,8 +48,8 @@
       ]
     },
     {
-      "debut": 5.5,
-      "fin": 6.2,
+      "debut": 6.1,
+      "fin": 6.8,
       "de": 1.06,
       "a": 1.06,
       "centre": [
@@ -58,8 +58,8 @@
       ]
     },
     {
-      "debut": 8.4,
-      "fin": 10.2,
+      "debut": 9.0,
+      "fin": 10.4,
       "de": 1.0,
       "a": 1.2,
       "centre": [
@@ -70,180 +70,236 @@
   ],
   "vignettes": [
     {
-      "debut": 0.0,
-      "fin": 0.8,
       "image_a": 12.0,
       "recadrage": "988:1280:44:358",
       "plein_ecran": true,
       "largeur": 820,
       "x": 45,
-      "y": 245
+      "y": 245,
+      "debut": 0.0,
+      "fin": 1.4
     },
     {
-      "debut": 9.9,
-      "fin": 13.0,
       "image_a": 12.0,
       "recadrage": "988:1280:44:358",
       "plein_ecran": true,
       "largeur": 820,
       "x": 45,
-      "y": 245
+      "y": 245,
+      "debut": 10.4,
+      "fin": 16.0,
+      "zoom": [
+        [
+          10.4,
+          1.0,
+          0.5,
+          0.5
+        ],
+        [
+          10.5,
+          1.0,
+          0.45,
+          0.35
+        ],
+        [
+          12.1,
+          1.12,
+          0.45,
+          0.35
+        ],
+        [
+          13.0,
+          1.12,
+          0.55,
+          0.78
+        ],
+        [
+          16,
+          1.12,
+          0.55,
+          0.78
+        ]
+      ]
     }
   ],
   "titres": [
     {
       "debut": 0.0,
-      "fin": 0.8,
+      "fin": 1.4,
       "style": "mention",
       "anim": "fondu",
       "x": 455,
       "y": 1349,
+      "taille": 44,
       "texte": "*Voir conditions en agence"
     },
     {
       "debut": 0.0,
-      "fin": 0.8,
+      "fin": 1.4,
       "style": "mention",
       "anim": "fondu",
       "x": 455,
       "y": 1405,
+      "taille": 44,
       "texte": "Crédit d'impôt selon conditions"
     },
     {
-      "debut": 0.8,
-      "fin": 2.62,
+      "debut": 1.4,
+      "fin": 3.22,
       "style": "etiquette",
       "anim": "pop",
       "x": 540,
-      "y": 500,
-      "largeur_fond": 1160,
-      "hauteur_fond": 600,
+      "y": 495,
+      "largeur_fond": 1140,
+      "hauteur_fond": 490,
       "couleur_fond": "#00557A",
       "texte": " ",
       "_pourquoi": "cache les textes incrustés d'origine (« Attendez », « Vous faites encore le ménage vous-même ? »)"
     },
     {
-      "debut": 0.8,
-      "fin": 2.62,
+      "debut": 1.4,
+      "fin": 3.22,
       "style": "accroche",
       "anim": "pop",
-      "x": 540,
-      "y": 420,
-      "taille": 100,
-      "texte": "ENCORE VOTRE MÉNAGE"
+      "x": 455,
+      "y": 330,
+      "taille": 96,
+      "texte": "ENCORE"
     },
     {
-      "debut": 1.1,
-      "fin": 2.62,
+      "debut": 1.5,
+      "fin": 3.22,
       "style": "accroche",
       "anim": "pop",
-      "x": 540,
-      "y": 575,
-      "taille": 130,
+      "x": 455,
+      "y": 445,
+      "taille": 96,
+      "texte": "VOTRE MÉNAGE"
+    },
+    {
+      "debut": 1.75,
+      "fin": 3.22,
+      "style": "accroche",
+      "anim": "pop",
+      "x": 455,
+      "y": 590,
+      "taille": 120,
       "couleur": "#E89838",
       "texte": "VOUS-MÊME ?"
     },
     {
-      "debut": 2.62,
-      "fin": 6.2,
+      "debut": 3.22,
+      "fin": 6.8,
       "style": "bandeau",
       "anim": "glisse",
       "x": 455,
       "y": 320,
-      "taille": 100,
+      "taille": 96,
       "largeur_fond": 790,
       "hauteur_fond": 140,
       "texte": "50 € OFFERTS*"
     },
     {
-      "debut": 2.7,
-      "fin": 6.2,
+      "debut": 3.3,
+      "fin": 6.8,
       "style": "mention",
       "anim": "fondu",
       "x": 455,
-      "y": 544,
-      "taille": 46,
+      "y": 560,
+      "taille": 44,
       "texte": "*Voir conditions en agence"
     },
     {
-      "debut": 3.6,
-      "fin": 6.2,
+      "debut": 4.2,
+      "fin": 6.8,
       "style": "etiquette",
       "anim": "glisse",
       "x": 455,
-      "y": 452,
+      "y": 455,
       "taille": 90,
       "largeur_fond": 790,
-      "hauteur_fond": 105,
+      "hauteur_fond": 110,
       "texte": "+ PAYEZ -50 %*"
     },
     {
-      "debut": 3.6,
-      "fin": 6.2,
+      "debut": 4.2,
+      "fin": 6.8,
       "style": "mention",
       "anim": "fondu",
       "x": 455,
-      "y": 598,
-      "taille": 46,
+      "y": 618,
+      "taille": 44,
       "texte": "Crédit d'impôt selon conditions"
     },
     {
-      "debut": 6.2,
-      "fin": 8.4,
+      "debut": 6.8,
+      "fin": 9.5,
       "style": "bandeau",
       "anim": "glisse",
       "x": 455,
       "y": 505,
       "taille": 110,
-      "largeur_fond": 790,
-      "hauteur_fond": 270,
-      "texte": "MIÈDAOU\\N "
+      "largeur_fond": 830,
+      "hauteur_fond": 300,
+      "texte": " "
     },
     {
-      "debut": 7.1,
-      "fin": 8.4,
+      "debut": 6.85,
+      "fin": 9.5,
       "style": "bandeau",
       "sans_fond": true,
       "anim": "pop",
       "x": 455,
-      "y": 565,
+      "y": 440,
+      "taille": 110,
+      "texte": "MIÈDAOU"
+    },
+    {
+      "debut": 8.65,
+      "fin": 9.5,
+      "style": "bandeau",
+      "sans_fond": true,
+      "anim": "pop",
+      "x": 455,
+      "y": 570,
       "taille": 110,
       "texte": "A 20 ANS"
     },
     {
-      "debut": 9.0,
-      "fin": 9.9,
+      "debut": 9.6,
+      "fin": 10.4,
       "style": "accroche",
       "anim": "machine",
       "x": 455,
       "y": 325,
-      "taille": 110,
+      "taille": 104,
       "vitesse": 25,
       "texte": "LE CADEAU…"
     },
     {
-      "debut": 9.9,
-      "fin": 13.0,
+      "debut": 10.4,
+      "fin": 13.58,
       "style": "mention",
       "anim": "fondu",
       "x": 455,
       "y": 1349,
-      "taille": 48,
+      "taille": 46,
       "texte": "*Voir conditions en agence"
     },
     {
-      "debut": 9.9,
-      "fin": 13.0,
+      "debut": 10.4,
+      "fin": 13.58,
       "style": "mention",
       "anim": "fondu",
       "x": 455,
       "y": 1405,
-      "taille": 48,
+      "taille": 46,
       "texte": "Crédit d'impôt selon conditions"
     }
   ],
   "sous_titres": {
-    "fichier": "preparation/sous-titres-feuille.json",
+    "fichier": "preparation/transcription-corrigee.json",
+    "decalage": -0.2,
     "x": 455,
     "y": 1375,
     "taille": 60,
@@ -258,55 +314,63 @@
     "masquer": [
       [
         0.0,
-        0.8
+        1.4
       ],
       [
-        9.9,
-        20
+        10.4,
+        30
       ]
     ]
   },
   "carton_final": {
     "duree": 2.0,
     "x": 455,
-    "y_depart": 435,
+    "y_depart": 560,
     "lignes": [
       {
         "texte": "*DEVIS GRATUIT*",
         "taille": 110,
         "anim": "pulse",
-        "espace": 115
+        "espace": 140
       },
       {
         "texte": "LIEN EN BIO",
         "taille": 80,
         "retard": 0.08,
-        "espace": 138
+        "espace": 130
       },
       {
         "texte": "0262 30 36 37",
         "taille": 96,
         "retard": 0.16,
-        "espace": 120
+        "espace": 130
       },
       {
         "texte": "miedaou.fr · Toute La Réunion",
         "style": "carton_petit",
+        "taille": 54,
         "retard": 0.24,
         "espace": 150
       },
       {
         "texte": "Offre 20 ans : 50 € offerts*",
         "style": "carton_petit",
+        "taille": 54,
         "retard": 0.32,
-        "espace": 86
+        "espace": 90
       },
       {
         "texte": "*Voir conditions en agence",
         "style": "mention",
+        "taille": 44,
         "retard": 0.4
       }
     ]
   },
-  "_ecarts": "Écarts avec la feuille : le bandeau 50 € arrive à 2,6 s au lieu de 2,2 s (un fond bleu nuit masque d'abord les textes incrustés d'origine jusqu'à 2,6 s) ; l'affiche arrive à 9,9 s au lieu de 10,2 s pour sauter le fondu délavé de l'original ; zoom sur l'affiche non réalisé (affiche fixe) ; logo absent du carton faute de fichier officiel."
+  "_ecarts": "Corrections C1 à C9 du contrôle qualité appliquées. Son et image démarrent à 0,2 s de la source (le mot « Attends » est conservé), ouverture sur l'affiche allongée à 1,4 s. Logo : celui du profil TikTok, à sa taille d'origine (280 px), sur plaque blanche, en attendant le fichier officiel. Pas de sous-titres pendant l'affiche.",
+  "logo": {
+    "image": "logo-miedaou.png",
+    "largeur": 280,
+    "y": 300
+  }
 }

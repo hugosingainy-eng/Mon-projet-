@@ -7,12 +7,12 @@ Rien n'a été publié. Tout est à valider par Mièdaou.
 ## 1. La vidéo refaite (sans nouveau tournage)
 | Fichier | Contenu |
 |---|---|
-| `video-offre-20-ans/rendu/offre-20-ans-habillee.mp4` | La vidéo habillée : 15 s, 1080 x 1920 |
+| `video-offre-20-ans/rendu/offre-20-ans-habillee.mp4` | La vidéo habillée : 15,6 s, 1080 x 1920, 12 Mb/s |
 | `video-offre-20-ans/rendu/avant-apres.jpg` | Comparaison image par image avant / après |
 | `video-offre-20-ans/rendu/miniature.jpg` | Miniature « 50 € OFFERTS* / SUR VOTRE MÉNAGE » |
 | `video-offre-20-ans/feuille-habillage.md` | Le plan du directeur artistique, seconde par seconde, avec son diagnostic (3/10 pour l'original) |
 | `video-offre-20-ans/habillage.json` | La feuille traduite pour l'outil de montage, avec les écarts assumés |
-| `video-offre-20-ans/controle-qualite.md` | Le contrôle qualité du rendu final par le directeur artistique |
+| `video-offre-20-ans/controle-qualite.md` | Le contrôle qualité du directeur artistique (6/10, À CORRIGER) et les 9 corrections appliquées depuis |
 
 Ce qui change :
 - **L'offre est visible dès la 1re seconde** (affiche en ouverture), puis en bandeaux « 50 € OFFERTS* » et « + PAYEZ -50 %* », au lieu de 11 s.
@@ -36,7 +36,15 @@ Ce qui change :
 
 `#974 #lareunion #menageadomicile #creditdimpot #bonplan974 #miedaou`
 
-## 4. L'automatisation
+## 4. Claude Design et Claude Motion
+| Artefact | Lien |
+|---|---|
+| Système de design Mièdaou (couleurs, polices, zones sûres, logo) | https://claude.ai/artifact/GSguYQPSVk5mj48M2zgyPp |
+| Film Claude Motion « Offre 20 ans » (15 s, vertical, musique originale, export MP4 depuis la page) | https://claude.ai/artifact/KvXpHFrgVp6NciYU5WnD2z |
+
+Ces pages sont privées : partage-les depuis leur menu Partager si quelqu'un d'autre doit les voir.
+
+## 5. L'automatisation
 Pour toute nouvelle vidéo : `/traiter-video chemin/de/la/video.mp4` dans Claude Code. La chaîne :
 1. préparation automatique (images, son, transcription française) ;
 2. stratège, directeur artistique, agence TikTok et conversion en parallèle ;
@@ -47,7 +55,7 @@ Pour toute nouvelle vidéo : `/traiter-video chemin/de/la/video.mp4` dans Claude
 
 Détails techniques : `../outils/README.md`.
 
-## 5. À faire par Mièdaou
+## 6. À faire par Mièdaou
 - **Valider la vidéo**, puis la publier (ou la republier) avec la légende ci-dessus.
 - **Accord écrit de la conseillère** pour son image.
 - **Licence de la musique d'origine** : à vérifier, ou remplacer par un son de la bibliothèque commerciale TikTok au moment de publier.

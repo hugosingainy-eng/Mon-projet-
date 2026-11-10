@@ -16,6 +16,7 @@ Ouvrir ce dépôt dans Claude Code, puis :
 | `/video <sujet>` | Une vidéo de A à Z |
 | `/bios` | Bios des trois réseaux, prêtes à copier |
 | `/bilan` | Bilan chiffré et décisions |
+| `/motion <sujet>` | Film animé Claude Motion aux couleurs de Mièdaou |
 | `/traiter-video <fichier>` | Automatisation : vidéo brute → vidéo habillée + miniature + légende + hashtags + réponses + contrôle qualité |
 
 ## Pour démarrer

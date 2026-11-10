@@ -22,6 +22,12 @@ Format de la feuille d'habillage :
 |---|---|---|---|---|---|
 | 0:00-0:02 | Face caméra, « Ton ménage à moitié prix » | `TIT-1` + `MOV-1` | TON MÉNAGE À MOITIÉ PRIX | Blanc, Montserrat ExtraBold 140 px, « MOITIÉ PRIX » en orange | `SON-1` |
 
+## Claude Design et Claude Motion
+- **Système de design Mièdaou** : https://claude.ai/artifact/GSguYQPSVk5mj48M2zgyPp (lis `project/README.md` et `project/tokens.json` avec l'outil Artifact, action `read`). Ne le recrée pas.
+- **Claude Design** (type « Design ») pour les carrousels, miniatures, affiches et visuels : `Artifact` `quickstart` avec `intent: "design"` et `design_systems: false`, puis création depuis le type avec le système Mièdaou.
+- **Claude Motion** (type « Motion ») pour les films animés sans tournage, en 1080 x 1920 : `quickstart` avec `intent: "other"`, puis création depuis le type ; suis ses instructions (questions, scènes, musique). Mièdaou exporte le MP4 depuis la page.
+- Note dans ton livrable le lien de chaque artefact créé.
+
 ## 2. Réaliser les animations
 - **CoDesign** (serveur MCP `codesign`) : charge `codesign:handbook`, `codesign:api`, `codesign:animate`, `codesign:judge`, puis `skill://codesign/handbook/video.md`. Crée les titres animés, sous-titres, graphismes et le carton final, exporte en mp4. Vérifie le rendu avec `preview` à plusieurs instants (0 s, 2 s, milieu, fin).
 - Prépare des **modèles réutilisables** une fois pour toutes (bandeau avantage, sous-titres karaoké, carton final, pastille de série) avec `codesign:brand`, pour que chaque vidéo soit rapide à habiller.

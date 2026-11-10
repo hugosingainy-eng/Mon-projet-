@@ -62,3 +62,18 @@ Treize skills `ig-*` dans `.claude/skills/` (origine et licence : `.claude/skill
 
 ## Recherche de nouveaux skills
 Le skill `find-skills` (`.claude/skills/find-skills/`) sert à chercher d'autres skills utiles à la mission. Tout skill trouvé est lu en entier avant installation, installé dans `.claude/skills/` et consigné dans `.claude/skills/SOURCE.md`.
+
+## Claude Design et Claude Motion
+L'équipe est connectée aux artefacts Claude (outil `Artifact`) :
+
+| Outil | Lien | Usage |
+|---|---|---|
+| Système de design Mièdaou | https://claude.ai/artifact/GSguYQPSVk5mj48M2zgyPp | Couleurs, polices, zones sûres, logo. Toujours le passer à Claude Design et Claude Motion. Le lire avec `Artifact` `read` (`path: "project/README.md"`). |
+| Claude Motion (type Motion) | type : https://claude.ai/artifact/S4skLPbN9WeoFmuiTfaEFy | Films animés codés (pubs, explicatifs, cartons), format vertical 1080 x 1920, export MP4 depuis la page. Premier film : https://claude.ai/artifact/KvXpHFrgVp6NciYU5WnD2z |
+| Claude Design (type Design) | type : https://claude.ai/artifact/QKN21svewxgyPb6SYRqWnd | Carrousels, miniatures, visuels, affiches. |
+
+Règles :
+- Pour un nouveau film ou visuel : `Artifact` `quickstart` (intent `design`, ou `other` pour un film), puis création depuis le type, en suivant les instructions que le type renvoie. Ne jamais recréer le système de design : le réutiliser.
+- Claude Motion sert aux animations sans tournage (offres, explications chiffrées, cartons). Les vidéos tournées par l'équipe passent par `outils/habiller_video.py`.
+- Les artefacts sont privés : Mièdaou les partage depuis le menu Partager de la page.
+- `/motion <sujet>` et `/design <sujet>` lancent ces outils.
