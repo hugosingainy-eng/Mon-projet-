@@ -11,6 +11,7 @@ Une équipe de sous-agents Claude Code versionnée dans ce dépôt, pilotée par
 ## Composants
 - `marque/fiche-marque.md` : faits, avantages client, cibles, ton. Seule source de vérité.
 - `marque/charte-graphique.md` : couleurs, polices, formats, qualité vidéo.
+- `marque/bibliotheque-animations.md` : effets de montage style TikTok (sous-titres, titres, zooms, transitions, sons) et recettes.
 - `.claude/agents/` : stratege-contenu, directeur-artistique, veille-tendances, agence-tiktok, agence-instagram, agence-snapchat, hashtags-seo, monteur-video, bios-profils, conversion-devis, analyste.
 - `.claude/commands/` : `/semaine`, `/tendances`, `/video`, `/bios`, `/bilan`.
 - `contenus/` : bios, hashtags, calendrier 30 jours, scripts, plans de montage.
