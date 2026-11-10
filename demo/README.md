@@ -23,7 +23,10 @@ Ce qui change :
 - **Mentions** « *Voir conditions en agence » et « Crédit d'impôt selon conditions » à chaque apparition de l'offre.
 - **Son** normalisé (-14 LUFS).
 
-## 2. Les autres livrables des agents
+## 2. Le profil TikTok géré par les agents
+`profil-tiktok-avant-apres.jpg` : la capture du profil, annotée de ce que les agents enlèvent (rouge) et ajoutent (vert), et `profil-tiktok-apres.jpg` : le profil tel qu'il serait. Nom avec mots recherchés, bio offre 20 ans + téléphone, lien miedaou.fr, 3 vidéos épinglées, couvertures aux couleurs Mièdaou, concours terminé signalé. Chiffres inchangés (aucun chiffre inventé). Note estimée par l'agent bios : 28/100 → 74/100. Script : `outils/demo/profil_avant_apres.py`.
+
+## 2 bis. Les autres livrables des agents
 | Agent | Fichier | En bref |
 |---|---|---|
 | Stratège contenu | `../contenus/strategie/2026-11-10.md` | La vidéo coulisses fait 7,1 fois la médiane du compte, l'offre 20 ans 0,37 fois. Formats gagnants, hashtags, style de montage, 5 idées de vidéos avec accroche notée. Confiance faible : un seul compte analysé. |
@@ -41,6 +44,7 @@ Ce qui change :
 |---|---|
 | Système de design Mièdaou (couleurs, polices, zones sûres, logo) | https://claude.ai/artifact/GSguYQPSVk5mj48M2zgyPp |
 | Film Claude Motion « Offre 20 ans » (15 s, vertical, musique originale, export MP4 depuis la page) | https://claude.ai/artifact/KvXpHFrgVp6NciYU5WnD2z |
+| Carrousel Claude Design « Le -50 % expliqué » (7 planches 1080 x 1350) | https://claude.ai/artifact/XZkc8bs8ywS85otbDCChPM |
 
 Ces pages sont privées : partage-les depuis leur menu Partager si quelqu'un d'autre doit les voir.
 
