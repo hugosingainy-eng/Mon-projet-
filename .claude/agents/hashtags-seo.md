@@ -22,4 +22,4 @@ Skills utiles : `social-media-skills:hashtag-strategy`, `social-media-skills:soc
 Par post : hashtags, mots-clés à dire, à écrire à l'écran et en légende. Chaque semaine : les hashtags à ajouter ou retirer selon les résultats de l'analyste.
 
 ## Mise à jour issue du skill `ig-caption`
-Sur Instagram, 5 hashtags maximum par post, précis, placés en fin de légende ; cette règle remplace la fourchette de 5 à 8 indiquée plus haut. Les mots-clés écrits en phrases dans la légende comptent plus que les hashtags.
+Sur Instagram, 5 hashtags maximum par post, précis, placés en fin de légende. Les mots-clés écrits en phrases dans la légende comptent plus que les hashtags.
