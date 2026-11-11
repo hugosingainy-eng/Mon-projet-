@@ -123,7 +123,7 @@ def test_nb_et_part():
 def test_double_verrou_argent_reel(tmp_path):
     conf = tmp_path / "c.yaml"
     conf.write_text(open(os.path.join(RACINE, "config.yaml"), encoding="utf-8").read()
-                    .replace("mode: demo", "mode: real"), encoding="utf-8")
+                    .replace("\nmode: demo", "\nmode: real"), encoding="utf-8")
     with pytest.raises(ErreurConfig):
         charger_config(str(conf), None, environ={})
     with pytest.raises(ErreurConfig):

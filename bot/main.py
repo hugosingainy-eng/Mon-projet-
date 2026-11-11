@@ -8,7 +8,9 @@
   --reset        réarme le bot après un arrêt
   --backtest     rejeu historique + Monte Carlo, sans aucun ordre
   --chat         discuter avec le bot dans le terminal
-  --test-api     vérifie vos clés eToro (lecture seule)
+  --test-api     vérifie la connexion (MetaTrader 5 ou eToro), lecture seule
+
+La plateforme se choisit dans config.yaml : `plateforme: mt5` ou `plateforme: etoro`.
 """
 import argparse
 import datetime as dt
@@ -48,7 +50,8 @@ def selection_due(directeur, climat_change):
     if climat_change:
         return True
     derniere = lire_date(directeur.etat.data.get("derniere_selection"))
-    jours = directeur.cfg["boucle"]["jours_entre_selections"]
+    jours = getattr(directeur, "jours_entre_selections",
+                    directeur.cfg["boucle"]["jours_entre_selections"])
     return derniere is None or maintenant() - derniere >= dt.timedelta(days=jours)
 
 
@@ -137,9 +140,96 @@ def tester_api(api, cfg, sortie=print):
     return 0 if ok else 1
 
 
-def main(argv=None, api=None, outils=None, client_ia=None, sortie=print):
+def construire_mt5(cfg, dry_run, module=None, client_ia=None):
+    from .ia import creer_client_ia
+    from .mt5.client import ClientMT5
+    from .mt5.directeur import DirecteurMT5
+    client = ClientMT5(cfg, module=module)
+    etat = Etat(chemin_data(cfg, "etat", dry_run))
+    if client_ia is None:
+        client_ia = creer_client_ia(cfg)
+    return DirecteurMT5(client, cfg, etat, client_ia=client_ia, dry_run=dry_run,
+                        chemin_rapport=chemin_data(cfg, "rapport"))
+
+
+def tester_mt5(directeur, sortie=print):
+    """Lecture seule : connexion, type de compte, symboles trouvés, derniers prix."""
+    c = directeur.client
+    sortie("Test de MetaTrader 5 (lecture seule, aucun ordre)")
+    try:
+        c.connecter()
+        compte = c.compte()
+    except Exception as exc:  # noqa: BLE001
+        sortie("❌ Connexion : %s" % exc)
+        return 1
+    sortie("✅ Connecté : compte %s sur %s - %s - solde %s %s" % (
+        compte.get("login"), compte.get("server"), "DÉMO" if c.est_demo() else "RÉEL",
+        compte.get("balance"), compte.get("currency")))
+    ok = True
+    noms = list(dict.fromkeys(directeur.cfg["mt5"]["strategie"]["instruments"]
+                              + directeur.cfg["mt5"]["indices_decisifs"]))
+    for nom in noms:
+        sym = c.resoudre(nom)
+        if not sym:
+            sortie("⚠️  %s : introuvable chez ce courtier (ajoutez son nom dans mt5.alias)" % nom)
+            continue
+        try:
+            bid, ask = c.prix(sym)
+            nb = len(c.bougies(sym, 300))
+            sortie("✅ %s -> %s : prix %s / %s, %d jours d'historique" % (nom, sym, bid, ask, nb))
+        except Exception as exc:  # noqa: BLE001
+            ok = False
+            sortie("⚠️  %s -> %s : %s" % (nom, sym, exc))
+    positions = c.positions()
+    sortie("Positions ouvertes sur le compte : %d (dont %d du bot, magic %d)" % (
+        len(positions), len(c.positions_du_bot()), c.magic))
+    sortie("Résultat : %s" % ("MetaTrader 5 est prêt ✅" if ok else
+                              "connexion OK, quelques symboles à vérifier"))
+    return 0
+
+
+def main_mt5(a, cfg, dossier_cmd, module, client_ia, sortie):
+    directeur = construire_mt5(cfg, a.dry_run, module, client_ia)
+    if a.test_api:
+        return tester_mt5(directeur, sortie)
+    if a.backtest:
+        from .mt5.backtest import lancer_backtest_mt5
+        res = lancer_backtest_mt5(directeur.client, cfg, chemin_data(cfg, "backtest"))
+        sortie("Backtest terminé : %s (gain total rejoué %+.1f %%)" % (
+            chemin_data(cfg, "backtest"), 100 * res["rejeu"]["gain_total"]))
+        return 0
+    if a.stop:
+        from .chat import deposer_commande
+        deposer_commande(dossier_cmd, "stop")
+        directeur.synchroniser()
+        directeur.fermer_tout("--stop")
+        directeur.etat.declencher_arret("arrêt manuel (--stop)")
+        directeur.etat.sauvegarder()
+        sortie("Positions du bot fermées (jamais les vôtres), bot arrêté. Relancez avec --reset.")
+        return 0
+    if a.once:
+        ok = un_cycle(directeur, forcer_selection=True)
+        sortie("Cycle terminé%s. Rapport : %s" % ("" if ok else " AVEC ERREUR (voir le log)",
+                                                  chemin_data(cfg, "rapport")))
+        return 0 if ok else 1
+    sec = cfg["_secrets"]
+    if cfg.get("chat", {}).get("telegram_actif") and sec.get("TELEGRAM_BOT_TOKEN") \
+            and sec.get("TELEGRAM_CHAT_ID"):
+        from .chat import Chat, Telegram
+        chat = Chat(cfg, chemin_data(cfg, "etat", a.dry_run), chemin_data(cfg, "rapport"),
+                    dossier_cmd, directeur.ia)
+        Telegram(sec["TELEGRAM_BOT_TOKEN"], sec["TELEGRAM_CHAT_ID"], chat).demarrer()
+    try:
+        boucle(directeur, dossier_cmd)
+    except KeyboardInterrupt:
+        log.info("Arrêt demandé au clavier. Les positions gardent leur stop-loss chez le courtier.")
+    return 0
+
+
+def main(argv=None, api=None, outils=None, client_ia=None, sortie=print, mt5=None):
     p = argparse.ArgumentParser(prog="python -m bot.main",
-                                description="Bot de copy trading eToro (démo d'abord).")
+                                description="Bot de trading prudent (MetaTrader 5 ou eToro), "
+                                            "démo d'abord.")
     p.add_argument("--dry-run", action="store_true", help="simule sans passer d'ordre")
     p.add_argument("--once", action="store_true", help="un seul cycle complet")
     p.add_argument("--status", action="store_true", help="affiche l'état")
@@ -148,7 +238,7 @@ def main(argv=None, api=None, outils=None, client_ia=None, sortie=print):
     p.add_argument("--backtest", action="store_true", help="rejeu historique + Monte Carlo")
     p.add_argument("--chat", action="store_true", help="discuter avec le bot")
     p.add_argument("--test-api", action="store_true",
-                   help="vérifie vos clés eToro (lecture seule, aucun ordre)")
+                   help="vérifie la connexion (MetaTrader 5 ou eToro), lecture seule")
     p.add_argument("--config", default="config.yaml")
     p.add_argument("--env", default=".env")
     a = p.parse_args(argv)
@@ -182,6 +272,9 @@ def main(argv=None, api=None, outils=None, client_ia=None, sortie=print):
                     dossier_cmd, client_ia if client_ia is not None else creer_client_ia(cfg))
         boucle_terminal(chat, sortie=sortie)
         return 0
+
+    if cfg.get("plateforme") == "mt5":
+        return main_mt5(a, cfg, dossier_cmd, mt5, client_ia, sortie)
 
     sec = cfg["_secrets"]
     if api is None and not (sec["ETORO_API_KEY"] and sec["ETORO_USER_KEY"]):

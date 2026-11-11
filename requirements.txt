@@ -1,5 +1,6 @@
 requests>=2.31
 PyYAML>=6.0
 numpy>=1.26
+MetaTrader5>=5.0.45; sys_platform == "win32"   # MetaTrader 5 (Windows seulement)
 anthropic>=2.0      # seulement si vous utilisez l'IA Claude
 pytest>=8.0         # pour lancer les tests

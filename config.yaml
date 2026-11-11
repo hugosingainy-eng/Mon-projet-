@@ -6,15 +6,52 @@
 #  jamais plus laxistes.
 # =====================================================================
 
+# --- Plateforme ------------------------------------------------------
+# "mt5"   = MetaTrader 5 (compte démo chez un courtier) - stratégie de tendance
+# "etoro" = eToro (copie de traders) - ancienne version, toujours disponible
+plateforme: mt5
+
 # --- Environnement ---------------------------------------------------
 # "demo" = argent fictif (recommandé). "real" = argent réel.
 # Pour "real", il faut AUSSI écrire I_ACCEPT_REAL_MONEY_RISK=oui dans .env
+# Avec MetaTrader 5, le bot REFUSE de démarrer en "demo" sur un compte réel.
 mode: demo
 
 # --- Budget ----------------------------------------------------------
-# Somme maximale que le bot a le droit d'engager, en dollars.
-# Démo de départ : 600 $ = 3 traders x 200 $.
-budget: 600
+# Somme maximale que le bot a le droit d'engager (devise du compte).
+# MetaTrader 5 démo : 10 000 (argent fictif). Les tailles minimales des
+# courtiers (0,01 lot) sont souvent trop grosses pour un très petit budget.
+# eToro démo : 600 = 3 traders x 200 $.
+budget: 10000
+
+# --- MetaTrader 5 ----------------------------------------------------
+mt5:
+  connexion: direct             # "direct" (Windows) ou "mt5linux" (pont pour Linux/Mac)
+  hote: localhost               # pour mt5linux seulement
+  port: 18812                   # pour mt5linux seulement
+  magic: 20261111               # numéro qui marque les positions DU BOT (les vôtres : jamais touchées)
+  timeout_ms: 60000
+  jours_entre_decisions: 1      # la stratégie décide une fois par jour
+  # Indices qui décident du climat (noms « génériques », retrouvés chez votre courtier)
+  indices_decisifs: ["US500", "US100"]
+  # Noms possibles selon les courtiers (le bot prend le premier qui existe)
+  alias:
+    US500: ["US500", "US500.cash", "SP500", "SPX500", "US500Cash", "USA500"]
+    US100: ["US100", "US100.cash", "NAS100", "NDX100", "USTEC", "US100Cash"]
+    DE40: ["DE40", "GER40", "DE40.cash", "GER40.cash", "DAX40"]
+    XAUUSD: ["XAUUSD", "GOLD", "XAUUSD.", "XAUUSDm"]
+    EURUSD: ["EURUSD", "EURUSD.", "EURUSDm"]
+    USDJPY: ["USDJPY", "USDJPY.", "USDJPYm"]
+  strategie:
+    instruments: ["US500", "US100", "DE40", "XAUUSD", "EURUSD", "USDJPY"]
+    historique_jours: 800
+    mm_longue: 200              # moyenne mobile longue (jours)
+    mm_courte: 50               # moyenne mobile courte (jours)
+    atr_jours: 20               # variation moyenne d'une journée
+    stop_atr: 2.5               # stop-loss à 2,5 x ATR sous le prix d'achat
+    risque_par_trade: 0.01      # perte au stop <= 1 % du budget par position
+    positions_max: 3            # au plus 3 positions en même temps
+    correlation_max: 0.80       # refuse deux instruments qui bougent presque pareil
 
 copie:
   nb_traders: 3                 # nombre de traders copiés en même temps
@@ -201,4 +238,4 @@ fichiers:
   etat_dry_run: etat_dry_run.json
   log: bot.log
   rapport: rapport.md
-  backtest: backtest.md
+  backtest: backtest.md       # avec MetaTrader 5, les fichiers commencent par "mt5_"

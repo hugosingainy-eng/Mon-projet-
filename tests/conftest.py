@@ -27,6 +27,8 @@ def pas_de_reseau(monkeypatch):
 @pytest.fixture
 def cfg(tmp_path):
     c = charger_config(os.path.join(RACINE, "config.yaml"), None, environ={})
+    c["plateforme"] = "etoro"
+    c["budget"] = 600
     c["fichiers"]["dossier_data"] = str(tmp_path / "data")
     c["simulateur"]["nb_simulations"] = 2000
     c["renseignement"]["dossier_pack"] = os.path.join(RACINE, "vendor", "trader-skill")

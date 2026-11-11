@@ -58,14 +58,14 @@ def valider_avis(brut, cfg, usernames_connus):
             "resume": str(brut.get("resume", ""))[:1000], "neutre": False}
 
 
-def consulter(client_ia, cfg, rapports, usernames_connus):
+def consulter(client_ia, cfg, rapports, usernames_connus, systeme=None):
     """Interroge l'IA. Ne lève jamais d'exception : avis neutre en cas de souci."""
     if client_ia is None:
         return avis_neutre("IA désactivée (pas de clé)")
     message = ("Voici les rapports des agents (JSON). Donne ton avis.\n\n"
                + json.dumps(rapports, ensure_ascii=False, default=str)[:150_000])
     try:
-        texte = client_ia.demander(SYSTEME, message,
+        texte = client_ia.demander(systeme or SYSTEME, message,
                                    recherche=cfg.get("ia", {}).get("recherche_web", True),
                                    recherche_x=getattr(client_ia, "sait_chercher_sur_x", False))
     except Exception as exc:  # noqa: BLE001 - l'IA ne doit jamais bloquer le bot

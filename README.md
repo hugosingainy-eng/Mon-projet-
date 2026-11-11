@@ -1,14 +1,65 @@
-# Bot de copy trading eToro (démo d'abord)
+# Bot de trading prudent : MetaTrader 5 (démo d'abord)
 
-Ce bot copie automatiquement, via l'API officielle d'eToro, des traders
-eToro sélectionnés avec prudence. Il tourne 24h/24, sur votre PC ou sur un
-serveur.
+Ce bot passe des ordres **automatiquement**, 24h/24, sur un compte **démo** MetaTrader 5
+(argent fictif, marchés réels en direct). Il suit une stratégie de **tendance prudente** :
+il achète seulement quand le marché monte, toujours avec un **stop-loss**, et il
+**simule au moins 10 000 futurs pour chaque option possible** avant le moindre ordre.
+
+L'ancienne version (copie de traders eToro) reste disponible : `plateforme: etoro` dans
+`config.yaml`.
 
 > ## ⚠️ À lire avant tout
 > - **Aucun bot ne garantit des gains.** Vous pouvez perdre de l'argent.
 > - Les simulations et le backtest **rejouent le passé**. Ils ne prédisent pas l'avenir.
-> - Commencez en **démo** (argent fictif) pendant **4 à 8 semaines** avant de penser à l'argent réel.
-> - Le bot ne passe **jamais** d'ordre sur des actions. Il démarre, ajuste ou arrête des **copies de traders**, rien d'autre.
+> - Commencez en **démo** pendant **4 à 8 semaines** avant de penser à l'argent réel.
+> - MetaTrader 5 donne surtout accès à des **CFD** (avec effet de levier) : la plupart des
+>   particuliers y perdent de l'argent. Le bot n'utilise **jamais** de levier (valeur exposée
+>   ≤ budget) et n'achète que (pas de vente à découvert).
+
+## MetaTrader 5 en 6 étapes
+
+**Important : le module Python officiel de MetaTrader 5 ne fonctionne que sous Windows.**
+Sur un Chromebook ou un Mac, il faut soit un PC Windows, soit un petit serveur Windows
+loué (« VPS Windows », environ 10 à 25 € par mois), soit le pont `mt5linux`
+(MetaTrader 5 sous Wine, plus technique : `mt5.connexion: mt5linux`).
+
+1. **Choisissez un courtier régulé** qui propose MetaTrader 5 et un compte démo.
+   Vérifiez son nom sur [regafi.fr](https://www.regafi.fr) (autorisé en France) et qu'il
+   n'est pas sur la liste noire de l'[AMF](https://www.amf-france.org).
+2. **Installez MetaTrader 5** (version Windows) depuis le site du courtier ou de MetaQuotes.
+3. **Ouvrez un compte démo** dans MetaTrader 5 : *Fichier → Ouvrir un compte*, choisissez
+   le serveur **Demo** du courtier. Notez le numéro de compte, le mot de passe et le serveur.
+4. **Autorisez le trading automatique** : bouton **« Trading algorithmique »** (Algo Trading)
+   en haut de MetaTrader 5, qui doit être vert.
+5. **Installez le bot** (Python 3.12, puis `lancer_windows.bat` qui installe tout). Dans
+   `.env`, remplissez `MT5_LOGIN`, `MT5_PASSWORD`, `MT5_SERVER` (ou laissez vide si
+   MetaTrader 5 est déjà connecté).
+6. **Testez :**
+   ```
+   python -m bot.main --test-api          # connexion, compte DÉMO ?, symboles trouvés
+   python -m bot.main --dry-run --once    # une décision simulée -> data/mt5_rapport.md
+   python -m bot.main --backtest          # rejeu historique -> data/mt5_backtest.md
+   ```
+
+Si un symbole est « introuvable », ouvrez la fenêtre *Observation du marché* de MetaTrader 5,
+regardez son nom exact chez votre courtier et ajoutez-le dans `mt5.alias` de `config.yaml`.
+
+### La stratégie (réglable dans `config.yaml`, section `mt5.strategie`)
+
+| Règle | Valeur par défaut |
+|---|---|
+| Instruments | S&P 500, Nasdaq 100, DAX 40, or, EUR/USD, USD/JPY |
+| Achat seulement si | cours > moyenne 200 j **et** moyenne 50 j > moyenne 200 j |
+| Stop-loss | 2,5 × la variation moyenne d'un jour (ATR), posé chez le courtier |
+| Sortie | le cours repasse sous la moyenne 200 j |
+| Risque par position | perte au stop ≤ **1 %** du budget |
+| Positions | 3 au plus, jamais deux instruments trop liés (corrélation > 0,8) |
+| Budget démo | 10 000 (argent fictif) ; valeur exposée totale ≤ budget (pas de levier) |
+| Arrêt total | à **−5 %** du budget, jusqu'à `--reset` |
+
+**Vos positions manuelles ne sont jamais touchées :** le bot marque les siennes avec un
+numéro « magic » (`mt5.magic`) et ne modifie que celles-là. Il **refuse de démarrer** si
+`config.yaml` est en démo mais que MetaTrader 5 est connecté à un compte réel.
 
 ---
 
