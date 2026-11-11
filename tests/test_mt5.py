@@ -20,7 +20,7 @@ from faux_mt5 import FauxMT5, serie
 @pytest.fixture
 def cfg5(tmp_path):
     c = charger_config(os.path.join(RACINE, "config.yaml"), None, environ={})
-    assert c["plateforme"] == "mt5"
+    c["plateforme"] = "mt5"
     c["fichiers"]["dossier_data"] = str(tmp_path / "data")
     return c
 
@@ -174,9 +174,8 @@ def test_ia_veto_et_exposition(cfg5, tmp_path):
 
 
 def test_backtest_sans_triche():
-    cfg = {"mt5": {"strategie": {"mm_longue": 200, "mm_courte": 50, "atr_jours": 20,
-                                 "stop_atr": 2.5, "risque_par_trade": 0.01,
-                                 "positions_max": 3}},
+    cfg = {"strategie": {"mm_longue": 200, "mm_courte": 50, "atr_jours": 20,
+                         "stop_atr": 2.5, "risque_par_trade": 0.01, "positions_max": 3},
            "securite": {"perte_max_pct": 0.05}}
     import datetime as dt
     base = dt.date(2020, 1, 1)
@@ -198,6 +197,7 @@ def config_mt5(tmp_path):
     conf = tmp_path / "config.yaml"
     texte = open(os.path.join(RACINE, "config.yaml"), encoding="utf-8").read()
     texte = texte.replace("dossier_data: data", "dossier_data: %s" % (tmp_path / "data"))
+    texte = texte.replace("plateforme: capital", "plateforme: mt5")
     conf.write_text(texte, encoding="utf-8")
     return ["--config", str(conf), "--env", str(tmp_path / "rien")]
 
@@ -207,7 +207,7 @@ def test_commandes_mt5(tmp_path):
     sorties = []
     assert main(["--test-api"] + config_mt5(tmp_path), mt5=faux, sortie=sorties.append) == 0
     txt = "\n".join(sorties)
-    assert "DÉMO" in txt and "US500 -> US500.cash" in txt and faux.envois == []
+    assert "DÉMO" in txt and "US500 -> US500.cash" in txt and "GOLD -> XAUUSD" in txt and faux.envois == []
     assert main(["--backtest"] + config_mt5(tmp_path), mt5=faux, sortie=sorties.append) == 0
     rapport = (tmp_path / "data" / "mt5_backtest.md").read_text(encoding="utf-8")
     assert "Rejeu jour par jour" in rapport and faux.envois == []

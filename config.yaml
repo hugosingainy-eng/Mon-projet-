@@ -7,51 +7,73 @@
 # =====================================================================
 
 # --- Plateforme ------------------------------------------------------
-# "mt5"   = MetaTrader 5 (compte démo chez un courtier) - stratégie de tendance
-# "etoro" = eToro (copie de traders) - ancienne version, toujours disponible
-plateforme: mt5
+# "capital" = Capital.com (compte démo, marche aussi sur Chromebook) - RECOMMANDÉ
+# "mt5"     = MetaTrader 5 (compte démo chez un courtier, Windows) - même stratégie
+# "etoro"   = eToro (copie de traders) - ancienne version, toujours disponible
+plateforme: capital
 
 # --- Environnement ---------------------------------------------------
 # "demo" = argent fictif (recommandé). "real" = argent réel.
 # Pour "real", il faut AUSSI écrire I_ACCEPT_REAL_MONEY_RISK=oui dans .env
-# Avec MetaTrader 5, le bot REFUSE de démarrer en "demo" sur un compte réel.
+# En "demo", le bot n'utilise QUE le serveur démo de Capital.com, et refuse un
+# compte MetaTrader 5 réel.
 mode: demo
 
 # --- Budget ----------------------------------------------------------
 # Somme maximale que le bot a le droit d'engager (devise du compte).
-# MetaTrader 5 démo : 10 000 (argent fictif). Les tailles minimales des
-# courtiers (0,01 lot) sont souvent trop grosses pour un très petit budget.
+# Capital.com / MetaTrader 5 démo : 10 000 (argent fictif). Si le compte démo
+# contient moins, le bot se limite au solde du compte.
 # eToro démo : 600 = 3 traders x 200 $.
 budget: 10000
 
-# --- MetaTrader 5 ----------------------------------------------------
+# --- Stratégie (Capital.com et MetaTrader 5) ------------------------
+# Suivi de tendance prudent : achat seulement, toujours avec stop-loss.
+# Les noms ci-dessous sont « génériques » : le bot retrouve le vrai nom chez
+# votre courtier grâce aux alias (sections capital et mt5 plus bas).
+strategie:
+  instruments: ["US500", "US100", "DE40", "GOLD", "EURUSD", "USDJPY"]
+  indices_climat: ["US500", "US100"]   # indices qui décident du climat du marché
+  jours_entre_decisions: 1      # la stratégie décide une fois par jour
+  historique_jours: 800
+  mm_longue: 200              # moyenne mobile longue (jours)
+  mm_courte: 50               # moyenne mobile courte (jours)
+  atr_jours: 20               # variation moyenne d'une journée
+  stop_atr: 2.5               # stop-loss à 2,5 x ATR sous le prix d'achat
+  risque_par_trade: 0.01      # perte au stop <= 1 % du budget par position
+  positions_max: 3            # au plus 3 positions en même temps
+  correlation_max: 0.80       # refuse deux instruments qui bougent presque pareil
+
+# --- Capital.com ------------------------------------------------------
+# Fonctionne partout (Chromebook compris) : tout passe par Internet.
+# Clés dans .env : CAPITAL_API_KEY, CAPITAL_IDENTIFIER, CAPITAL_PASSWORD.
+capital:
+  url_demo: "https://demo-api-capital.backend-capital.com/api/v1"
+  url_reel: "https://api-capital.backend-capital.com/api/v1"
+  pause_min_secondes: 0.15      # Capital.com limite le nombre de requêtes par seconde
+  timeout_secondes: 30
+  max_tentatives: 5
+  alias:                        # « epics » Capital.com possibles pour chaque instrument
+    US500: ["US500"]
+    US100: ["US100", "US Tech 100"]
+    DE40: ["DE40", "GERMANY40"]
+    GOLD: ["GOLD"]
+    EURUSD: ["EURUSD"]
+    USDJPY: ["USDJPY"]
+
+# --- MetaTrader 5 (Windows) ------------------------------------------
 mt5:
   connexion: direct             # "direct" (Windows) ou "mt5linux" (pont pour Linux/Mac)
   hote: localhost               # pour mt5linux seulement
   port: 18812                   # pour mt5linux seulement
   magic: 20261111               # numéro qui marque les positions DU BOT (les vôtres : jamais touchées)
   timeout_ms: 60000
-  jours_entre_decisions: 1      # la stratégie décide une fois par jour
-  # Indices qui décident du climat (noms « génériques », retrouvés chez votre courtier)
-  indices_decisifs: ["US500", "US100"]
-  # Noms possibles selon les courtiers (le bot prend le premier qui existe)
   alias:
     US500: ["US500", "US500.cash", "SP500", "SPX500", "US500Cash", "USA500"]
     US100: ["US100", "US100.cash", "NAS100", "NDX100", "USTEC", "US100Cash"]
     DE40: ["DE40", "GER40", "DE40.cash", "GER40.cash", "DAX40"]
-    XAUUSD: ["XAUUSD", "GOLD", "XAUUSD.", "XAUUSDm"]
+    GOLD: ["XAUUSD", "GOLD", "XAUUSD.", "XAUUSDm"]
     EURUSD: ["EURUSD", "EURUSD.", "EURUSDm"]
     USDJPY: ["USDJPY", "USDJPY.", "USDJPYm"]
-  strategie:
-    instruments: ["US500", "US100", "DE40", "XAUUSD", "EURUSD", "USDJPY"]
-    historique_jours: 800
-    mm_longue: 200              # moyenne mobile longue (jours)
-    mm_courte: 50               # moyenne mobile courte (jours)
-    atr_jours: 20               # variation moyenne d'une journée
-    stop_atr: 2.5               # stop-loss à 2,5 x ATR sous le prix d'achat
-    risque_par_trade: 0.01      # perte au stop <= 1 % du budget par position
-    positions_max: 3            # au plus 3 positions en même temps
-    correlation_max: 0.80       # refuse deux instruments qui bougent presque pareil
 
 copie:
   nb_traders: 3                 # nombre de traders copiés en même temps
@@ -238,4 +260,4 @@ fichiers:
   etat_dry_run: etat_dry_run.json
   log: bot.log
   rapport: rapport.md
-  backtest: backtest.md       # avec MetaTrader 5, les fichiers commencent par "mt5_"
+  backtest: backtest.md       # préfixés "capital_" ou "mt5_" selon la plateforme

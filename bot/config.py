@@ -13,7 +13,7 @@ class ErreurConfig(Exception):
     """La configuration est invalide ou dangereuse."""
 
 
-SECRETS = ("MT5_LOGIN", "MT5_PASSWORD", "MT5_SERVER", "MT5_PATH",
+SECRETS = ("CAPITAL_API_KEY", "CAPITAL_IDENTIFIER", "CAPITAL_PASSWORD", "MT5_LOGIN", "MT5_PASSWORD", "MT5_SERVER", "MT5_PATH",
            "ETORO_API_KEY", "ETORO_USER_KEY", "ANTHROPIC_API_KEY", "XAI_API_KEY",
            "SEC_USER_AGENT", "I_ACCEPT_REAL_MONEY_RISK", "TELEGRAM_BOT_TOKEN",
            "TELEGRAM_CHAT_ID")
@@ -66,8 +66,8 @@ def fusionner(base, ajout):
 
 
 def valider(cfg):
-    if cfg.get("plateforme", "etoro") not in ("etoro", "mt5"):
-        raise ErreurConfig("plateforme doit valoir 'mt5' ou 'etoro'")
+    if cfg.get("plateforme", "etoro") not in ("etoro", "mt5", "capital"):
+        raise ErreurConfig("plateforme doit valoir 'capital', 'mt5' ou 'etoro'")
     mode = cfg.get("mode", "demo")
     if mode not in ("demo", "real"):
         raise ErreurConfig("mode doit valoir 'demo' ou 'real' (actuellement %r)" % mode)
@@ -95,6 +95,7 @@ def chemin_data(cfg, nom_cle, dry_run=False):
     else:
         nom = f.get(nom_cle, nom_cle)
     # MetaTrader 5 et eToro ont chacun leur propre mémoire et leur propre rapport
-    if cfg.get("plateforme", "etoro") == "mt5" and nom_cle in ("etat", "rapport", "backtest"):
-        nom = "mt5_" + nom
+    plateforme = cfg.get("plateforme", "etoro")
+    if plateforme in ("mt5", "capital") and nom_cle in ("etat", "rapport", "backtest"):
+        nom = plateforme + "_" + nom
     return os.path.join(dossier, nom)

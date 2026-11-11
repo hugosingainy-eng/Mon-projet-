@@ -51,7 +51,7 @@ def test_commande_backtest(cfg, tmp_path):
     conf = tmp_path / "config.yaml"
     texte = open(os.path.join(RACINE, "config.yaml"), encoding="utf-8").read()
     texte = texte.replace("dossier_data: data", "dossier_data: %s" % (tmp_path / "data"))
-    texte = texte.replace("plateforme: mt5", "plateforme: etoro")
+    texte = texte.replace("plateforme: capital", "plateforme: etoro")
     texte = texte.replace("budget: 10000", "budget: 600")
     texte = texte.replace("nb_simulations: 10000", "nb_simulations: 500")
     conf.write_text(texte, encoding="utf-8")

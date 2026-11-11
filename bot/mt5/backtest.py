@@ -27,7 +27,7 @@ def rejouer(series, cfg, frais=0.0002):
 
     Renvoie les statistiques. Valeur de départ = 1.0 (= le budget).
     """
-    cs = cfg["mt5"]["strategie"]
+    cs = cfg["strategie"]
     perte_max = securite.perte_max(cfg)
     dates = sorted(set().union(*[{b[0] for b in s} for s in series.values()]))
     index = {n: {b[0]: i for i, b in enumerate(s)} for n, s in series.items()}
@@ -117,7 +117,7 @@ def rejouer(series, cfg, frais=0.0002):
 
 def lancer_backtest_mt5(client, cfg, chemin="data/mt5_backtest.md"):
     client.connecter()
-    cs = cfg["mt5"]["strategie"]
+    cs = cfg["strategie"]
     series, notes = {}, []
     for nom in cs["instruments"]:
         sym = client.resoudre(nom)

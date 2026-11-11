@@ -51,8 +51,9 @@ class DirecteurMT5:
         self.dry_run = dry_run
         dossier = cfg.get("fichiers", {}).get("dossier_data", "data")
         self.chemin_rapport = chemin_rapport or os.path.join(dossier, "mt5_rapport.md")
-        self.cs = cfg["mt5"]["strategie"]
-        self.jours_entre_selections = cfg["mt5"].get("jours_entre_decisions", 1)
+        self.cs = cfg["strategie"]
+        self.jours_entre_selections = cfg["strategie"].get("jours_entre_decisions", 1)
+        self.plateforme = cfg.get("plateforme", "mt5")
         self.dernier_rapport = None
         self._donnees = {}
 
@@ -61,6 +62,9 @@ class DirecteurMT5:
     # =================================================================
     def synchroniser(self):
         self.client.connecter()
+        if hasattr(self.client, "tickets_du_bot"):
+            # Capital.com : le bot reconnaît ses positions grâce à son état
+            self.client.tickets_du_bot = set(self.etat.copies.keys())
         reelles = {str(p["ticket"]): p for p in self.client.positions_du_bot()}
         for ticket, c in list(self.etat.copies_ouvertes().items()):
             p = reelles.get(ticket)
@@ -77,12 +81,27 @@ class DirecteurMT5:
                 except Exception as exc:  # noqa: BLE001
                     log.warning("Historique de la position %s illisible (%s)", ticket, exc)
                 valeur = None if profit is None else c["investi"] + profit
+                if valeur is None:
+                    valeur = self._estimation_prudente(c)
                 res = self.etat.fermer_copie(ticket, valeur, "fermée hors du bot ou stop-loss")
                 self.etat.alerte("Position %s (%s) fermée hors du bot ou par son stop-loss : "
                                  "%+.2f" % (c["username"], ticket, res))
         self.etat.data["historique"].append({"date": iso(maintenant()),
                                              "pnl_total": round(self.etat.pnl_total(), 2)})
         self.etat.data["historique"] = self.etat.data["historique"][-3000:]
+
+    def _estimation_prudente(self, c):
+        """Résultat inconnu : on compte le PIRE entre la dernière valeur connue et la
+        valeur au stop-loss (pour que l'arrêt -5 % ne sous-estime jamais une perte)."""
+        valeur = c["derniere_valeur"]
+        try:
+            if c.get("stop") and c.get("prix_entree") and c.get("volume"):
+                au_stop = c["investi"] + self.client.valeur_mouvement(
+                    c["symbole"], c["volume"], c["prix_entree"], c["stop"])
+                valeur = min(valeur, au_stop)
+        except Exception:  # noqa: BLE001
+            pass
+        return valeur
 
     def _valoriser_simulation(self, c):
         """En --dry-run, on suit la position fictive avec le vrai prix du marché."""
@@ -178,10 +197,9 @@ class DirecteurMT5:
         self.etat.sauvegarder()
 
     def _controle_rapide_marche(self):
-        cm = self.cfg["mt5"]
         ref = (self.etat.data.get("marche") or {}).get("clotures") or {}
         alerte = False
-        for nom in cm["indices_decisifs"]:
+        for nom in self.cs["indices_climat"]:
             sym = self.client.resoudre(nom)
             if not sym or nom not in ref:
                 continue
@@ -201,10 +219,10 @@ class DirecteurMT5:
         return False
 
     def analyser_marche(self):
-        cm, cmar = self.cfg["mt5"], self.cfg["marche"]
+        cmar = self.cfg["marche"]
         rapport = {"indices": {}, "date": dt.date.today().isoformat()}
         climats, clotures = [], {}
-        for nom in cm["indices_decisifs"]:
+        for nom in self.cs["indices_climat"]:
             sym = self.client.resoudre(nom)
             try:
                 b = self.client.bougies(sym, 420) if sym else None
@@ -263,7 +281,7 @@ class DirecteurMT5:
             self.cycle_quotidien(aujourd_hui)
         cfg, cs, etat = self.cfg, self.cs, self.etat
         r = {"date": iso(maintenant()), "mode": cfg["mode"], "dry_run": self.dry_run,
-             "plateforme": "MetaTrader 5", "rejets": [], "ordres": [], "signaux": {}}
+             "plateforme": "Capital.com" if self.plateforme == "capital" else "MetaTrader 5", "rejets": [], "ordres": [], "signaux": {}}
         try:
             compte = self.client.compte()
             r["compte"] = {k: compte.get(k) for k in ("login", "server", "currency", "balance",
@@ -302,13 +320,21 @@ class DirecteurMT5:
                                     "raison": "tendance cassée"})
                 del ouvertes[nom]
 
-        # 3. Candidats à l'achat
+        # 3. Candidats à l'achat (jamais sur un instrument où VOUS avez une position)
+        try:
+            perso = {p.get("symbol") for p in self.client.positions()
+                     if not self.client.est_du_bot(p)}
+        except Exception:  # noqa: BLE001
+            perso = set()
         candidats = []
         for nom, d in donnees.items():
             sig = d["signal"]
             if nom in ouvertes:
                 continue
-            if etat.est_banni(nom):
+            if d["symbole"] in perso:
+                r["rejets"].append({"username": nom, "agent": "Directeur",
+                                    "raison": "vous avez déjà une position à vous dessus"})
+            elif etat.est_banni(nom):
                 r["rejets"].append({"username": nom, "agent": "Sentinelle", "raison": "banni"})
             elif not sig.get("valide"):
                 r["rejets"].append({"username": nom, "agent": "Stratégie",
@@ -334,6 +360,10 @@ class DirecteurMT5:
                                                      candidats)
         r["rejets"] += rej
         cap = securite.capital(cfg, etat)
+        solde = (r.get("compte") or {}).get("balance")
+        if isinstance(solde, (int, float)) and 0 < solde < cap:
+            etat.alerte("Le compte ne contient que %.2f : le bot se limite à ce montant" % solde)
+            cap = float(solde)
         total = cap * min(expo, securite.EXPOSITION_MAX_ABSOLUE)
         places = max(0, int(cs["positions_max"]) - len(ouvertes))
         r["budget"] = {"capital": cap, "climat": climat, "exposition": expo,
@@ -446,7 +476,7 @@ class DirecteurMT5:
         perte_lot = abs(self.client.valeur_mouvement(sym, 1.0, ask, stop))
         notionnel_lot = self.client.notionnel_par_lot(sym, ask)
         budget = float(self.cfg["budget"])
-        risque = cs["risque_par_trade"] * budget
+        risque = cs["risque_par_trade"] * min(budget, total if total > 0 else budget)
         part = total / max(1, int(cs["positions_max"]))
         volume = min(risque / perte_lot if perte_lot else 0.0, part / notionnel_lot)
         t = {"pas": float(info.get("volume_step") or 0.01), "min": float(info.get("volume_min")
@@ -504,14 +534,14 @@ def _pct(v):
 
 
 def ecrire_rapport_mt5(r, chemin):
-    L = ["# Rapport du bot MetaTrader 5 - %s" % r["date"], ""]
+    L = ["# Rapport du bot %s - %s" % (r.get("plateforme", "MetaTrader 5"), r["date"]), ""]
     mode = "DÉMO (argent fictif)" if r["mode"] == "demo" else "ARGENT RÉEL"
     if r.get("dry_run"):
         mode += " - SIMULATION (--dry-run) : aucun ordre envoyé"
     L += ["**Mode :** " + mode, ""]
     c = r.get("compte") or {}
     if "erreur" not in c:
-        L += ["**Compte MT5 :** %s sur %s (%s) - solde %s %s" % (
+        L += ["**Compte :** %s sur %s (%s) - solde %s %s" % (
             c.get("login"), c.get("server"), c.get("type"), c.get("balance"),
             c.get("currency")), ""]
     L += ["> Rappel : aucun bot ne garantit des gains. Les simulations rejouent le passé.", ""]

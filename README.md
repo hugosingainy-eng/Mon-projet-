@@ -1,20 +1,50 @@
-# Bot de trading prudent : MetaTrader 5 (démo d'abord)
+# Bot de trading prudent : Capital.com (démo d'abord)
 
-Ce bot passe des ordres **automatiquement**, 24h/24, sur un compte **démo** MetaTrader 5
+Ce bot passe des ordres **automatiquement**, 24h/24, sur un compte **démo Capital.com**
 (argent fictif, marchés réels en direct). Il suit une stratégie de **tendance prudente** :
 il achète seulement quand le marché monte, toujours avec un **stop-loss**, et il
 **simule au moins 10 000 futurs pour chaque option possible** avant le moindre ordre.
 
-L'ancienne version (copie de traders eToro) reste disponible : `plateforme: etoro` dans
+Capital.com marche **sur n'importe quel ordinateur, Chromebook compris** (tout passe par
+Internet). La même stratégie existe pour **MetaTrader 5** (Windows) et l'ancienne
+version **eToro** (copie de traders) reste disponible : réglage `plateforme` dans
 `config.yaml`.
 
 > ## ⚠️ À lire avant tout
 > - **Aucun bot ne garantit des gains.** Vous pouvez perdre de l'argent.
 > - Les simulations et le backtest **rejouent le passé**. Ils ne prédisent pas l'avenir.
 > - Commencez en **démo** pendant **4 à 8 semaines** avant de penser à l'argent réel.
-> - MetaTrader 5 donne surtout accès à des **CFD** (avec effet de levier) : la plupart des
->   particuliers y perdent de l'argent. Le bot n'utilise **jamais** de levier (valeur exposée
->   ≤ budget) et n'achète que (pas de vente à découvert).
+> - Capital.com et MetaTrader 5 proposent des **CFD** : la plupart des particuliers y
+>   perdent de l'argent, surtout avec l'effet de levier. Le bot n'utilise **jamais** de
+>   levier (valeur exposée ≤ budget) et ne fait qu'acheter (pas de vente à découvert).
+
+## Capital.com en 5 étapes (recommandé)
+
+1. **Compte démo :** créez un compte sur [capital.com](https://capital.com) et passez en
+   **démo**. Vérifiez que l'entité est autorisée en France sur
+   [regafi.fr](https://www.regafi.fr).
+2. **Double authentification :** *Paramètres → Sécurité → 2FA* (obligatoire pour l'API).
+3. **Clé API :** *Paramètres → Intégrations API → Générer une nouvelle clé*. Donnez-lui un
+   nom, choisissez un **mot de passe de clé**, entrez le code 2FA. Copiez la clé.
+4. **Fichier `.env` :** copiez `.env.example` en `.env` et remplissez :
+   ```
+   CAPITAL_API_KEY=la-clé
+   CAPITAL_IDENTIFIER=votre-email
+   CAPITAL_PASSWORD=le-mot-de-passe-de-la-clé
+   ```
+5. **Lancez** (Chromebook : activez d'abord *Paramètres → Développeurs →
+   Environnement de développement Linux*, puis ouvrez le Terminal) :
+   ```
+   ./lancer_mac_linux.sh --test-api          # connexion + instruments trouvés
+   ./lancer_mac_linux.sh --dry-run --once    # une décision simulée -> data/capital_rapport.md
+   ./lancer_mac_linux.sh --backtest          # rejeu historique -> data/capital_backtest.md
+   ./lancer_mac_linux.sh --dry-run           # la boucle 24h/24 en simulation
+   ./lancer_mac_linux.sh                     # la boucle 24h/24 sur le compte DÉMO
+   ```
+
+En mode `demo`, le bot n'utilise **que** le serveur démo de Capital.com. Il ne touche
+**jamais** vos positions à vous, et n'achète jamais un instrument sur lequel vous avez une
+position. Si le compte démo contient moins que le `budget`, il se limite au solde.
 
 ## MetaTrader 5 en 6 étapes
 
@@ -42,9 +72,9 @@ loué (« VPS Windows », environ 10 à 25 € par mois), soit le pont `mt5linux
    ```
 
 Si un symbole est « introuvable », ouvrez la fenêtre *Observation du marché* de MetaTrader 5,
-regardez son nom exact chez votre courtier et ajoutez-le dans `mt5.alias` de `config.yaml`.
+regardez son nom exact chez votre courtier et ajoutez-le dans les `alias` de `config.yaml`.
 
-### La stratégie (réglable dans `config.yaml`, section `mt5.strategie`)
+### La stratégie (réglable dans `config.yaml`, section `strategie`)
 
 | Règle | Valeur par défaut |
 |---|---|

@@ -188,8 +188,11 @@ class ClientMT5:
     def positions(self):
         return [_dict(p) for p in (self.m.positions_get() or [])]
 
+    def est_du_bot(self, position):
+        return int(position.get("magic", 0)) == self.magic
+
     def positions_du_bot(self):
-        return [p for p in self.positions() if int(p.get("magic", 0)) == self.magic]
+        return [p for p in self.positions() if self.est_du_bot(p)]
 
     def _remplissage(self, symbole):
         mode = int(self.infos(symbole).get("filling_mode", 0))

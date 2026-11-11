@@ -140,11 +140,18 @@ def tester_api(api, cfg, sortie=print):
     return 0 if ok else 1
 
 
-def construire_mt5(cfg, dry_run, module=None, client_ia=None):
+def construire_mt5(cfg, dry_run, module=None, client_ia=None, capital_session=None):
+    """Directeur pour Capital.com ou MetaTrader 5 (même stratégie, mêmes règles)."""
     from .ia import creer_client_ia
-    from .mt5.client import ClientMT5
     from .mt5.directeur import DirecteurMT5
-    client = ClientMT5(cfg, module=module)
+    if cfg.get("plateforme") == "capital":
+        from .capital.client import ClientCapital
+        client = ClientCapital(cfg, session=capital_session)
+        if capital_session is not None:
+            client.dormir = lambda s: None
+    else:
+        from .mt5.client import ClientMT5
+        client = ClientMT5(cfg, module=module)
     etat = Etat(chemin_data(cfg, "etat", dry_run))
     if client_ia is None:
         client_ia = creer_client_ia(cfg)
@@ -155,7 +162,8 @@ def construire_mt5(cfg, dry_run, module=None, client_ia=None):
 def tester_mt5(directeur, sortie=print):
     """Lecture seule : connexion, type de compte, symboles trouvés, derniers prix."""
     c = directeur.client
-    sortie("Test de MetaTrader 5 (lecture seule, aucun ordre)")
+    sortie("Test de %s (lecture seule, aucun ordre)" % (
+        "Capital.com" if directeur.plateforme == "capital" else "MetaTrader 5"))
     try:
         c.connecter()
         compte = c.compte()
@@ -166,12 +174,13 @@ def tester_mt5(directeur, sortie=print):
         compte.get("login"), compte.get("server"), "DÉMO" if c.est_demo() else "RÉEL",
         compte.get("balance"), compte.get("currency")))
     ok = True
-    noms = list(dict.fromkeys(directeur.cfg["mt5"]["strategie"]["instruments"]
-                              + directeur.cfg["mt5"]["indices_decisifs"]))
+    noms = list(dict.fromkeys(directeur.cfg["strategie"]["instruments"]
+                              + directeur.cfg["strategie"]["indices_climat"]))
     for nom in noms:
         sym = c.resoudre(nom)
         if not sym:
-            sortie("⚠️  %s : introuvable chez ce courtier (ajoutez son nom dans mt5.alias)" % nom)
+            sortie("⚠️  %s : introuvable chez ce courtier (ajoutez son nom dans les alias de "
+                   "config.yaml)" % nom)
             continue
         try:
             bid, ask = c.prix(sym)
@@ -181,15 +190,15 @@ def tester_mt5(directeur, sortie=print):
             ok = False
             sortie("⚠️  %s -> %s : %s" % (nom, sym, exc))
     positions = c.positions()
-    sortie("Positions ouvertes sur le compte : %d (dont %d du bot, magic %d)" % (
-        len(positions), len(c.positions_du_bot()), c.magic))
-    sortie("Résultat : %s" % ("MetaTrader 5 est prêt ✅" if ok else
+    sortie("Positions ouvertes sur le compte : %d (dont %d du bot)" % (
+        len(positions), len(directeur.etat.copies_ouvertes())))
+    sortie("Résultat : %s" % ("la connexion est prête ✅" if ok else
                               "connexion OK, quelques symboles à vérifier"))
     return 0
 
 
-def main_mt5(a, cfg, dossier_cmd, module, client_ia, sortie):
-    directeur = construire_mt5(cfg, a.dry_run, module, client_ia)
+def main_mt5(a, cfg, dossier_cmd, module, client_ia, sortie, capital_session=None):
+    directeur = construire_mt5(cfg, a.dry_run, module, client_ia, capital_session)
     if a.test_api:
         return tester_mt5(directeur, sortie)
     if a.backtest:
@@ -226,7 +235,8 @@ def main_mt5(a, cfg, dossier_cmd, module, client_ia, sortie):
     return 0
 
 
-def main(argv=None, api=None, outils=None, client_ia=None, sortie=print, mt5=None):
+def main(argv=None, api=None, outils=None, client_ia=None, sortie=print, mt5=None,
+         capital_session=None):
     p = argparse.ArgumentParser(prog="python -m bot.main",
                                 description="Bot de trading prudent (MetaTrader 5 ou eToro), "
                                             "démo d'abord.")
@@ -273,8 +283,14 @@ def main(argv=None, api=None, outils=None, client_ia=None, sortie=print, mt5=Non
         boucle_terminal(chat, sortie=sortie)
         return 0
 
-    if cfg.get("plateforme") == "mt5":
-        return main_mt5(a, cfg, dossier_cmd, mt5, client_ia, sortie)
+    if cfg.get("plateforme") in ("mt5", "capital"):
+        try:
+            return main_mt5(a, cfg, dossier_cmd, mt5, client_ia, sortie, capital_session)
+        except Exception as exc:  # noqa: BLE001 - message clair plutôt qu'une trace Python
+            if a.once or a.test_api or a.backtest or a.stop:
+                sortie("❌ %s" % exc)
+                return 1
+            raise
 
     sec = cfg["_secrets"]
     if api is None and not (sec["ETORO_API_KEY"] and sec["ETORO_USER_KEY"]):
