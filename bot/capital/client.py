@@ -183,6 +183,26 @@ class ClientCapital:
         self._symboles[nom] = trouve
         return trouve
 
+    def lister_marches(self, cs):
+        """TOUS les marchés ouverts de Capital.com (GET /markets), en écartant ceux dont
+        l'écart achat/vente est trop cher. Limité à `max_marches` pour rester raisonnable."""
+        data = self.requete("GET", "/markets")
+        types = set(cs.get("types_marches") or [])
+        ecart_max = float(cs.get("ecart_max_pct", 0.5)) / 100
+        choisis = []
+        for m in data.get("markets", []):
+            epic = m.get("epic")
+            if not epic or m.get("marketStatus") != "TRADEABLE":
+                continue
+            if types and m.get("instrumentType") not in types:
+                continue
+            bid, offre = m.get("bid"), m.get("offer")
+            if not bid or not offre or (offre - bid) / offre > ecart_max:
+                continue
+            self._symboles.setdefault(epic, epic)
+            choisis.append(epic)
+        return choisis[:int(cs.get("max_marches", 1500))]
+
     def infos(self, epic):
         m = self._marche(epic)
         regles = m.get("dealingRules") or {}

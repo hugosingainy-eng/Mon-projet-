@@ -146,6 +146,21 @@ class ClientMT5:
         self._symboles[nom] = trouve
         return trouve
 
+    def lister_marches(self, cs):
+        """TOUS les symboles tradables du courtier, sans les plus chers (écart trop grand)."""
+        ecart_max = float(cs.get("ecart_max_pct", 0.5)) / 100
+        out = []
+        for s in self.m.symbols_get() or []:
+            d = _dict(s)
+            bid, ask = float(d.get("bid") or 0), float(d.get("ask") or 0)
+            if int(d.get("trade_mode", 4)) == 0:          # SYMBOL_TRADE_MODE_DISABLED
+                continue
+            if bid <= 0 or ask <= 0 or (ask - bid) / ask > ecart_max:
+                continue
+            self._symboles.setdefault(d["name"], d["name"])
+            out.append(d["name"])
+        return out[:int(cs.get("max_marches", 1500))]
+
     def infos(self, symbole):
         self.m.symbol_select(symbole, True)
         i = _dict(self.m.symbol_info(symbole))

@@ -78,7 +78,7 @@ regardez son nom exact chez votre courtier et ajoutez-le dans les `alias` de `co
 
 | Règle | Valeur par défaut |
 |---|---|
-| Univers | ~30 marchés : indices (S&P 500, Nasdaq, Dow Jones, DAX, CAC 40…), or, argent, pétrole, gaz, cuivre, devises, Bitcoin, Ethereum, grandes actions US (Apple, Nvidia, Tesla…) |
+| Univers | **tous les marchés ouverts** du courtier (`univers: tout`, jusqu'à 1 500 par jour) : actions du monde entier, indices, matières premières, devises, cryptos. Les marchés trop chers (écart achat/vente > 0,5 %) sont ignorés. Avec `univers: liste`, seulement la liste de ~30 marchés de `config.yaml` |
 | Profil | **dynamique** (style trader actif, vise la semaine) ou **prudent** |
 | Méthode « tendance » | achat si cours > moyenne 200 j **et** moyenne 50 j > moyenne 200 j ; sortie sous la moyenne 200 j |
 | Méthode « cassure » (profil dynamique) | achat quand le cours dépasse son plus haut des 20 jours avec élan ; sortie sous le plus bas des 10 jours |

@@ -293,19 +293,37 @@ class DirecteurMT5:
         except Exception as exc:  # noqa: BLE001
             r["compte"] = {"erreur": str(exc)}
 
-        # 1. Stratégie : signaux sur chaque instrument
+        # 1. Stratégie : signaux sur chaque instrument (ou sur TOUS les marchés)
         donnees = {}
-        for nom in cs["instruments"]:
+        instruments = list(cs["instruments"])
+        if cs.get("univers") == "tout":
+            try:
+                tous = self.client.lister_marches(cs)
+                instruments = list(dict.fromkeys(instruments + tous))
+            except Exception as exc:  # noqa: BLE001
+                etat.alerte("Liste de tous les marchés indisponible (%s) : liste de base" % exc)
+        # positions déjà ouvertes : toujours analysées (pour leurs sorties)
+        for c in etat.copies_ouvertes().values():
+            if c["username"] not in instruments:
+                instruments.append(c["username"])
+        grand = len(instruments) > 60
+        r["nb_marches"] = len(instruments)
+        compteur = {"introuvables": 0, "sans_historique": 0, "sans_signal": 0}
+        for nom in instruments:
             sym = self.client.resoudre(nom)
             if not sym:
-                r["rejets"].append({"username": nom, "agent": "Stratégie",
-                                    "raison": "symbole introuvable chez ce courtier"})
+                compteur["introuvables"] += 1
+                if not grand:
+                    r["rejets"].append({"username": nom, "agent": "Stratégie",
+                                        "raison": "symbole introuvable chez ce courtier"})
                 continue
             try:
                 b = self.client.bougies(sym, cs.get("historique_jours", 800))
             except Exception as exc:  # noqa: BLE001
-                r["rejets"].append({"username": nom, "agent": "Stratégie",
-                                    "raison": "historique indisponible (%s)" % exc})
+                compteur["sans_historique"] += 1
+                if not grand:
+                    r["rejets"].append({"username": nom, "agent": "Stratégie",
+                                        "raison": "historique indisponible (%s)" % exc})
                 continue
             sig = strategie.analyser(b, cs)
             donnees[nom] = {"symbole": sym, "bougies": b, "signal": sig}
@@ -345,15 +363,21 @@ class DirecteurMT5:
                                     "raison": "vous avez déjà une position à vous dessus"})
             elif etat.est_banni(nom):
                 r["rejets"].append({"username": nom, "agent": "Sentinelle", "raison": "banni"})
-            elif not sig.get("valide"):
-                r["rejets"].append({"username": nom, "agent": "Stratégie",
-                                    "raison": sig.get("raison")})
-            elif not sig["entree"]:
-                r["rejets"].append({"username": nom, "agent": "Stratégie",
-                                    "raison": "pas de signal : " + sig["raison"]})
+            elif not sig.get("valide") or not sig["entree"]:
+                compteur["sans_signal"] += 1
+                if not grand:
+                    r["rejets"].append({"username": nom, "agent": "Stratégie",
+                                        "raison": ("pas de signal : " + sig["raison"])
+                                        if sig.get("valide") else sig.get("raison")})
             else:
                 candidats.append({"username": nom, "score": sig["force"]})
         candidats.sort(key=lambda t: t["score"], reverse=True)
+        r["compteur"] = compteur
+        r["nb_signaux"] = len(candidats)
+        if grand:
+            # Rapport lisible : on ne garde que les signaux d'achat et les positions
+            gardes = {t["username"] for t in candidats[:40]} | set(ouvertes)
+            r["signaux"] = {n: v for n, v in r["signaux"].items() if n in gardes}
 
         # 4. Analyste IA (ne peut que réduire)
         avis = analyste_ia.consulter(
@@ -588,7 +612,13 @@ def ecrire_rapport_mt5(r, chemin):
               b.get("montant_expose", 0), b.get("capital", 0), b.get("deja_engage", 0)),
           "- Profil : **%s** - places libres : %s" % (r.get("profil"), b.get("places")),
           "- Résultat total du bot : **%+.2f**" % r.get("pnl_total", 0), ""]
-    L += ["## Signaux de la stratégie (tendance)", "",
+    if r.get("nb_marches"):
+        cpt = r.get("compteur") or {}
+        L += ["**%d marchés analysés** : %d signaux d'achat, %d sans signal, %d introuvables, "
+              "%d sans historique." % (r["nb_marches"], r.get("nb_signaux", 0),
+                                       cpt.get("sans_signal", 0), cpt.get("introuvables", 0),
+                                       cpt.get("sans_historique", 0)), ""]
+    L += ["## Signaux de la stratégie", "",
           "| Instrument | Dernier | Moyenne 200 j | Élan 20 j | Signal |", "|---|---|---|---|---|"]
     for nom, s in sorted((r.get("signaux") or {}).items(),
                          key=lambda kv: (not kv[1].get("entree"), kv[0])):

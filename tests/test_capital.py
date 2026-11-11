@@ -169,3 +169,42 @@ def test_mauvais_identifiants_message_clair(tmp_path):
     sorties = []
     assert main(["--test-api"] + args, capital_session=faux, sortie=sorties.append) == 1
     assert "refusée" in "\n".join(sorties) or "Connexion" in "\n".join(sorties)
+
+
+def test_univers_tous_les_marches(cfgc, tmp_path):
+    """Le bot analyse TOUS les marchés listés par Capital.com (GET /markets)."""
+    from faux_capital import MARCHES
+    faux = FauxCapital()
+    # 40 actions supplémentaires, dont une trop chère (écart achat/vente de 3 %)
+    from faux_mt5 import serie
+    for i in range(40):
+        epic = "ACT%02d" % i
+        MARCHES[epic] = ("USD", 50 + i, 0.0009, 0.012, 100 + i, 1)
+        faux.series[epic] = serie(50 + i, 0.0009, 0.012, graine=100 + i)
+    try:
+        orig = faux.request
+
+        def request(methode, url, params=None, json=None, headers=None, timeout=None):
+            if url.endswith("/markets"):
+                liste = []
+                for e in MARCHES:
+                    p = faux.dernier(e)
+                    ecart = 0.03 if e == "ACT00" else 0.0002
+                    liste.append({"epic": e, "marketStatus": "TRADEABLE", "bid": p,
+                                  "offer": p * (1 + ecart), "instrumentType": "SHARES"})
+                from faux_capital import Rep
+                return Rep(200, {"markets": liste})
+            return orig(methode, url, params, json, headers, timeout)
+        faux.request = request
+        d, _ = directeur(cfgc, tmp_path, faux)
+        r = d.selection()
+        assert r["nb_marches"] >= 45
+        liste = d.client.lister_marches(d.cs)
+        assert "ACT00" not in liste and "ACT01" in liste          # écart de 3 % : écarté
+        assert "ACT00" not in [o["epic"] for o in faux.ordres]
+        assert r["feu_vert"] and 1 <= len(faux.ordres) <= 6
+        rapport = open(tmp_path / "r.md", encoding="utf-8").read()
+        assert "marchés analysés" in rapport
+    finally:
+        for i in range(40):
+            MARCHES.pop("ACT%02d" % i, None)

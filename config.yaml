@@ -38,6 +38,14 @@ strategie:
                 "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCHF", "USDCAD",
                 "BTCUSD", "ETHUSD",
                 "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "TSLA", "AMD", "NFLX", "JPM"]
+  # "tout" = le bot analyse TOUS les marchés ouverts du courtier (actions du monde
+  # entier, indices, matières premières, devises, cryptos), en plus de la liste
+  # ci-dessus. "liste" = seulement la liste ci-dessus.
+  univers: tout
+  max_marches: 1500           # au plus 1500 marchés analysés par jour
+  ecart_max_pct: 0.5          # ignore un marché si l'écart achat/vente dépasse 0,5 % (trop cher)
+  types_marches: []           # vide = tous ; ex. ["SHARES", "INDICES", "COMMODITIES",
+                              #   "CURRENCIES", "CRYPTOCURRENCIES"] (noms Capital.com)
   indices_climat: ["US500", "US100"]   # indices qui décident du climat du marché
   jours_entre_decisions: 1      # la stratégie décide une fois par jour
   historique_jours: 800
@@ -65,7 +73,8 @@ profil: dynamique
 profils:
   dynamique:
     strategie: {strategies: ["tendance", "cassure"], positions_max: 6}
-    simulateur: {jours: 5, chance_gain_min: 0.55, risque_arret_max: 0.10, choix: rendement}
+    simulateur: {jours: 5, chance_gain_min: 0.55, risque_arret_max: 0.10, choix: rendement,
+                 max_candidats_explores: 10}
   prudent:
     strategie: {strategies: ["tendance"], positions_max: 3}
     simulateur: {jours: 63, chance_gain_min: 0.60, risque_arret_max: 0.20, choix: prudent}
