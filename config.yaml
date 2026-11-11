@@ -31,17 +31,44 @@ budget: 10000
 # Les noms ci-dessous sont « génériques » : le bot retrouve le vrai nom chez
 # votre courtier grâce aux alias (sections capital et mt5 plus bas).
 strategie:
-  instruments: ["US500", "US100", "DE40", "GOLD", "EURUSD", "USDJPY"]
+  # Univers : indices, matières premières, devises, cryptos et grandes actions.
+  # Un nom introuvable chez votre courtier est simplement ignoré.
+  instruments: ["US500", "US100", "US30", "DE40", "UK100", "FR40", "J225", "EU50",
+                "GOLD", "SILVER", "OIL_CRUDE", "NATURALGAS", "COPPER",
+                "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCHF", "USDCAD",
+                "BTCUSD", "ETHUSD",
+                "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "TSLA", "AMD", "NFLX", "JPM"]
   indices_climat: ["US500", "US100"]   # indices qui décident du climat du marché
   jours_entre_decisions: 1      # la stratégie décide une fois par jour
   historique_jours: 800
+  strategies: ["tendance"]      # remplacé par le profil choisi plus bas
   mm_longue: 200              # moyenne mobile longue (jours)
   mm_courte: 50               # moyenne mobile courte (jours)
   atr_jours: 20               # variation moyenne d'une journée
   stop_atr: 2.5               # stop-loss à 2,5 x ATR sous le prix d'achat
+  stop_suiveur: true          # le stop remonte avec le prix (ne descend jamais)
+  cassure_jours: 20           # cassure = plus haut des 20 derniers jours
+  cassure_sortie_jours: 10    # sortie d'une cassure = plus bas des 10 derniers jours
   risque_par_trade: 0.01      # perte au stop <= 1 % du budget par position
-  positions_max: 3            # au plus 3 positions en même temps
+  positions_max: 3            # remplacé par le profil choisi plus bas
   correlation_max: 0.80       # refuse deux instruments qui bougent presque pareil
+
+# --- Profil de trading (Capital.com et MetaTrader 5) ------------------
+# "dynamique" : style trader actif, cherche les meilleures occasions de la
+#               SEMAINE (cassures + tendances, jusqu'à 6 positions, simulations
+#               sur 5 jours, choisit l'option au meilleur gain médian).
+# "prudent"   : tendance seule, 3 positions, simulations sur 3 mois,
+#               choisit l'option la moins risquée.
+# Dans les deux cas : stop-loss sur chaque position, 1 % de risque max par
+# position, pas de levier, et ARRÊT TOTAL à -5 % (codé en dur).
+profil: dynamique
+profils:
+  dynamique:
+    strategie: {strategies: ["tendance", "cassure"], positions_max: 6}
+    simulateur: {jours: 5, chance_gain_min: 0.55, risque_arret_max: 0.10, choix: rendement}
+  prudent:
+    strategie: {strategies: ["tendance"], positions_max: 3}
+    simulateur: {jours: 63, chance_gain_min: 0.60, risque_arret_max: 0.20, choix: prudent}
 
 # --- Capital.com ------------------------------------------------------
 # Fonctionne partout (Chromebook compris) : tout passe par Internet.
@@ -52,13 +79,12 @@ capital:
   pause_min_secondes: 0.15      # Capital.com limite le nombre de requêtes par seconde
   timeout_secondes: 30
   max_tentatives: 5
-  alias:                        # « epics » Capital.com possibles pour chaque instrument
-    US500: ["US500"]
+  alias:                        # « epics » Capital.com possibles (le nom lui-même est essayé d'abord)
     US100: ["US100", "US Tech 100"]
     DE40: ["DE40", "GERMANY40"]
-    GOLD: ["GOLD"]
-    EURUSD: ["EURUSD"]
-    USDJPY: ["USDJPY"]
+    J225: ["J225", "JP225"]
+    EU50: ["EU50", "EU Stocks 50"]
+    OIL_CRUDE: ["OIL_CRUDE", "OIL_BRENT"]
 
 # --- MetaTrader 5 (Windows) ------------------------------------------
 mt5:
@@ -74,6 +100,15 @@ mt5:
     GOLD: ["XAUUSD", "GOLD", "XAUUSD.", "XAUUSDm"]
     EURUSD: ["EURUSD", "EURUSD.", "EURUSDm"]
     USDJPY: ["USDJPY", "USDJPY.", "USDJPYm"]
+    US30: ["US30", "DJ30", "WS30", "US30.cash"]
+    UK100: ["UK100", "FTSE100", "UK100.cash"]
+    FR40: ["FR40", "FRA40", "F40"]
+    J225: ["J225", "JP225", "JPN225"]
+    EU50: ["EU50", "EUSTX50", "STOXX50"]
+    SILVER: ["XAGUSD", "SILVER"]
+    OIL_CRUDE: ["XTIUSD", "USOIL", "WTI", "OIL_CRUDE"]
+    NATURALGAS: ["XNGUSD", "NATGAS", "NGAS"]
+    COPPER: ["XCUUSD", "COPPER"]
 
 copie:
   nb_traders: 3                 # nombre de traders copiés en même temps

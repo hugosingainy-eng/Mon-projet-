@@ -325,6 +325,19 @@ class ClientCapital:
                 raise ErreurCapital("Fermeture refusée : %s" % conf.get("reason"))
         return rep
 
+    def modifier_stop(self, position, nouveau_stop):
+        """Déplace le stop-loss d'une position DU BOT (PUT /positions/{dealId})."""
+        if not self.est_du_bot(position):
+            raise ErreurCapital("SÉCURITÉ : la position %s n'appartient pas au bot" %
+                                position.get("ticket"))
+        rep = self.requete("PUT", "/positions/" + str(position["ticket"]),
+                           corps={"stopLevel": float(nouveau_stop)})
+        if rep.get("dealReference"):
+            conf = self._confirmer(rep["dealReference"])
+            if conf.get("dealStatus") not in (None, "ACCEPTED"):
+                raise ErreurCapital("Stop refusé : %s" % conf.get("reason"))
+        return rep
+
     def profit_realise(self, ticket):
         """Capital.com ne donne pas simplement le résultat d'une position fermée :
         le Directeur fait alors une estimation prudente."""

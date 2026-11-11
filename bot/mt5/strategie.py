@@ -1,14 +1,24 @@
-"""Stratégie prudente « suivi de tendance » (achat seulement, jamais de vente à découvert).
+"""Stratégies de trading (achat seulement, jamais de vente à découvert).
 
-Règles, sur les cours de clôture JOURNALIERS :
-- ENTRÉE possible si le cours est au-dessus de sa moyenne 200 jours ET que la
-  moyenne 50 jours est au-dessus de la moyenne 200 jours (tendance haussière).
-- STOP-LOSS placé chez le courtier à 2,5 x l'ATR (la variation moyenne d'un jour).
-- SORTIE si le cours repasse sous sa moyenne 200 jours (tendance cassée).
-- TAILLE : la perte au stop ne dépasse jamais 1 % du budget par position.
+Le bot combine deux méthodes classiques de traders professionnels, sur les cours
+de clôture JOURNALIERS :
 
-Ce n'est pas une « recette magique » : c'est une règle simple, connue et
-testable, qui coupe les pertes et limite le nombre de trades (moins de frais).
+1. TENDANCE (moyen terme)
+   - entrée : cours > moyenne 200 j ET moyenne 50 j > moyenne 200 j ;
+   - sortie : le cours repasse sous la moyenne 200 j.
+2. CASSURE (court terme, pour les occasions de la semaine)
+   - entrée : le cours dépasse son plus haut des 20 derniers jours, au-dessus de
+     sa moyenne 50 j (le marché « casse » vers le haut avec de l'élan) ;
+   - sortie : le cours passe sous son plus bas des 10 derniers jours.
+
+Pour les deux :
+- STOP-LOSS chez le courtier à 2,5 x l'ATR (la variation moyenne d'un jour) ;
+- STOP SUIVEUR : chaque jour, le stop remonte sous le plus haut atteint
+  (il ne descend jamais) : on coupe vite les pertes et on laisse courir les gains ;
+- TAILLE : la perte au stop ne dépasse jamais le risque par trade (1 % du budget).
+
+Aucune stratégie ne gagne à tous les coups : elles perdent souvent un peu, et
+gagnent parfois beaucoup. Le bot ne garantit aucun gain.
 """
 
 
@@ -31,28 +41,64 @@ def atr(bougies, n=20):
 
 
 def analyser(bougies, cs):
-    """Renvoie l'état du signal pour un instrument (uniquement à partir du passé fourni)."""
+    """Signaux pour un instrument, calculés UNIQUEMENT avec le passé fourni."""
+    strategies = cs.get("strategies", ["tendance"])
     cl = [b[4] for b in bougies]
     mm_l = moyenne(cl, cs["mm_longue"])
     mm_c = moyenne(cl, cs["mm_courte"])
     a = atr(bougies, cs["atr_jours"])
-    if mm_l is None or mm_c is None or not a:
+    nb_cassure = int(cs.get("cassure_jours", 20))
+    nb_sortie = int(cs.get("cassure_sortie_jours", 10))
+    if mm_l is None or mm_c is None or not a or len(cl) < nb_cassure + 2:
         return {"valide": False, "raison": "historique trop court"}
     dernier = cl[-1]
+    vol = a / dernier
     tendance = dernier > mm_l and mm_c > mm_l
+    plus_haut = max(cl[-nb_cassure - 1:-1])
+    cassure = dernier > plus_haut and dernier > mm_c
+    elan = dernier / cl[-nb_cassure - 1] - 1           # variation sur 20 jours
+    entree, nom, force = False, None, 0.0
+    if "cassure" in strategies and cassure:
+        entree, nom = True, "cassure"
+        force = elan / vol if vol else 0.0
+    if "tendance" in strategies and tendance:
+        f = (dernier / mm_l - 1) / vol if vol else 0.0
+        if not entree or f > force:
+            entree, nom, force = True, "tendance", f
+    if entree:
+        raison = "tendance haussière" if nom == "tendance" else "cassure du plus haut 20 j"
+    elif dernier < mm_l:
+        raison = "sous la moyenne 200 j"
+    elif mm_c <= mm_l:
+        raison = "moyenne 50 j sous la 200 j"
+    else:
+        raison = "pas d'élan suffisant"
+    plus_haut_recent = max(b[2] for b in bougies[-nb_cassure:])
     return {
         "valide": True,
         "dernier": dernier,
         "mm_longue": mm_l,
         "mm_courte": mm_c,
         "atr": a,
-        "entree": tendance,
-        "sortie": dernier < mm_l,
+        "entree": entree,
+        "strategie": nom,
+        "sortie": dernier < mm_l,                                  # sortie « tendance »
+        "sortie_cassure": dernier < min(cl[-nb_sortie - 1:-1]),    # sortie « cassure »
         "distance_stop": cs["stop_atr"] * a,
-        "force": (dernier / mm_l - 1) / (a / dernier) if a else 0.0,  # tendance / volatilité
-        "raison": ("tendance haussière" if tendance else
-                   "sous la moyenne 200 j" if dernier < mm_l else "moyenne 50 j sous la 200 j"),
+        "stop_suiveur": plus_haut_recent - cs["stop_atr"] * a,
+        "elan_20j": elan,
+        "force": force,
+        "raison": raison,
     }
+
+
+def doit_sortir(signal, strategie_position):
+    """La position doit-elle être fermée selon SA stratégie ?"""
+    if not signal.get("valide"):
+        return False
+    if strategie_position == "cassure":
+        return bool(signal["sortie_cassure"])
+    return bool(signal["sortie"])
 
 
 def rendements(bougies):

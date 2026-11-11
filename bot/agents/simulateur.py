@@ -154,7 +154,13 @@ def explorer(equipes, matrice, usernames, allocation_pour, budget, cfg):
         log.info("Simulateur : %d options examinées (%d futurs simulés), aucune n'a le "
                  "feu vert", len(examinees), total)
         return None, examinees
-    meilleure = max(vertes, key=lambda o: (o["mise"], o["pire_5"], o["chance_gain"]))
+    if cfg_s.get("choix") == "rendement":
+        # Profil dynamique : le meilleur gain médian, puis la meilleure chance de gagner
+        meilleure = max(vertes, key=lambda o: (round(o["mediane"], 6), o["chance_gain"],
+                                               -o["risque_arret"]))
+    else:
+        # Profil prudent : la plus grosse mise sûre, puis le « pire 5 % » le moins mauvais
+        meilleure = max(vertes, key=lambda o: (o["mise"], o["pire_5"], o["chance_gain"]))
     log.info("Simulateur : %d options examinées (%d futurs simulés). Choix : %s à %.0f %% "
              "(gain %.0f %%, arrêt %.0f %%)", len(examinees), total,
              ", ".join(meilleure["equipe"]), 100 * meilleure["mise"],

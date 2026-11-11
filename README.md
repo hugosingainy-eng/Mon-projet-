@@ -74,16 +74,19 @@ loué (« VPS Windows », environ 10 à 25 € par mois), soit le pont `mt5linux
 Si un symbole est « introuvable », ouvrez la fenêtre *Observation du marché* de MetaTrader 5,
 regardez son nom exact chez votre courtier et ajoutez-le dans les `alias` de `config.yaml`.
 
-### La stratégie (réglable dans `config.yaml`, section `strategie`)
+### La stratégie (réglable dans `config.yaml`, sections `strategie` et `profil`)
 
 | Règle | Valeur par défaut |
 |---|---|
-| Instruments | S&P 500, Nasdaq 100, DAX 40, or, EUR/USD, USD/JPY |
-| Achat seulement si | cours > moyenne 200 j **et** moyenne 50 j > moyenne 200 j |
+| Univers | ~30 marchés : indices (S&P 500, Nasdaq, Dow Jones, DAX, CAC 40…), or, argent, pétrole, gaz, cuivre, devises, Bitcoin, Ethereum, grandes actions US (Apple, Nvidia, Tesla…) |
+| Profil | **dynamique** (style trader actif, vise la semaine) ou **prudent** |
+| Méthode « tendance » | achat si cours > moyenne 200 j **et** moyenne 50 j > moyenne 200 j ; sortie sous la moyenne 200 j |
+| Méthode « cassure » (profil dynamique) | achat quand le cours dépasse son plus haut des 20 jours avec élan ; sortie sous le plus bas des 10 jours |
 | Stop-loss | 2,5 × la variation moyenne d'un jour (ATR), posé chez le courtier |
-| Sortie | le cours repasse sous la moyenne 200 j |
+| Stop suiveur | le stop **remonte** avec le prix et ne redescend jamais : on coupe les pertes, on laisse courir les gains |
+| Simulateur | dynamique : 5 jours, choisit le meilleur gain médian ; prudent : 3 mois, choisit l'option la moins risquée |
 | Risque par position | perte au stop ≤ **1 %** du budget |
-| Positions | 3 au plus, jamais deux instruments trop liés (corrélation > 0,8) |
+| Positions | dynamique : 6 au plus ; prudent : 3 ; jamais deux instruments trop liés (corrélation > 0,8) |
 | Budget démo | 10 000 (argent fictif) ; valeur exposée totale ≤ budget (pas de levier) |
 | Arrêt total | à **−5 %** du budget, jusqu'à `--reset` |
 

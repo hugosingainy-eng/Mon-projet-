@@ -155,6 +155,7 @@ def test_budget_trop_petit(cfg5, tmp_path):
 
 
 def test_correlation_refusee(cfg5, tmp_path):
+    cfg5["profil"] = "prudent"
     s = serie(100, 0.0008, 0.01, graine=9)
     faux = FauxMT5(series={"US500.cash": s, "US100.cash": copy.deepcopy(s)},
                    contrat={"US500.cash": 1, "US100.cash": 1})
@@ -222,3 +223,42 @@ def test_commandes_mt5(tmp_path):
     sorties.clear()
     main(["--status"] + config_mt5(tmp_path), mt5=faux, sortie=sorties.append)
     assert "ARRÊT" in sorties[0]
+
+
+def test_profil_dynamique_et_stop_suiveur(cfg5, tmp_path):
+    d, faux = directeur(cfg5, tmp_path)
+    assert d.cs["positions_max"] == 6 and "cassure" in d.cs["strategies"]
+    assert d.cfg["simulateur"]["jours"] == 5
+    d.selection()
+    t = faux.positions_get()[0]
+    c = d.etat.copies[str(t.ticket)]
+    ancien = c["stop"]
+    s = faux.series[t.symbol]
+    for k in range(15):                                  # le prix monte fort
+        p = s[-1][3] * 1.01
+        s.append((p, p * 1.002, p * 0.998, p))
+    faux.prix_force[t.symbol] = s[-1][3]
+    r = d.selection()
+    nouveau = faux.positions[t.ticket].sl
+    assert nouveau > ancien and c["stop"] == nouveau     # le stop a monté chez le courtier
+    assert any(o["type"] == "stop remonté" for o in r["ordres"])
+    # il ne redescend jamais
+    for k in range(5):
+        p = s[-1][3] * 0.995
+        s.append((p, p, p, p))
+    faux.prix_force[t.symbol] = s[-1][3]
+    d.selection()
+    if t.ticket in faux.positions:
+        assert faux.positions[t.ticket].sl >= nouveau
+
+
+def test_cassure():
+    cs = {"mm_longue": 200, "mm_courte": 50, "atr_jours": 20, "stop_atr": 2.5,
+          "strategies": ["cassure"], "cassure_jours": 20, "cassure_sortie_jours": 10}
+    plat = [(None, 100, 100.5, 99.5, 100 + (i % 3) * 0.1) for i in range(260)]
+    bond = plat + [(None, 101, 103, 101, 103)]
+    assert not strategie.analyser(plat, cs)["entree"]
+    s = strategie.analyser(bond, cs)
+    assert s["entree"] and s["strategie"] == "cassure"
+    chute = bond + [(None, 99, 99, 98, 98)]
+    assert strategie.doit_sortir(strategie.analyser(chute, cs), "cassure")

@@ -44,6 +44,8 @@ class DirecteurMT5:
     plateforme = "mt5"
 
     def __init__(self, client, cfg, etat, client_ia=None, dry_run=False, chemin_rapport=None):
+        from ..config import appliquer_profil
+        cfg = appliquer_profil(cfg)
         self.client = client
         self.cfg = cfg
         self.etat = etat
@@ -281,7 +283,8 @@ class DirecteurMT5:
             self.cycle_quotidien(aujourd_hui)
         cfg, cs, etat = self.cfg, self.cs, self.etat
         r = {"date": iso(maintenant()), "mode": cfg["mode"], "dry_run": self.dry_run,
-             "plateforme": "Capital.com" if self.plateforme == "capital" else "MetaTrader 5", "rejets": [], "ordres": [], "signaux": {}}
+             "plateforme": "Capital.com" if self.plateforme == "capital" else "MetaTrader 5",
+             "profil": cfg.get("profil", "prudent"), "rejets": [], "ordres": [], "signaux": {}}
         try:
             compte = self.client.compte()
             r["compte"] = {k: compte.get(k) for k in ("login", "server", "currency", "balance",
@@ -307,18 +310,24 @@ class DirecteurMT5:
             sig = strategie.analyser(b, cs)
             donnees[nom] = {"symbole": sym, "bougies": b, "signal": sig}
             r["signaux"][nom] = {k: sig.get(k) for k in ("raison", "dernier", "mm_longue",
-                                                         "atr", "entree", "sortie")}
+                                                         "atr", "entree", "sortie", "strategie",
+                                                         "elan_20j")}
         self._donnees = donnees
 
-        # 2. Sorties : tendance cassée -> on ferme
+        # 2. Positions ouvertes : sortie selon leur stratégie, sinon stop suiveur
         ouvertes = {c["username"]: (t, c) for t, c in etat.copies_ouvertes().items()}
         for nom, (ticket, c) in list(ouvertes.items()):
             sig = (donnees.get(nom) or {}).get("signal") or {}
-            if sig.get("sortie"):
-                self.fermer(ticket, "tendance cassée (sous la moyenne 200 j)")
-                r["ordres"].append({"type": "fermeture", "instrument": nom,
-                                    "raison": "tendance cassée"})
+            strat = c.get("strategie", "tendance")
+            if strategie.doit_sortir(sig, strat):
+                raison = ("tendance cassée" if strat == "tendance"
+                          else "cassure terminée (plus bas 10 j)")
+                self.fermer(ticket, raison)
+                r["ordres"].append({"type": "fermeture", "instrument": nom, "raison": raison})
                 del ouvertes[nom]
+                continue
+            if cs.get("stop_suiveur", True) and sig.get("valide"):
+                self._remonter_stop(ticket, c, sig, r)
 
         # 3. Candidats à l'achat (jamais sur un instrument où VOUS avez une position)
         try:
@@ -451,6 +460,31 @@ class DirecteurMT5:
         return r
 
     # -----------------------------------------------------------------
+    def _remonter_stop(self, ticket, c, sig, r):
+        """Stop suiveur : le stop ne fait que MONTER, jamais descendre."""
+        try:
+            digits = int(self.client.infos(c["symbole"]).get("digits", 5))
+            bid, _ = self.client.prix(c["symbole"])
+        except Exception:  # noqa: BLE001
+            return
+        nouveau = round(sig["stop_suiveur"], digits)
+        ancien = float(c.get("stop") or 0)
+        if nouveau <= ancien or nouveau >= bid * 0.999:
+            return
+        if not self.dry_run and not str(ticket).startswith("SIM-"):
+            p = next((x for x in self.client.positions_du_bot()
+                      if str(x["ticket"]) == str(ticket)), None)
+            if p is None:
+                return
+            try:
+                self.client.modifier_stop(p, nouveau)
+            except Exception as exc:  # noqa: BLE001
+                log.warning("Stop de %s non remonté (%s)", c["symbole"], exc)
+                return
+        c["stop"] = nouveau
+        r["ordres"].append({"type": "stop remonté", "instrument": c["username"],
+                            "ancien": ancien, "nouveau": nouveau})
+
     def _compatibles(self, a, b, matrice, noms):
         """Refuse deux instruments trop corrélés (ex. S&P 500 et Nasdaq ensemble)."""
         i, j = noms.index(a["username"]), noms.index(b["username"])
@@ -518,7 +552,8 @@ class DirecteurMT5:
         self.etat.ajouter_copie(ticket, None, nom, montant, ticket)
         c = self.etat.copies[ticket]
         c.update({"symbole": sym, "volume": volume, "stop": t["stop"],
-                  "prix_entree": t["prix"], "ticket": ticket})
+                  "prix_entree": t["prix"], "ticket": ticket,
+                  "strategie": d["signal"].get("strategie") or "tendance"})
         return ticket
 
 
@@ -551,15 +586,17 @@ def ecrire_rapport_mt5(r, chemin):
                                                            _p(b.get("exposition"))),
           "- Montant exposable : %.2f sur un capital de %.2f (déjà engagé : %.2f)" % (
               b.get("montant_expose", 0), b.get("capital", 0), b.get("deja_engage", 0)),
-          "- Places libres : %s" % b.get("places"),
+          "- Profil : **%s** - places libres : %s" % (r.get("profil"), b.get("places")),
           "- Résultat total du bot : **%+.2f**" % r.get("pnl_total", 0), ""]
     L += ["## Signaux de la stratégie (tendance)", "",
-          "| Instrument | Dernier | Moyenne 200 j | Signal |", "|---|---|---|---|"]
-    for nom, s in (r.get("signaux") or {}).items():
-        L.append("| %s | %s | %s | %s |" % (
+          "| Instrument | Dernier | Moyenne 200 j | Élan 20 j | Signal |", "|---|---|---|---|---|"]
+    for nom, s in sorted((r.get("signaux") or {}).items(),
+                         key=lambda kv: (not kv[1].get("entree"), kv[0])):
+        L.append("| %s | %s | %s | %s | %s |" % (
             nom, "%.5g" % s["dernier"] if s.get("dernier") else "—",
             "%.5g" % s["mm_longue"] if s.get("mm_longue") else "—",
-            "ACHAT possible" if s.get("entree") else (s.get("raison") or "—")))
+            _pct(s.get("elan_20j")),
+            ("ACHAT (%s)" % s.get("strategie")) if s.get("entree") else (s.get("raison") or "—")))
     L += ["", "## Simulateur (Monte Carlo)", ""]
     essais = r.get("simulateur") or []
     if not essais:

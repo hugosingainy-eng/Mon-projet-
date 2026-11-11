@@ -74,10 +74,12 @@ def rejouer(series, cfg, frais=0.0002):
             if i is None:
                 continue
             sig = strategie.analyser(series[n][:i + 1], cs)
-            if sig.get("valide") and sig["sortie"]:
+            if strategie.doit_sortir(sig, positions[n].get("strategie", "tendance")):
                 valeur -= positions[n]["poids"] * frais * valeur
                 del positions[n]
                 nb_trades += 1
+            elif sig.get("valide") and cs.get("stop_suiveur", True):
+                positions[n]["stop"] = max(positions[n]["stop"], sig["stop_suiveur"])
         candidats = []
         for n, s in series.items():
             i = index[n].get(jour)
@@ -91,7 +93,7 @@ def rejouer(series, cfg, frais=0.0002):
             poids = min(cs["risque_par_trade"] / (sig["distance_stop"] / sig["dernier"]),
                         1.0 / cs["positions_max"])
             positions[n] = {"poids": poids, "stop": sig["dernier"] - sig["distance_stop"],
-                            "entree": sig["dernier"]}
+                            "entree": sig["dernier"], "strategie": sig.get("strategie")}
             valeur -= poids * frais * valeur
             nb_trades += 1
         journal.append((jour, valeur))
@@ -116,6 +118,8 @@ def rejouer(series, cfg, frais=0.0002):
 
 
 def lancer_backtest_mt5(client, cfg, chemin="data/mt5_backtest.md"):
+    from ..config import appliquer_profil
+    cfg = appliquer_profil(cfg)
     client.connecter()
     cs = cfg["strategie"]
     series, notes = {}, []
@@ -154,7 +158,7 @@ def _p(v):
 
 
 def ecrire(chemin, rejeu, mc, equipe, notes):
-    L = ["# Backtest du bot MetaTrader 5", "",
+    L = ["# Backtest du bot (Capital.com / MetaTrader 5)", "",
          "> **Aucun ordre n'a été passé.** Aucun bot ne garantit des gains : ces chiffres "
          "décrivent le passé, pas l'avenir.", "",
          "## 1. Rejeu jour par jour de la stratégie", "",

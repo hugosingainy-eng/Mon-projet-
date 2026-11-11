@@ -106,6 +106,13 @@ class FauxCapital:
             self.confirms[ref] = {"dealStatus": "ACCEPTED", "dealId": deal,
                                   "affectedDeals": [{"dealId": deal, "status": "OPENED"}]}
             return Rep(200, {"dealReference": ref})
+        if chemin.startswith("/positions/") and methode == "PUT":
+            deal = chemin.split("/")[-1]
+            self.modifs = getattr(self, "modifs", []) + [(deal, json)]
+            self.positions[deal]["position"]["stopLevel"] = json["stopLevel"]
+            ref = "p_" + deal + "_m"
+            self.confirms[ref] = {"dealStatus": "ACCEPTED", "dealId": deal}
+            return Rep(200, {"dealReference": ref})
         if chemin.startswith("/positions/") and methode == "DELETE":
             deal = chemin.split("/")[-1]
             self.fermetures.append(deal)

@@ -249,6 +249,17 @@ class ClientMT5:
         }
         return self._envoyer(requete)
 
+    def modifier_stop(self, position, nouveau_stop):
+        """Déplace le stop-loss d'une position DU BOT."""
+        if not self.est_du_bot(position):
+            raise ErreurMT5("SÉCURITÉ : la position %s n'appartient pas au bot" %
+                            position.get("ticket"))
+        requete = {"action": getattr(self.m, "TRADE_ACTION_SLTP", TRADE_ACTION_SLTP),
+                   "position": int(position["ticket"]), "symbol": position["symbol"],
+                   "sl": float(nouveau_stop), "tp": float(position.get("tp") or 0.0),
+                   "magic": self.magic}
+        return self._envoyer(requete)
+
     def profit_realise(self, ticket):
         """Résultat final d'une position fermée (stop-loss touché, fermée à la main…)."""
         deals = self.m.history_deals_get(position=int(ticket))

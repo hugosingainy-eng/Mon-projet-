@@ -36,6 +36,7 @@ class FauxMT5:
     TIMEFRAME_D1 = 16408
     ORDER_TYPE_BUY, ORDER_TYPE_SELL = 0, 1
     TRADE_ACTION_DEAL = 1
+    TRADE_ACTION_SLTP = 6
     ORDER_TIME_GTC = 0
     ORDER_FILLING_FOK, ORDER_FILLING_IOC, ORDER_FILLING_RETURN = 0, 1, 2
 
@@ -118,6 +119,10 @@ class FauxMT5:
 
     def order_send(self, req):
         self.envois.append(req)
+        if req.get("action") == 6:
+            p = self.positions[req["position"]]
+            self.positions[p.ticket] = p._replace(sl=req["sl"])
+            return Resultat(10009, 0, 0, "Done")
         if "position" in req:
             p = self.positions.pop(req["position"])
             profit = (self.dernier(p.symbol) - p.price_open) * p.volume * self.contrat[p.symbol]

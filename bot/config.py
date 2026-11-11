@@ -99,3 +99,15 @@ def chemin_data(cfg, nom_cle, dry_run=False):
     if plateforme in ("mt5", "capital") and nom_cle in ("etat", "rapport", "backtest"):
         nom = plateforme + "_" + nom
     return os.path.join(dossier, nom)
+
+
+def appliquer_profil(cfg):
+    """Renvoie une copie de cfg avec les réglages du profil choisi (dynamique/prudent).
+    Les règles dures (arrêt -5 %, budget, stop-loss) ne dépendent pas du profil."""
+    profil = cfg.get("profil")
+    reglages = (cfg.get("profils") or {}).get(profil)
+    if not reglages:
+        return cfg
+    out = fusionner({k: v for k, v in cfg.items() if k != "_secrets"}, reglages)
+    out["_secrets"] = cfg.get("_secrets", {})
+    return out
