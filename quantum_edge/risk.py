@@ -22,6 +22,7 @@ class Proposal:
     expected_trade_pct: float = 0.0  # out-of-sample average net trade return (fraction)
     bar_turnover: float | None = None   # last bar volume × price in quote currency
     consensus: float = 0.0          # signed agent consensus for this instrument
+    exploratory: bool = False       # unvalidated strategy traded on the owner's explicit request
 
 
 @dataclass
@@ -82,12 +83,14 @@ class RiskManager:
             if p.bar_turnover * fx < s.min_bar_turnover_eur:
                 return no(f"insufficient liquidity (last bar turnover €{p.bar_turnover * fx:,.0f})")
         round_trip = 2 * s.cost_per_side(cls, inst.quote_ccy)
-        if p.expected_trade_pct <= 0:
+        if p.expected_trade_pct <= 0 and not p.exploratory:
             return no("no positive out-of-sample expectancy after costs")
         if not 0 < p.stop_dist_pct < 0.5:
             return no("invalid stop distance")
         if p.stop_dist_pct < round_trip:
             return no(f"stop distance {p.stop_dist_pct:.2%} is inside round-trip cost {round_trip:.2%}")
+        if p.exploratory and state.get("explore_halted"):
+            return no("exploration loss budget exhausted")
         if p.consensus * p.side < -s.agent_veto_threshold:
             return no(f"agent consensus opposes the trade ({p.consensus:+.2f})")
         if p.book == "shadow":      # forward test: no capital at risk, only data/cost checks

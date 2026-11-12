@@ -381,3 +381,56 @@ def test_forward_test_can_be_disabled_by_configuration(eng, settings):
     eng.run_agent(perf)
     with eng.db.session() as s:
         assert s.get(Strategy, st.id).stage == "live"
+
+
+def test_exploration_trades_small_and_stops_at_loss_budget(eng, providers, monkeypatch, settings):
+    import quantum_edge.engine as engine_mod
+    settings.explore_count, settings.explore_loss_budget_eur = 2, 5.0
+    now = utcnow()
+    with eng.db.session() as s:
+        st = Strategy(experiment_id="x", family="ma_cross", params={"fast": 5, "slow": 30, "kind": "ema", **GRID_DEFAULTS},
+                      instrument="BTC/EUR", timeframe="15m", stage="explore", weight=settings.explore_weight,
+                      expected_trade_pct=-0.001, created_at=now, updated_at=now)      # negative expectancy
+        s.add(st)
+    df = providers["ccxt"].history(BTC, "15m", 600)
+    setp(providers, eng.hub, "BTC/EUR", float(df["close"].iloc[-1]))
+    eng.control("start")
+
+    def fire():
+        def f(family, d, p):
+            z = np.zeros(d.n, bool); one = z.copy(); one[-1] = True
+            return one, z, z, z
+        monkeypatch.setattr(engine_mod, "strategy_signals", f)
+        with eng.db.session() as s:
+            s.get(Strategy, st.id).last_bar_ts = None
+        eng.evaluate_strategies(utcnow())
+
+    fire()
+    pos = eng.broker.open_positions("live")
+    assert len(pos) == 1 and pos[0].strategy_name.startswith("explore:")
+    assert pos[0].entry_notional_eur <= 1000 * settings.max_position_pct * settings.explore_weight + 1e-6   # <= 5%
+    # a validated ("live") strategy with the same negative expectancy is still refused
+    v = eng.risk.evaluate(prop(inst=BY_SYMBOL["ETH/EUR"], expected_trade_pct=-0.001), eng.state)
+    assert not v.approved and "expectancy" in v.reason
+    # lose more than the budget -> exploration is halted and the strategy retired
+    setp(providers, eng.hub, "BTC/EUR", eng.hub.quote("BTC/EUR").price * 0.8)
+    eng.broker.close(pos[0].id, "test")
+    eng.run_agent(next(a for a in eng.agents if a.id == "performance"))
+    assert eng.state["explore_halted"]
+    with eng.db.session() as s:
+        assert s.get(Strategy, st.id).stage == "retired"
+    assert not eng.risk.evaluate(prop(exploratory=True), eng.state).approved
+
+
+def test_focused_research_run_only_uses_requested_markets(settings, db, hub):
+    from quantum_edge.lab import Lab
+    lab = Lab(settings, db, hub)
+    lab._focus = (["crypto"], ["15m"])
+    lab.run(120)
+    with db.session() as s:
+        from quantum_edge.db import LabExperiment
+        rows = s.execute(select(LabExperiment.instrument, LabExperiment.timeframe).distinct()).all()
+    assert rows and all(i.endswith("/EUR") and tf == "15m" for i, tf in rows)
+    settings.explore_count = 3
+    picks = lab.exploration_picks(1)
+    assert len({p.instrument for p in picks}) == len(picks) <= 3

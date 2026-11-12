@@ -427,6 +427,12 @@ class PerformanceAnalyst(Agent):
         promoted = retired = 0
         now = eng.now()
         with eng.db.session() as s:
+            explore_pnl = float(sum(p.realized_pnl_eur for p in s.scalars(select(Position).where(
+                Position.book == "live", Position.status == "closed", Position.strategy_name.like("explore:%")))))
+        if explore_pnl <= -eng.s.explore_loss_budget_eur and not eng.state.get("explore_halted"):
+            eng.state["explore_halted"] = True
+            eng.db.incident("warning", self.id, f"exploration stopped: it lost €{-explore_pnl:.2f}, the budget is €{eng.s.explore_loss_budget_eur:.0f}")
+        with eng.db.session() as s:
             strategies = list(s.scalars(select(Strategy).where(Strategy.stage != "retired")))
         for st in strategies:
             with eng.db.session() as s:
@@ -447,6 +453,10 @@ class PerformanceAnalyst(Agent):
                 elif len(shadow) >= eng.s.forward_max_trades and pnl <= 0:
                     stage, note = "retired", f"failed forward test: {len(shadow)} trades, net €{pnl:+.2f}"
                     retired += 1
+            elif st.stage == "explore":
+                if eng.state.get("explore_halted"):
+                    stage, note = "retired", "exploration loss budget exhausted"
+                    retired += 1
             elif st.stage == "live" and live:
                 pnl = sum(p.realized_pnl_eur for p in live)
                 avg = float(np.mean([p.realized_pnl_eur / p.entry_notional_eur for p in live]))
@@ -460,7 +470,8 @@ class PerformanceAnalyst(Agent):
                 with eng.db.session() as s:
                     row = s.get(Strategy, st.id)
                     row.stage, row.weight, row.note, row.updated_at = stage, weight, note, now
-        return f"{len(strategies)} active strategies reviewed; {promoted} promoted, {retired} retired", []
+        explore_note = f"; exploration net €{explore_pnl:+.2f} of €{eng.s.explore_loss_budget_eur:.0f} budget" if eng.s.explore_count > 0 else ""
+        return f"{len(strategies)} active strategies reviewed; {promoted} promoted, {retired} retired{explore_note}", []
 
 
 class Supervisor(Agent):

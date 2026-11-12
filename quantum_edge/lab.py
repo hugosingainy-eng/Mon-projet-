@@ -56,6 +56,7 @@ class Lab:
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self.on_finish = None            # callback(run_id)
+        self._focus = (None, None)
         self.revalidate = None           # callable -> [(family, params, instrument, timeframe)] to re-test first
         st = self.db.get("lab_status")
         if st and st.get("running"):     # interrupted by a restart
@@ -73,9 +74,12 @@ class Lab:
     def is_running(self) -> bool:
         return self._thread is not None and self._thread.is_alive()
 
-    def start(self, target: int | None = None) -> bool:
+    def start(self, target: int | None = None, classes: list | None = None,
+              timeframes: list | None = None) -> bool:
+        """Start a research run; `classes` / `timeframes` restrict it (a focused run)."""
         if self.is_running():
             return False
+        self._focus = (classes, timeframes)
         self._stop.clear()
         self._thread = threading.Thread(target=self._safe_run, args=(target or self.s.lab_target,),
                                         name="lab", daemon=True)
@@ -97,11 +101,12 @@ class Lab:
     # --- data -------------------------------------------------------------------------
     def load_datasets(self, st: dict) -> list[Dataset]:
         out = []
-        insts = [i for i in UNIVERSE if i.tradable]
+        classes, timeframes = self._focus
+        insts = [i for i in UNIVERSE if i.tradable and (not classes or i.asset_class in classes)]
         for n, inst in enumerate(insts):
             if self._stop.is_set():
                 break
-            for tf in self.s.lab_timeframes:
+            for tf in (timeframes or self.s.lab_timeframes):
                 st["message"] = f"loading history {inst.symbol} {tf} ({n + 1}/{len(insts)})"
                 self.db.set("lab_status", st)
                 try:
@@ -335,5 +340,25 @@ class Lab:
             per[r.instrument] = per.get(r.instrument, 0) + 1
             out.append(r)
             if len(out) >= self.s.lab_deploy_top:
+                break
+        return out
+
+    def exploration_picks(self, run_id: int) -> list[LabExperiment]:
+        """Most robust of the FREQUENTLY trading configurations of a run, one per instrument,
+        regardless of verdict. Used only when exploration is enabled in the settings."""
+        if self.s.explore_count <= 0:
+            return []
+        with self.db.session() as s:
+            rows = s.scalars(select(LabExperiment).where(
+                LabExperiment.run_id == run_id, LabExperiment.evaluation != "INSUFFICIENT_TRADES")
+                .order_by(LabExperiment.score.desc())).all()
+        out, seen = [], set()
+        for r in rows:
+            if (BY_SYMBOL[r.instrument].asset_class not in self.s.explore_classes or r.instrument in seen
+                    or trades_per_day(r) < self.s.explore_min_trades_per_day):
+                continue
+            seen.add(r.instrument)
+            out.append(r)
+            if len(out) >= self.s.explore_count:
                 break
         return out

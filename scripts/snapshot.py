@@ -104,6 +104,7 @@ def build() -> str:
     fresh = sum(1 for m in market if not m["stale"])
     live = [s for s in strategies if s["stage"] == "live"]
     fwd = [s for s in strategies if s["stage"] == "forward"]
+    exp = [s for s in strategies if s["stage"] == "explore"]
     tiles = [("Valeur du portefeuille", eur(pf["equity"]), ""),
              ("Résultat total", pct(pf["total_return_pct"]), tone(pf["total_return_pct"])),
              ("Liquidités", eur(pf["cash"]), ""),
@@ -123,7 +124,7 @@ def build() -> str:
                    (eur(t["pnl_eur"], True), tone(t["pnl_eur"])), (pct(t["pnl_pct"]), tone(t["pnl_pct"])),
                    (eur(t["fees_eur"] + t["slippage_eur"] + t["fx_cost_eur"]), "dim"), (esc(t["exit_reason"]), "dim"),
                    (esc(t["strategy"]), "dim")] for t in trades]
-    stage_fr = {"forward": "test sans capital", "live": "avec capital", "retired": "retirée"}
+    stage_fr = {"forward": "test sans capital", "live": "avec capital", "explore": "exploration (non validée)", "retired": "retirée"}
     strat_rows = [[(esc(s["strategy"]), ""), (esc(s["instrument"]), ""), (esc(s["timeframe"]), "dim"),
                    (f'<span class="pill {s["stage"]}">{stage_fr.get(s["stage"], s["stage"])}</span>', ""),
                    (f'{s["shadow_trades"]} / {eur(s["shadow_pnl_eur"], True)}', tone(s["shadow_pnl_eur"])),
@@ -167,7 +168,7 @@ section{{min-width:0}}.panel{{background:var(--panel);border:1px solid var(--lin
 th,td{{padding:6px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;font-variant-numeric:tabular-nums}}
 th{{color:var(--dim);font-weight:500;font-size:12px}}td:last-child{{white-space:normal;min-width:180px}}tr:last-child td{{border-bottom:0}}
 .pos{{color:var(--pos)}}.neg{{color:var(--neg)}}.warn{{color:var(--warn)}}.dim{{color:var(--dim)}}
-.pill{{border:1px solid var(--line);border-radius:10px;padding:1px 8px;font-size:12px}}.pill.live{{border-color:var(--pos);color:var(--pos)}}.pill.forward{{border-color:var(--accent);color:var(--accent)}}
+.pill{{border:1px solid var(--line);border-radius:10px;padding:1px 8px;font-size:12px}}.pill.live{{border-color:var(--pos);color:var(--pos)}}.pill.forward{{border-color:var(--accent);color:var(--accent)}}.pill.explore{{border-color:var(--warn);color:var(--warn)}}
 .empty,.note{{color:var(--dim);margin:0}}.note{{font-size:12px;margin-top:6px}}
 svg{{width:100%;height:auto;display:block}}.grid{{stroke:var(--line);stroke-width:1}}.tick{{fill:var(--dim);font:11px var(--mono)}}
 .base{{stroke:var(--dim);stroke-width:1;stroke-dasharray:4 4}}.line{{stroke:var(--accent);stroke-width:2}}.area{{fill:var(--accent);opacity:.12}}.dot{{fill:var(--accent)}}
@@ -184,7 +185,7 @@ ul.agents b{{display:block;font-weight:600}}ul.agents span{{color:var(--dim);fon
 <section><h2>Valeur du portefeuille</h2><div class="panel">{equity_chart(equity, pf["initial_capital"])}</div></section>
 <section><h2>Positions ouvertes ({len(positions)})</h2><div class="panel">{table([("Instrument", ""), ("Sens", ""), ("Entrée", ""), ("Cours", ""), ("Valeur", ""), ("Latent", ""), ("Stratégie", ""), ("Ouverte", "")], pos_rows, "Aucune position ouverte pour le moment.")}</div></section>
 <section><h2>Derniers trades clôturés</h2><div class="panel">{table([("Clôture", ""), ("Instrument", ""), ("Sens", ""), ("Résultat net", ""), ("%", ""), ("Coûts", ""), ("Sortie", ""), ("Stratégie", "")], trade_rows, "Aucun trade clôturé pour le moment.")}</div></section>
-<section><h2>Stratégies actives — {len(live)} avec capital, {len(fwd)} en test</h2><div class="panel">{table([("Famille", ""), ("Instrument", ""), ("Bougies", ""), ("Étape", ""), ("Test : trades / net", ""), ("Capital : trades / net", ""), ("Attendu par trade", ""), ("Note", "")], strat_rows, "Aucune stratégie validée pour le moment.")}</div></section>
+<section><h2>Stratégies actives — {len(live)} validées avec capital, {len(exp)} en exploration, {len(fwd)} en test</h2><div class="panel">{table([("Famille", ""), ("Instrument", ""), ("Bougies", ""), ("Étape", ""), ("Test : trades / net", ""), ("Capital : trades / net", ""), ("Attendu par trade", ""), ("Note", "")], strat_rows, "Aucune stratégie validée pour le moment.")}</div></section>
 <section><h2>Laboratoire de stratégies</h2><div class="panel facts"><span>Expériences stockées <b>{num(lab.get("total_all_runs"), 0)}</b></span><span>Dernière série <b>{num(lab["completed"], 0)} / {num(lab["target"], 0)}</b></span><span>Validées <b>{ev.get("PASS", 0)}</b></span><span>Rejetées à la validation <b>{ev.get("FAIL_VALIDATION", 0)}</b></span><span>Rejetées au test final <b>{ev.get("FAIL_TEST", 0)}</b></span><span>Trop peu de trades <b>{ev.get("INSUFFICIENT_TRADES", 0)}</b></span><span>Phase <b>{esc(lab["phase"])}</b></span></div></section>
 <section><h2>Décisions du gestionnaire de risque</h2><div class="panel">{table([("Heure", ""), ("Instrument", ""), ("Sens", ""), ("Décision", ""), ("Motif", "")], dec_rows, "Aucune proposition de trade avec capital pour le moment.")}</div></section>
 <section><h2>Les 14 agents</h2><div class="panel"><ul class="agents">{agent_html}</ul></div></section>

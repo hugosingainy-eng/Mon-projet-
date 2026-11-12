@@ -95,6 +95,16 @@ class Settings:
     retire_min_trades: int = 4
     retire_loss_pct_of_equity: float = 0.02
 
+    # --- exploration (OFF by default) -------------------------------------------------
+    # When explore_count > 0 the most active configurations of the latest research run are
+    # traded with small positions EVEN THOUGH they did not pass validation. This exists only
+    # because the owner asked to see the bot trade; expected result is a slow loss to costs.
+    explore_count: int = 0
+    explore_classes: list = field(default_factory=lambda: ["crypto"])
+    explore_min_trades_per_day: float = 2.0
+    explore_weight: float = 0.2            # x max_position_pct -> 5% of equity per position
+    explore_loss_budget_eur: float = 50.0  # all exploration stops once it has lost this much
+
     def cost_per_side(self, asset_class: str, quote_ccy: str) -> float:
         """Fractional one-way cost used by the backtester (fee + slippage + half spread + FX)."""
         bps = (self.fee_bps[asset_class] + self.slippage_bps[asset_class]

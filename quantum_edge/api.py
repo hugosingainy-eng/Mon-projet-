@@ -152,7 +152,7 @@ def create_app(settings: Settings | None = None, providers: dict | None = None,
     def control(action: str, body: dict | None = Body(default=None)):
         if action not in ACTIONS:
             return {"ok": False, "message": f"unknown action '{action}'"}
-        ok, message = eng.control(action, confirm=bool((body or {}).get("confirm")))
+        ok, message = eng.control(action, confirm=bool((body or {}).get("confirm")), options=body or {})
         return {"ok": ok, "message": message}
 
     @app.websocket("/ws")

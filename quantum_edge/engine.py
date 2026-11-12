@@ -22,7 +22,7 @@ from .lab import Lab
 from .risk import Proposal, RiskManager
 from .strategies import Data, signals as strategy_signals
 
-DEFAULT_STATE = {"status": "idle", "started_at": None, "ends_at": None, "flatten": False,
+DEFAULT_STATE = {"explore_halted": False, "status": "idle", "started_at": None, "ends_at": None, "flatten": False,
                  "halt_reason": None, "peak_equity": None, "max_drawdown": 0.0,
                  "day": None, "day_start_equity": None}
 
@@ -84,7 +84,7 @@ class Engine:
         self.db.incident(severity, component, message)
 
     # --- controls ---------------------------------------------------------------------
-    def control(self, action: str, confirm: bool = False) -> tuple[bool, str]:
+    def control(self, action: str, confirm: bool = False, options: dict | None = None) -> tuple[bool, str]:
         with self._lock:
             st, now = self.state, self.now()
             status = st["status"]
@@ -129,9 +129,12 @@ class Engine:
                        + (f", {left} on closed/stale markets will close at the first fresh price" if left else ""))
                 self.db.incident("error", "supervisor", msg)
             elif action == "run_experiments":
-                if not self.lab.start():
+                opt = options or {}
+                classes, tfs = opt.get("asset_classes"), opt.get("timeframes")
+                if not self.lab.start(classes=classes, timeframes=tfs):
                     return False, "the strategy lab is already running"
-                return True, f"strategy lab started: {self.s.lab_target:,} experiments"
+                scope = f" on {', '.join(classes)}" if classes else ""
+                return True, f"strategy lab started: {self.s.lab_target:,} experiments{scope}"
             elif action == "reset":
                 if not confirm:
                     return False, "confirmation required"
@@ -298,6 +301,19 @@ class Engine:
                     a.stage, a.updated_at = "retired", now
                     a.note = f"retired: re-validation on fresh data gave {verdict}"
         self.db.incident("info", "optimizer", f"research run {run_id}: {len(cands)} validated candidates, {added} new in forward test")
+        picks = self.lab.exploration_picks(run_id)
+        if picks:
+            with self.db.session() as s:
+                for old in s.scalars(select(Strategy).where(Strategy.stage == "explore")):
+                    old.stage, old.note, old.updated_at = "retired", "exploration slot replaced by a newer research run", now
+                for c in picks:
+                    oos = [c.segments[k]["avg"] for k in ("val", "test") if c.segments[k]["avg"] is not None]
+                    s.add(Strategy(experiment_id=c.id, family=c.family, params=c.params, instrument=c.instrument,
+                                   timeframe=c.timeframe, stage="explore", weight=self.s.explore_weight,
+                                   expected_trade_pct=float(np.mean(oos)) if oos else 0.0,
+                                   note=f"EXPLORATION: not validated (lab verdict {c.evaluation}); small size, loss budget applies",
+                                   created_at=now, updated_at=now))
+            self.db.incident("warning", "optimizer", f"exploration: {len(picks)} unvalidated high-frequency strategies trade with small size (owner's setting)")
 
     def _active_configs(self) -> list[tuple]:
         with self.db.session() as s:
@@ -306,7 +322,7 @@ class Engine:
 
     def evaluate_strategies(self, now: datetime):
         with self.db.session() as s:
-            strategies = list(s.scalars(select(Strategy).where(Strategy.stage.in_(("forward", "live")))))
+            strategies = list(s.scalars(select(Strategy).where(Strategy.stage.in_(("forward", "live", "explore")))))
         for st in strategies:
             try:
                 inst = BY_SYMBOL[st.instrument]
@@ -346,7 +362,8 @@ class Engine:
         if st.family in ("relative_strength", "pairs_ratio") and d.bench is None:
             return
         le, se, lx, sx = strategy_signals(st.family, d, st.params)
-        book = "live" if st.stage == "live" else "shadow"
+        book = "live" if st.stage in ("live", "explore") else "shadow"
+        exploring = st.stage == "explore"
         with self.db.session() as s:
             pos = s.scalar(select(Position).where(Position.strategy_id == st.id, Position.status == "open",
                                                   Position.book == book))
@@ -365,12 +382,12 @@ class Engine:
             return
         p = st.params
         dist = p["stop_atr"] * atr
-        name = f"{st.family}/{st.timeframe}#{st.id}"
+        name = f"{'explore:' if exploring else ''}{st.family}/{st.timeframe}#{st.id}"
         verdict = self.risk.evaluate(Proposal(
             inst=inst, side=side, strategy_id=st.id, strategy_name=name, book=book,
             stop_dist_pct=dist / price, weight=st.weight, expected_trade_pct=st.expected_trade_pct,
             bar_turnover=float(d.v[-1] * d.c[-1]) if d.has_volume else None,
-            consensus=self.consensus(inst.symbol)), self.state, now)
+            consensus=self.consensus(inst.symbol), exploratory=exploring), self.state, now)
         if not verdict.approved:
             return
         pos = self.broker.open(
