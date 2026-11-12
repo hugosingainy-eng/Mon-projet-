@@ -364,3 +364,20 @@ def test_backup_and_restore_into_a_fresh_database(settings, providers, tmp_path)
     pos = e2.broker.open_positions()
     assert len(pos) == 1 and pos[0].stop_price == 90.0
     assert e2.broker.account()["cash"] == pytest.approx(acct["cash"]) and e2.broker.audit()["ok"]
+
+
+def test_forward_test_can_be_disabled_by_configuration(eng, settings):
+    now = utcnow()
+    with eng.db.session() as s:
+        st = Strategy(experiment_id="x", family="ma_cross", params={"fast": 5, "slow": 30, "kind": "ema", **GRID_DEFAULTS},
+                      instrument="BTC/EUR", timeframe="15m", stage="forward", weight=1.0, expected_trade_pct=0.01,
+                      created_at=now, updated_at=now)
+        s.add(st)
+    perf = next(a for a in eng.agents if a.id == "performance")
+    eng.run_agent(perf)
+    with eng.db.session() as s:
+        assert s.get(Strategy, st.id).stage == "forward"            # default: must pass the forward test
+    settings.forward_min_trades = 0
+    eng.run_agent(perf)
+    with eng.db.session() as s:
+        assert s.get(Strategy, st.id).stage == "live"

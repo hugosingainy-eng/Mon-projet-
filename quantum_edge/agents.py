@@ -438,7 +438,10 @@ class PerformanceAnalyst(Agent):
             if st.stage == "forward":
                 pnl = sum(p.realized_pnl_eur for p in shadow)
                 hours = (now - st.created_at).total_seconds() / 3600
-                if len(shadow) >= eng.s.forward_min_trades and hours >= eng.s.forward_min_hours and pnl > 0:
+                if eng.s.forward_min_trades <= 0:        # forward test disabled by configuration
+                    stage, note = "live", "promoted directly from lab validation (forward test disabled in settings)"
+                    promoted += 1
+                elif len(shadow) >= eng.s.forward_min_trades and hours >= eng.s.forward_min_hours and pnl > 0:
                     stage, note = "live", f"promoted: {len(shadow)} forward trades, net €{pnl:+.2f} on €{eng.s.shadow_notional_eur:.0f} notional"
                     promoted += 1
                 elif len(shadow) >= eng.s.forward_max_trades and pnl <= 0:
