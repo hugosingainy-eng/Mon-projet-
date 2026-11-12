@@ -30,7 +30,7 @@ class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider
     def _exchange(self, name: str):
         if name not in self._ex:
             import ccxt
-            ex = getattr(ccxt, name)({"enableRateLimit": True, "timeout": 20000})
+            ex = getattr(ccxt, name)({"enableRateLimit": True, "timeout": 20000, "requests_trust_env": True})
             ex.load_markets()
             self._ex[name] = ex
         return self._ex[name]
@@ -131,7 +131,7 @@ class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider
         try:
             if self._funding_ex is None:
                 import ccxt
-                self._funding_ex = ccxt.binanceusdm({"enableRateLimit": True, "timeout": 20000})
+                self._funding_ex = ccxt.binanceusdm({"enableRateLimit": True, "timeout": 20000, "requests_trust_env": True})
             r = self._funding_ex.fetch_funding_rate(f"{base}/USDT:USDT")
             return _f(r.get("fundingRate"))
         except Exception:
