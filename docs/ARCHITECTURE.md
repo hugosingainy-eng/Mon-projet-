@@ -52,6 +52,8 @@ means measured, rule-based re-allocation and periodic re-validation — nothing 
 - Verdict: `PASS` needs positive net return and Sharpe ≥ 0.5 on train, Sharpe ≥ 1.0 on validation,
   positive return and Sharpe ≥ 0.5 on test, enough trades in each, and profit in at least half of
   six chronological slices. Ranking uses the *weakest* segment's Sharpe × stability.
+- Only configurations averaging at least one trade per calendar day in their backtest are deployed
+  (`lab_min_trades_per_day`); the optimizers are penalised below that rate. Research uses 5m, 15m and 1h bars.
 - A test on pure random walks checks that fewer than 3% of configurations pass.
 
 ## Accounting

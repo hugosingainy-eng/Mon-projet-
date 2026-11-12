@@ -84,6 +84,7 @@ def settings(tmp_path):
     s.db_path = str(tmp_path / "qe.db")
     s.lab_target = 300
     s.lab_crypto_bars = 3000
+    s.lab_timeframes = ["15m", "1h"]
     s.crypto_quote_seconds = 0
     s.yahoo_quote_seconds = 0
     return s

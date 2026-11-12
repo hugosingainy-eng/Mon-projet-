@@ -44,6 +44,12 @@ def config_hash(family: str, params: dict, instrument: str, timeframe: str) -> s
     return hashlib.sha1(blob.encode()).hexdigest()[:14]
 
 
+def trades_per_day(row) -> float:
+    """Average trades per calendar day over the experiment's whole history."""
+    days = max((row.period_end - row.period_start).total_seconds() / 86400, 1.0)
+    return row.trades / days
+
+
 class Lab:
     def __init__(self, settings: Settings, db: Database, hub):
         self.s, self.db, self.hub = settings, db, hub
@@ -130,7 +136,11 @@ class Lab:
             sharpe=f["sharpe"], sortino=f["sortino"], profit_factor=f["pf"], win_rate=f["win"],
             avg_trade=f["avg"], segments=ev["segments"], stability=ev["stability"],
             cost_pct=ev["cost_pct"], evaluation=ev["evaluation"], score=ev["score"])
-        return row, ev["train_objective"]
+        objective = ev["train_objective"]
+        tpd = trades_per_day(row)
+        if tpd < self.s.lab_min_trades_per_day:      # steer the optimizers away from rare traders
+            objective = min(objective, -1.0 + tpd)
+        return row, objective
 
     # --- main loop --------------------------------------------------------------------
     def run(self, target: int) -> int:
@@ -314,9 +324,11 @@ class Lab:
         with self.db.session() as s:
             rows = s.scalars(select(LabExperiment).where(
                 LabExperiment.run_id == run_id, LabExperiment.evaluation == "PASS")
-                .order_by(LabExperiment.score.desc()).limit(500)).all()
+                .order_by(LabExperiment.score.desc()).limit(5000)).all()
         out, per, fams = [], {}, set()
         for r in rows:
+            if trades_per_day(r) < self.s.lab_min_trades_per_day:
+                continue                     # robust but too rare to matter in a short experiment
             if per.get(r.instrument, 0) >= self.s.lab_deploy_per_instrument or (r.instrument, r.family) in fams:
                 continue                     # diversify: one configuration per family per instrument
             fams.add((r.instrument, r.family))

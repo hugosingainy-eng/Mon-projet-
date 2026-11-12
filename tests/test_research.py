@@ -160,3 +160,17 @@ def test_lab_without_data_runs_nothing(settings, db, providers):
     lab.run(100)
     assert lab.status()["completed"] == 0 and lab.status()["phase"] == "no data"
     assert lab.total() == 0                                    # nothing fabricated
+
+
+def test_only_frequently_trading_strategies_are_deployed(settings, db, hub):
+    from quantum_edge.lab import trades_per_day
+    lab = Lab(settings, db, hub)
+    run = lab.run(600)
+    settings.lab_min_trades_per_day = 0.0
+    everything = lab.candidates(run)
+    settings.lab_min_trades_per_day = 1.0
+    frequent = lab.candidates(run)
+    assert all(trades_per_day(r) >= 1.0 for r in frequent)
+    assert len(frequent) <= len(everything)
+    settings.lab_min_trades_per_day = 1e9
+    assert lab.candidates(run) == []

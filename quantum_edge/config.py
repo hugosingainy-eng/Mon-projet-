@@ -73,7 +73,10 @@ class Settings:
 
     # --- strategy lab -----------------------------------------------------------------
     lab_target: int = 10000
-    lab_timeframes: list = field(default_factory=lambda: ["15m", "1h"])
+    lab_timeframes: list = field(default_factory=lambda: ["5m", "15m", "1h"])
+    # a five-day experiment needs strategies that actually trade: minimum average number of
+    # trades per calendar day (over the whole backtest) for a configuration to be deployed
+    lab_min_trades_per_day: float = 1.0
     lab_crypto_bars: int = 12000
     lab_min_bars: int = 600
     lab_seed: int = 42
