@@ -434,3 +434,12 @@ def test_focused_research_run_only_uses_requested_markets(settings, db, hub):
     settings.explore_count = 3
     picks = lab.exploration_picks(1)
     assert len({p.instrument for p in picks}) == len(picks) <= 3
+
+
+def test_order_size_is_capped_by_market_liquidity(risk):
+    v = risk.evaluate(prop(bar_turnover=1000.0), RUN)          # 10% of a 1,000 EUR bar
+    assert v.approved and v.notional_eur == pytest.approx(100.0)
+    v = risk.evaluate(prop(bar_turnover=150.0), RUN)           # below the floor
+    assert not v.approved and "liquidity" in v.reason
+    v = risk.evaluate(prop(bar_turnover=600.0), RUN)           # would allow 60, fine; 10% of 190 would be < 20
+    assert v.approved and v.notional_eur == pytest.approx(60.0)

@@ -120,8 +120,12 @@ class RiskManager:
         room_class = equity * s.max_class_exposure_pct - bucket
         cost_buffer = 1 + (s.fee_bps[cls] + s.fx_cost_bps) / 1e4
         size = min(size, room, room_class, acct["cash"] / cost_buffer)
+        limits = {"exposure": room, "correlated exposure": room_class, "cash": acct["cash"]}
+        if p.bar_turnover is not None and cls != "forex":      # stay a small part of real traded volume
+            liq = p.bar_turnover * self.hub.fx_rate(inst.quote_ccy)[0] * s.max_bar_participation
+            limits["liquidity"] = liq
+            size = min(size, liq)
         if size < s.min_notional_eur:
-            limits = {"exposure": room, "correlated exposure": room_class, "cash": acct["cash"]}
             tight = min(limits, key=limits.get)
             return no(f"size €{max(size, 0):.2f} below minimum (limited by {tight})")
         return Verdict(True, "approved", round(size, 2))

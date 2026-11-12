@@ -70,7 +70,7 @@ Per-side costs (configurable): fee (crypto 10 bps, stocks/ETFs 5, forex 0.5), sl
 
 25% of equity per position · 100% total exposure (no leverage; enforced at startup) · 8 positions ·
 60% per asset class and direction · 2% equity risk per trade · new trades blocked after −6% in a
-day or −20% from the equity peak · 30 bps maximum spread · minimum bar turnover · one position per
+day or −20% from the equity peak · 30 bps maximum spread · an order is at most 10% of the last bar's traded value · one position per
 instrument · stale or missing price ⇒ no trade.
 
 ## Controls

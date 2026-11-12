@@ -67,7 +67,8 @@ class Settings:
     max_daily_loss_pct: float = 0.06
     max_drawdown_pct: float = 0.20
     max_spread_bps: float = 30.0
-    min_bar_turnover_eur: float = 20000.0
+    min_bar_turnover_eur: float = 500.0     # floor: below this the market is too thin to trade at all
+    max_bar_participation: float = 0.10     # an order may be at most this share of the last bar's turnover
     min_notional_eur: float = 20.0
     agent_veto_threshold: float = 1.2
 
