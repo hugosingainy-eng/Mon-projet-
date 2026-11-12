@@ -50,6 +50,7 @@ class Lab:
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self.on_finish = None            # callback(run_id)
+        self.revalidate = None           # callable -> [(family, params, instrument, timeframe)] to re-test first
         st = self.db.get("lab_status")
         if st and st.get("running"):     # interrupted by a restart
             st.update(running=False, phase="interrupted", message="interrupted by restart")
@@ -180,6 +181,13 @@ class Lab:
         def done() -> bool:
             return st["completed"] >= target or self._stop.is_set()
 
+        # ---- phase 0: re-test the configurations currently deployed, on the fresh data ---
+        st["phase"] = "re-validation"
+        cell_index = {(ds.inst.symbol, ds.timeframe, fam): i for i, (ds, fam) in enumerate(cells)}
+        for fam, params, symbol, tf in (self.revalidate() if self.revalidate else []):
+            ci = cell_index.get((symbol, tf, fam))
+            if ci is not None and not done():
+                do(ci, dict(params), "revalidation")
         # ---- phase 1: grid ------------------------------------------------------------
         explore = int(target * 0.6)
         per_cell = max(2, explore // len(cells))
@@ -294,6 +302,12 @@ class Lab:
     def total(self) -> int:
         with self.db.session() as s:
             return s.scalar(select(func.count()).select_from(LabExperiment)) or 0
+
+    def verdict(self, run_id: int, family: str, params: dict, instrument: str, timeframe: str) -> str | None:
+        """Verdict of one configuration in a given run, or None if it was not tested there."""
+        with self.db.session() as s:
+            row = s.get(LabExperiment, f"{run_id}-{config_hash(family, params, instrument, timeframe)}")
+            return None if row is None else row.evaluation
 
     def candidates(self, run_id: int) -> list[LabExperiment]:
         """Best PASS configurations of a run, at most N per instrument."""

@@ -56,7 +56,7 @@ tradable, price, bid, ask, change_pct, volume, volatility_pct, regime ("trend_up
 "volatile"|null), provider, last_update, market_open, stale}`
 
 ### `GET /api/lab/top?limit=20`
-Array of `{id, strategy, instrument, timeframe, method ("grid"|"random"|"bayesian"|"evolutionary"),
+Array of `{id, strategy, instrument, timeframe, method ("grid"|"random"|"bayesian"|"evolutionary"|"revalidation"),
 params (object), trades, net_return_pct, max_drawdown_pct, sharpe, sortino, profit_factor,
 val_return_pct, val_sharpe, test_return_pct, test_sharpe, stability, cost_pct, evaluation, score}`.
 The unprefixed metrics cover the whole history; `train_return_pct` / `train_sharpe`, `val_*` and `test_*`

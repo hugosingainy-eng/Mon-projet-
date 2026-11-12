@@ -118,6 +118,12 @@ def test_lab_runs_distinct_stored_experiments(settings, db, hub):
         methods = {m for (m,) in s.execute(select(LabExperiment.method).distinct())}
     assert len(rows) == 300 and len({r.id for r in rows}) == 300
     assert methods == {"grid", "random", "bayesian", "evolutionary"}
+    # a second run re-tests the configurations that are currently deployed, before anything else
+    cfg = (rows[0].family, rows[0].params, rows[0].instrument, rows[0].timeframe)
+    lab.revalidate = lambda: [cfg]
+    run2 = lab.run(50)
+    assert lab.verdict(run2, *cfg) == rows[0].evaluation          # same data -> same verdict
+    assert lab.verdict(run2, "ma_cross", {"x": 1}, "BTC/EUR", "15m") is None
     keys = {(r.family, str(sorted(r.params.items())), r.instrument, r.timeframe) for r in rows}
     assert len(keys) == 300                                    # 300 genuinely different configurations
     r = rows[0]

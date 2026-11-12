@@ -44,6 +44,7 @@ class Engine:
         self.risk = RiskManager(settings, self.db, self.hub, self.broker)
         self.lab = Lab(settings, self.db, self.hub)
         self.lab.on_finish = self.deploy
+        self.lab.revalidate = self._active_configs
         self.agents = build_agents()
         self.market_stats: dict[str, dict] = {}
         self.focus: list[str] = []
@@ -290,9 +291,18 @@ class Engine:
                                note="validated in the lab; forward test on live prices", created_at=now, updated_at=now))
                 added += 1
             for key, a in index.items():
-                if key not in keep and a.stage == "forward":
-                    a.stage, a.note, a.updated_at = "retired", "did not re-validate in the latest research run", now
+                if key in keep:
+                    continue
+                verdict = self.lab.verdict(run_id, a.family, a.params, a.instrument, a.timeframe)
+                if verdict is not None and verdict != "PASS":      # re-tested on fresh data and failed
+                    a.stage, a.updated_at = "retired", now
+                    a.note = f"retired: re-validation on fresh data gave {verdict}"
         self.db.incident("info", "optimizer", f"research run {run_id}: {len(cands)} validated candidates, {added} new in forward test")
+
+    def _active_configs(self) -> list[tuple]:
+        with self.db.session() as s:
+            return [(a.family, a.params, a.instrument, a.timeframe)
+                    for a in s.scalars(select(Strategy).where(Strategy.stage != "retired"))]
 
     def evaluate_strategies(self, now: datetime):
         with self.db.session() as s:
