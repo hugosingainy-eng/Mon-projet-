@@ -178,10 +178,13 @@ class Engine:
             self._wake.clear()
 
     def cycle(self):
+        """One engine cycle. Network calls run OUTSIDE the lock so dashboard controls
+        (pause, emergency stop...) never wait behind a slow or failing data provider."""
+        now = self.now()
+        for e in self.hub.refresh_quotes(now):
+            self.incident("warning", "data", e)
         with self._lock:
-            now, st = self.now(), self.state
-            for e in self.hub.refresh_quotes(now):
-                self.incident("warning", "data", e)
+            st = self.state
             if st["status"] != "idle":
                 for pos, reason in self.broker.mark_and_check(now, flatten=st["flatten"]):
                     if pos.book == "live":
@@ -192,11 +195,15 @@ class Engine:
                 self._track_equity(now)
             if st["status"] in ("running", "paused") and now >= datetime.fromisoformat(st["ends_at"]):
                 self._complete(now)
-            for agent in self.agents:
-                if agent.due():
-                    self.run_agent(agent)
-            if st["status"] == "running":
-                self.evaluate_strategies(now)
+            self._save()
+        for agent in self.agents:
+            if self._stop.is_set():
+                return
+            if agent.due():
+                self.run_agent(agent)
+        if self.state["status"] == "running":
+            self.evaluate_strategies(self.now())
+        with self._lock:
             self._save()
 
     def _track_equity(self, now: datetime):
@@ -292,7 +299,15 @@ class Engine:
             strategies = list(s.scalars(select(Strategy).where(Strategy.stage.in_(("forward", "live")))))
         for st in strategies:
             try:
-                self._evaluate_one(st, now)
+                inst = BY_SYMBOL[st.instrument]
+                if is_market_open(inst, now) and self.hub.is_fresh(inst.symbol, now):
+                    self.hub.candles(inst, st.timeframe, bars=600)      # network, outside the lock
+                    if inst.benchmark:
+                        self.hub.candles(BY_SYMBOL[inst.benchmark], st.timeframe, bars=600)
+                with self._lock:
+                    if self.state["status"] != "running":
+                        return                                          # paused/stopped meanwhile
+                    self._evaluate_one(st, now)
             except BrokerError as e:
                 self.incident("warning", "execution", f"{st.instrument}: {e}")
             except Exception as e:
