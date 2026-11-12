@@ -174,3 +174,26 @@ def test_only_frequently_trading_strategies_are_deployed(settings, db, hub):
     assert len(frequent) <= len(everything)
     settings.lab_min_trades_per_day = 1e9
     assert lab.candidates(run) == []
+
+
+def test_illiquid_venue_history_is_rejected():
+    """A venue whose candles are mostly empty must not be used; the next venue is tried."""
+    import pandas as pd
+    from quantum_edge.data.ccxt_provider import CcxtProvider
+    from quantum_edge.instruments import BY_SYMBOL
+
+    class Ex:
+        rateLimit = 0
+        def __init__(self, volume):
+            self.markets, self.volume = {"BNB/EUR": {}}, volume
+        def milliseconds(self):
+            return 1_800_000_000_000
+        def fetch_ohlcv(self, symbol, tf, since=None, limit=None):
+            return [[since + i * 900_000, 1.0, 1.0, 1.0, 1.0, self.volume] for i in range(50)]
+
+    prov = CcxtProvider(["dead", "alive"], ["dead", "alive"])
+    prov._ex = {"dead": Ex(0.0), "alive": Ex(5.0)}
+    df = prov.history(BY_SYMBOL["BNB/EUR"], "15m", 40)
+    assert df.attrs["source"] == "ccxt:alive" and (df["volume"] > 0).all()
+    prov._ex = {"dead": Ex(0.0), "alive": Ex(0.0)}
+    assert prov.history(BY_SYMBOL["BNB/EUR"], "15m", 40).empty        # nothing usable -> no data, not fake data

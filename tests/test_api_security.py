@@ -119,4 +119,4 @@ def test_data_adapters_are_read_only():
     from quantum_edge.data.yahoo_provider import YahooProvider
     for cls in (CcxtProvider, YahooProvider):
         public = {n for n in dir(cls) if not n.startswith("_")}
-        assert public <= {"name", "quotes", "history", "history_many", "order_book", "funding_rate", "news", "supports"}
+        assert public <= {"name", "quotes", "history", "history_many", "order_book", "funding_rate", "news", "supports", "MAX_EMPTY_BARS"}

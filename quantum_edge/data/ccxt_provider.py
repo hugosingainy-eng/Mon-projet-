@@ -16,6 +16,7 @@ from .base import (OHLCV, TF_SECONDS, HistoricalDataProvider, MarketDataProvider
 
 class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider):
     name = "ccxt"
+    MAX_EMPTY_BARS = 0.2      # share of zero-volume candles above which a venue's history is rejected
 
     def __init__(self, exchanges: list[str], history_exchanges: list[str] | None = None):
         self.exchange_names = exchanges
@@ -101,6 +102,11 @@ class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider
                 self._last_error = f"{name}: {type(e).__name__}: {e}"[:200]
                 continue
             df.attrs["source"] = f"ccxt:{name}"
+            if len(df) and float((df["volume"] <= 0).mean()) > self.MAX_EMPTY_BARS:
+                # the pair is listed but barely trades on this venue: its candles are flat
+                # placeholders, useless for research and misleading against another venue's quotes
+                self._last_error = f"{name}: {inst.provider_symbol} {timeframe} is illiquid (empty bars)"
+                continue
             if len(df) >= 0.8 * bars:
                 return df
             if len(df) > len(best):
