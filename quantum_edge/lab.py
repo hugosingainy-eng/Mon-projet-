@@ -350,8 +350,12 @@ class Lab:
             return []
         with self.db.session() as s:
             rows = s.scalars(select(LabExperiment).where(
-                LabExperiment.run_id == run_id, LabExperiment.evaluation != "INSUFFICIENT_TRADES")
-                .order_by(LabExperiment.score.desc())).all()
+                LabExperiment.run_id == run_id, LabExperiment.evaluation != "INSUFFICIENT_TRADES")).all()
+
+        def oos_avg(r):       # average net return per trade on the two unseen segments
+            vals = [r.segments[k]["avg"] for k in ("val", "test") if r.segments[k]["avg"] is not None]
+            return sum(vals) / len(vals) if vals else -1.0
+        rows = sorted(rows, key=oos_avg, reverse=True)      # least bad first
         out, seen = [], set()
         for r in rows:
             if (BY_SYMBOL[r.instrument].asset_class not in self.s.explore_classes or r.instrument in seen
