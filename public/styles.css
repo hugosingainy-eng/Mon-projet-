@@ -237,7 +237,9 @@ code { font: 13px var(--mono); background: var(--surface-2); padding: 1px 6px; b
   .two-col { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
-  .shell { grid-template-columns: 1fr; }
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { min-width: 0; }
+  .side nav { min-width: 0; flex: 1 1 100%; }
   .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 16px; }
   .side nav { display: flex; overflow-x: auto; width: 100%; order: 3; }
   .side nav a { padding: 8px 10px; white-space: nowrap; }
