@@ -30,7 +30,7 @@ DEFAULT_STATE = {"status": "idle", "started_at": None, "ends_at": None, "flatten
 def default_providers(settings: Settings) -> dict:
     from .data.ccxt_provider import CcxtProvider
     from .data.yahoo_provider import YahooProvider
-    return {"ccxt": CcxtProvider(settings.crypto_exchanges), "yahoo": YahooProvider()}
+    return {"ccxt": CcxtProvider(settings.crypto_exchanges, settings.crypto_history_exchanges), "yahoo": YahooProvider()}
 
 
 class Engine:

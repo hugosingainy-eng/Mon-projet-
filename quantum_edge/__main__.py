@@ -1,4 +1,4 @@
-"""Command line:  python -m quantum_edge [serve|selfcheck|stop]"""
+"""Command line:  python -m quantum_edge [serve|selfcheck|stop|backup [file]|restore [file]]"""
 from __future__ import annotations
 
 import os
@@ -58,7 +58,7 @@ def selfcheck() -> int:
             failures += 1
             print(f"[FAIL] {label}: {type(e).__name__}: {e}")
 
-    cx, yh = CcxtProvider(s.crypto_exchanges), YahooProvider()
+    cx, yh = CcxtProvider(s.crypto_exchanges, s.crypto_history_exchanges), YahooProvider()
     cryptos = [i for i in UNIVERSE if i.provider == "ccxt"]
 
     def crypto_quotes():
@@ -66,7 +66,7 @@ def selfcheck() -> int:
         missing = [i.symbol for i in cryptos if i.symbol not in q]
         return f"{len(q)}/{len(cryptos)} quotes" + (f" (not listed: {', '.join(missing)})" if missing else "")
     check(f"crypto quotes via {s.crypto_exchanges}", crypto_quotes)
-    check("crypto 15m history BTC/EUR", lambda: f"{len(cx.history(BY_SYMBOL['BTC/EUR'], '15m', 1500))} bars")
+    check("crypto 15m history BTC/EUR", lambda: (lambda d: f"{len(d)} bars from {d.attrs.get('source')}")(cx.history(BY_SYMBOL['BTC/EUR'], '15m', 12000)))
     check("crypto order book BTC/EUR", lambda: cx.order_book(BY_SYMBOL["BTC/EUR"]))
     check("funding rate BTC (optional)", lambda: cx.funding_rate("BTC") if cx.funding_rate("BTC") is not None else "not accessible (optional)")
     others = [i for i in UNIVERSE if i.provider == "yahoo"]
@@ -83,6 +83,18 @@ def selfcheck() -> int:
     return 1 if failures else 0
 
 
+def backup_cmd(path: str):
+    from .backup import save
+    from .db import Database
+    print("backup written to", save(Database(load_settings().db_path), path))
+
+
+def restore_cmd(path: str):
+    from .backup import restore
+    from .db import Database
+    print(restore(Database(load_settings().db_path), path))
+
+
 def main():
     for stream in (sys.stdout, sys.stderr):      # never crash on a console that lacks a character
         if hasattr(stream, "reconfigure"):
@@ -94,6 +106,9 @@ def main():
         stop()
     elif cmd == "selfcheck":
         sys.exit(selfcheck())
+    elif cmd in ("backup", "restore"):
+        path = sys.argv[2] if len(sys.argv) > 2 else "backup/state.json"
+        backup_cmd(path) if cmd == "backup" else restore_cmd(path)
     else:
         print(__doc__)
         sys.exit(2)

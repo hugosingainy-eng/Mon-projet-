@@ -84,6 +84,43 @@ class YahooProvider(MarketDataProvider, HistoricalDataProvider, NewsProvider):
         return out
 
     def news(self, inst: Instrument) -> list[dict]:
+        """Headlines with source and timestamp: Yahoo's news API, then its public RSS feed."""
+        try:
+            items = self._news_api(inst)
+            if items:
+                return items
+        except Exception:
+            pass
+        return self._news_rss(inst)
+
+    @staticmethod
+    def _news_rss(inst: Instrument) -> list[dict]:
+        import urllib.parse
+        import urllib.request
+        import xml.etree.ElementTree as ET
+        from email.utils import parsedate_to_datetime
+        url = ("https://feeds.finance.yahoo.com/rss/2.0/headline?s="
+               + urllib.parse.quote(inst.provider_symbol) + "&region=US&lang=en-US")
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            root = ET.fromstring(r.read())
+        out = []
+        for it in root.iter("item"):
+            title, link, when = it.findtext("title"), it.findtext("link"), it.findtext("pubDate")
+            if not (title and link and when):
+                continue
+            try:
+                ts = parsedate_to_datetime(when)
+            except (TypeError, ValueError):
+                continue
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+            out.append({"title": title.strip(), "url": link.strip(), "publisher": "Yahoo Finance RSS",
+                        "ts": ts.astimezone(timezone.utc)})
+        return out
+
+    @staticmethod
+    def _news_api(inst: Instrument) -> list[dict]:
         import yfinance as yf
         items = yf.Ticker(inst.provider_symbol).news or []
         out = []

@@ -17,8 +17,10 @@ from .base import (OHLCV, TF_SECONDS, HistoricalDataProvider, MarketDataProvider
 class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider):
     name = "ccxt"
 
-    def __init__(self, exchanges: list[str]):
+    def __init__(self, exchanges: list[str], history_exchanges: list[str] | None = None):
         self.exchange_names = exchanges
+        # venues tried in order for candles; some (e.g. Kraken) only serve ~720 bars
+        self.history_names = history_exchanges or exchanges
         self._ex: dict[str, object] = {}
         self._route: dict[str, str] = {}      # symbol -> exchange name
         self._unsupported: set[str] = set()
@@ -86,20 +88,37 @@ class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider
 
     # --- candles ----------------------------------------------------------------------
     def history(self, inst: Instrument, timeframe: str, bars: int) -> pd.DataFrame:
-        name = self._route_for(inst.provider_symbol)
-        if not name:
-            return empty_frame()
-        ex = self._ex[name]
+        """Candles from the first venue that can serve (nearly) the requested depth; otherwise
+        the longest series found. The venue used is recorded in `df.attrs["source"]`."""
+        best = empty_frame()
+        for name in self.history_names:
+            try:
+                ex = self._exchange(name)
+                if inst.provider_symbol not in ex.markets:
+                    continue
+                df = self._history_from(ex, inst.provider_symbol, timeframe, bars)
+            except Exception as e:
+                self._last_error = f"{name}: {type(e).__name__}: {e}"[:200]
+                continue
+            df.attrs["source"] = f"ccxt:{name}"
+            if len(df) >= 0.8 * bars:
+                return df
+            if len(df) > len(best):
+                best = df
+        return best
+
+    @staticmethod
+    def _history_from(ex, symbol: str, timeframe: str, bars: int) -> pd.DataFrame:
         step = TF_SECONDS[timeframe] * 1000
         since = ex.milliseconds() - bars * step
         rows: list[list] = []
-        while len(rows) < bars + 5:
-            chunk = ex.fetch_ohlcv(inst.provider_symbol, timeframe, since=since, limit=1000)
+        for _ in range(bars // 100 + 10):                 # hard bound on requests
+            chunk = ex.fetch_ohlcv(symbol, timeframe, since=since, limit=1000)
             if not chunk:
                 break
             rows.extend(chunk)
             nxt = chunk[-1][0] + step
-            if nxt <= since or len(chunk) < 2 or nxt > ex.milliseconds():
+            if nxt <= since or len(chunk) < 2 or nxt > ex.milliseconds() or len(rows) >= bars + 5:
                 break
             since = nxt
             time.sleep(ex.rateLimit / 1000)
@@ -107,7 +126,7 @@ class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider
             return empty_frame()
         df = pd.DataFrame(rows, columns=["ts"] + OHLCV).drop_duplicates("ts").sort_values("ts")
         df.index = pd.to_datetime(df.pop("ts"), unit="ms", utc=True)
-        return df.astype(float)
+        return df.astype(float).iloc[-bars:]
 
     # --- microstructure ---------------------------------------------------------------
     def order_book(self, inst: Instrument, depth: int = 20) -> dict | None:

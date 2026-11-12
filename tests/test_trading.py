@@ -344,3 +344,23 @@ def test_all_fourteen_agents_run(eng):
     bad = {a.id: a.last_error for a in eng.agents if a.status == "error"}
     assert not bad, bad
     assert all(a.last_run for a in eng.agents)
+
+
+def test_backup_and_restore_into_a_fresh_database(settings, providers, tmp_path):
+    from quantum_edge.backup import restore, save
+    from quantum_edge.db import Database
+    e1 = Engine(settings, providers)
+    e1.control("start")
+    setp(providers, e1.hub, "BTC/EUR", 100.0)
+    e1.broker.open(BTC, 1, 200.0, stop_price=90.0)
+    e1.cycle()
+    acct, started = e1.broker.account(), e1.state["started_at"]
+    path = save(e1.db, tmp_path / "state.json")
+    assert "already holds" in restore(e1.db, path)                   # never overwrites
+    settings.db_path = str(tmp_path / "fresh.db")
+    assert "restored" in restore(Database(settings.db_path), path)
+    e2 = Engine(settings, providers)
+    assert e2.state["status"] == "running" and e2.state["started_at"] == started
+    pos = e2.broker.open_positions()
+    assert len(pos) == 1 and pos[0].stop_price == 90.0
+    assert e2.broker.account()["cash"] == pytest.approx(acct["cash"]) and e2.broker.audit()["ok"]

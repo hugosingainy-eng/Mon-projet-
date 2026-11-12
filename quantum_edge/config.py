@@ -39,7 +39,8 @@ class Settings:
     relab_hours: float = 24.0
 
     # --- data -------------------------------------------------------------------------
-    crypto_exchanges: list = field(default_factory=lambda: ["binance", "kraken"])
+    crypto_exchanges: list = field(default_factory=lambda: ["binance", "kraken"])          # live quotes
+    crypto_history_exchanges: list = field(default_factory=lambda: ["binance", "bitstamp", "kraken"])
     max_quote_age: dict = field(default_factory=lambda: {
         "crypto": 180, "equity": 1200, "etf": 1200, "forex": 600, "index": 1200, "commodity": 1200})
     sec_user_agent: str = ""  # SEC EDGAR requires a contact User-Agent; empty = Elite filings disabled
