@@ -1,0 +1,22 @@
+{
+  "_comment": "Copy to config.json and edit. Every key is optional; defaults are in quantum_edge/config.py. trading_mode can only be \"paper\".",
+  "initial_capital": 1000.0,
+  "duration_days": 5,
+  "port": 8000,
+  "crypto_exchanges": ["binance", "kraken"],
+  "sec_user_agent": "",
+  "max_position_pct": 0.25,
+  "max_exposure_pct": 1.0,
+  "max_positions": 8,
+  "risk_per_trade_pct": 0.02,
+  "max_daily_loss_pct": 0.06,
+  "max_drawdown_pct": 0.20,
+  "max_spread_bps": 30,
+  "allow_short": true,
+  "lab_target": 10000,
+  "lab_timeframes": ["15m", "1h"],
+  "forward_min_trades": 2,
+  "forward_min_hours": 6,
+  "fee_bps": {"crypto": 10, "equity": 5, "etf": 5, "forex": 0.5},
+  "fx_cost_bps": 5
+}

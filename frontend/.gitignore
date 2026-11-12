@@ -1,0 +1,10 @@
+# Dependencies are never committed.
+node_modules/
+
+# NOTE: dist/ is intentionally NOT ignored. The built dashboard is committed so
+# the FastAPI backend can serve it without requiring Node.js on the user's machine.
+
+*.log
+*.tsbuildinfo
+.vite/
+.DS_Store
