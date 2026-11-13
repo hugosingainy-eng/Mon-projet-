@@ -1,5 +1,5 @@
 {
-  "_comment": "Settings of the running experiment (owner's choices, 12-13 Nov 2026). OBJECTIVE: be profitable, +10%. Validated strategies only, sized by tested robustness (165 to 500 EUR), tested win rate of at least 55%; gains taken at +0.5% after costs and stop moved to a no-loss level after a 0.5% favourable move. Fast unvalidated trades were stopped for good on 13 Nov 19:40 Paris at the owner's request after 100+ live trades lost money to costs. The agent-consensus method only counts agents whose remembered signals made money. Simulated leverage allowed up to 3x. Research every 6 hours.",
+  "_comment": "Settings of the SECOND run, started 13 Nov 2026 about 20:00 Paris after the owner asked to restart from 1,000 EUR with 'the method that reached 1,033': large leveraged positions (up to 100% of equity each, 3x in total) taken in the direction the analysis agents agree on, 2x ATR(1h) stop, target at 3x the stop, no quick profit-taking. OBJECTIVE: 1,100 EUR. Validated strategies (tested win rate of at least 55%) also trade. The first run's full history is archived in backup/run1-2026-11-13-state.json.",
   "forward_min_trades": 0,
   "forward_min_hours": 0,
   "lab_min_trades_per_day": 0.3,
@@ -15,7 +15,7 @@
   "max_positions": 10,
   "allow_leverage": true,
   "max_exposure_pct": 3.0,
-  "max_position_pct": 0.5,
+  "max_position_pct": 1.0,
   "lab_target": 20000,
   "relab_hours": 6.0,
   "objective_return_pct": 10.0,
@@ -28,8 +28,8 @@
   "consensus_hours": 4.0,
   "consensus_stop_drawdown_eur": 40.0,
   "lab_min_win_rate": 0.55,
-  "quick_profit_pct": 0.005,
-  "breakeven_trigger_pct": 0.005,
+  "quick_profit_pct": 0.0,
+  "breakeven_trigger_pct": 0.0,
   "size_by_conviction": true,
   "conviction_floor": 0.33,
   "explore_per_instrument": 3
