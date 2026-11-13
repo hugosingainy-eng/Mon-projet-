@@ -1,11 +1,11 @@
 {
-  "_comment": "Settings of the running experiment (owner's explicit choices, 12-13 Nov 2026): SIMULATED 3x LEVERAGE, validated strategies up to 50% of equity per position, 5% equity risk per trade, no forward test, exploration of 6 unvalidated crypto strategies at up to 15% per position with a 150 EUR loss budget. New trades pause at -10% in a day or -20% from the peak; margin call force-closes everything if equity falls below 22% of exposure.",
+  "_comment": "Settings of the running experiment (owner's choices, 12-13 Nov 2026): simulated 3x leverage, validated strategies up to 50% of equity per position, 5% equity risk per trade, no forward test, research re-run every 6 hours. Exploration of unvalidated strategies was tried and switched OFF on 13 Nov at the owner's request.",
   "forward_min_trades": 0,
   "forward_min_hours": 0,
   "lab_min_trades_per_day": 0.3,
   "lab_deploy_top": 50,
   "lab_deploy_per_instrument": 3,
-  "explore_count": 22,
+  "explore_count": 0,
   "explore_weight": 0.3,
   "explore_loss_budget_eur": 150.0,
   "explore_min_trades_per_day": 20.0,
@@ -16,5 +16,6 @@
   "allow_leverage": true,
   "max_exposure_pct": 3.0,
   "max_position_pct": 0.5,
-  "lab_target": 20000
+  "lab_target": 20000,
+  "relab_hours": 6.0
 }
