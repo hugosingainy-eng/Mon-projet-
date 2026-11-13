@@ -15,7 +15,7 @@
   "max_positions": 30,
   "allow_leverage": true,
   "max_exposure_pct": 3.0,
-  "max_position_pct": 0.5,
+  "max_position_pct": 0.75,
   "lab_target": 20000,
   "relab_hours": 6.0
 }
