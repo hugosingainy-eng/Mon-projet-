@@ -119,8 +119,9 @@ class RiskManager:
         bucket = sum(x.entry_notional_eur for x in positions if x.asset_class == cls and x.side == p.side)
         room_class = equity * s.max_class_exposure_pct - bucket
         cost_buffer = 1 + (s.fee_bps[cls] + s.fx_cost_bps) / 1e4
-        size = min(size, room, room_class, acct["cash"] / cost_buffer)
-        limits = {"exposure": room, "correlated exposure": room_class, "cash": acct["cash"]}
+        power = self.broker.buying_power()
+        size = min(size, room, room_class, power / cost_buffer)
+        limits = {"exposure": room, "correlated exposure": room_class, "cash": power}
         if p.bar_turnover is not None and cls != "forex":      # stay a small part of real traded volume
             liq = p.bar_turnover * self.hub.fx_rate(inst.quote_ccy)[0] * s.max_bar_participation
             limits["liquidity"] = liq

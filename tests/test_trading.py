@@ -463,3 +463,44 @@ def test_kickstart_opens_small_stopped_positions_in_consensus_direction(eng, pro
     assert b.side == -1 and b.stop_price > b.entry_price > b.take_profit and b.expires_at is not None
     assert all(p.entry_notional_eur <= 50.0 + 1e-6 and p.strategy_name.startswith("explore:") for p in pos.values())
     assert eng.broker.audit()["ok"]
+
+
+def test_leverage_is_off_by_default_and_capped(settings):
+    from quantum_edge.config import SecurityError, validate_paper_only
+    settings.max_exposure_pct = 3.0
+    with pytest.raises(SecurityError, match="leverage"):
+        validate_paper_only(settings)                               # needs explicit allow_leverage
+    settings.allow_leverage = True
+    validate_paper_only(settings)
+    settings.max_exposure_pct = 5.0
+    with pytest.raises(SecurityError, match="capped"):
+        validate_paper_only(settings)
+
+
+def test_leverage_borrowing_interest_and_margin_call(settings, providers):
+    settings.allow_leverage, settings.max_exposure_pct = True, 3.0
+    settings.max_position_pct, settings.max_class_exposure_pct = 1.0, 3.0
+    e = Engine(settings, providers)
+    e.hub.refresh_quotes(force=True)
+    e.control("start")
+    for sym in ("BTC/EUR", "ETH/EUR", "SOL/EUR"):
+        setp(providers, e.hub, sym, 100.0)
+        e.broker.open(BY_SYMBOL[sym], 1, 950.0)
+    a = e.broker.account()
+    assert a["cash"] < 0 and 2.8 < a["leverage"] <= 3.0                # borrowed about 1,850
+    assert np.isclose(a["equity"], a["initial_capital"] + a["realized_pnl"] + a["unrealized_pnl"])
+    with pytest.raises(BrokerError, match="insufficient"):
+        e.broker.open(BY_SYMBOL["XRP/EUR"], 1, 500.0)                  # beyond 3x
+    paid = e.broker.accrue_financing(86400)                            # one day of interest
+    assert paid == pytest.approx(-a["cash"] * settings.financing_bps_per_day / 1e4)
+    b = e.broker.account()
+    assert b["financing"] == pytest.approx(paid) and b["equity"] == pytest.approx(a["equity"] - paid)
+    assert np.isclose(b["equity"], b["initial_capital"] + b["realized_pnl"] + b["unrealized_pnl"])
+    assert e.broker.audit()["cash_replayed"] == pytest.approx(b["cash"])
+    # a 27% fall on a 3x book wipes most of the equity -> margin call
+    for sym in ("BTC/EUR", "ETH/EUR", "SOL/EUR"):
+        setp(providers, e.hub, sym, 73.0)
+    e.cycle()
+    assert e.state["status"] == "halted" and "MARGIN CALL" in e.state["halt_reason"]
+    assert e.broker.open_positions() == []
+    assert 0 < e.broker.account()["equity"] < 300                      # most of the capital is gone

@@ -113,7 +113,9 @@ def build() -> str:
              ("Perte maximale depuis un sommet", pct(-pf["max_drawdown_pct"] if pf["max_drawdown_pct"] else 0.0, False), tone(-pf["max_drawdown_pct"])),
              ("Trades clôturés", str(tr["closed_trades"]), ""),
              ("Taux de réussite", pct(tr["win_rate"] * 100, False) if tr["win_rate"] is not None else "—", ""),
-             ("Frais + glissement + change", eur(pf["fees"] + pf["slippage"] + pf["fx_costs"]), "")]
+             ("Frais + glissement + change", eur(pf["fees"] + pf["slippage"] + pf["fx_costs"]), ""),
+             ("Capital engagé", eur(pf["invested"]), ""),
+             ("Levier utilisé", "×" + num(pf.get("leverage") or 0.0), "warn" if (pf.get("leverage") or 0) > 1 else "")]
     tiles_html = "".join(f'<div class="tile"><span>{esc(l)}</span><b class="{c}">{v}</b></div>' for l, v, c in tiles)
 
     pos_rows = [[(esc(p["instrument"]), ""), ("achat" if p["side"] == "long" else "vente", ""), (num(p["entry_price"], 4), ""),

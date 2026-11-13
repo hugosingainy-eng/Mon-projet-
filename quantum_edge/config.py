@@ -13,6 +13,9 @@ ROOT = Path(__file__).resolve().parent.parent
 PAPER_MODE = "paper"
 
 
+MAX_SIMULATED_LEVERAGE = 3.0
+
+
 class SecurityError(RuntimeError):
     """Raised when the paper-only guarantees would be violated."""
 
@@ -57,6 +60,12 @@ class Settings:
     short_borrow_bps_per_day: float = 3.0
 
     # --- risk limits ("aggressive, no leverage") --------------------------------------
+    # Simulated leverage (OFF by default): with allow_leverage, max_exposure_pct may go up to 3.0.
+    # Borrowed cash pays interest; if equity falls below liquidation_margin x exposure every
+    # position is force-closed (margin call) and trading halts.
+    allow_leverage: bool = False
+    financing_bps_per_day: float = 3.0
+    liquidation_margin: float = 0.22
     allow_short: bool = True
     allow_fractional: bool = True
     max_position_pct: float = 0.25
@@ -144,8 +153,10 @@ def validate_paper_only(s: Settings) -> None:
     with no broker credentials present in the environment."""
     if s.trading_mode != PAPER_MODE:
         raise SecurityError(f"trading_mode={s.trading_mode!r} is not supported: paper trading only")
-    if s.max_exposure_pct > 1.0:
-        raise SecurityError("max_exposure_pct > 1.0 would be leverage, which is disabled")
+    if s.max_exposure_pct > 1.0 and not s.allow_leverage:
+        raise SecurityError("max_exposure_pct > 1.0 would be leverage, which is disabled (allow_leverage is false)")
+    if s.max_exposure_pct > MAX_SIMULATED_LEVERAGE:
+        raise SecurityError(f"simulated leverage is capped at {MAX_SIMULATED_LEVERAGE:g}x")
     for key in os.environ:
         k = key.upper()
         if k.startswith("QE_") and any(t in k for t in ("API_KEY", "APIKEY", "SECRET", "PASSWORD")):

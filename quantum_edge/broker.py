@@ -86,7 +86,7 @@ class PaperBroker:
         notional = qty * px * fx
         fee = notional * self.s.fee_bps[inst.asset_class] / 1e4
         fxc = notional * self._fx_cost_rate(inst)
-        if book == "live" and notional + fee + fxc > self.cash() + 1e-9:
+        if book == "live" and notional + fee + fxc > self.buying_power() + 1e-9:
             raise BrokerError("insufficient cash")
         slip_eur = abs(px - ref) * qty * fx
         with self.db.session() as s:
@@ -196,6 +196,28 @@ class PaperBroker:
             d = s.scalar(select(func.coalesce(func.sum(Fill.cash_delta_eur), 0.0)).where(Fill.book == "live"))
         return self.s.initial_capital + float(d)
 
+    def buying_power(self) -> float:
+        """Cash available for a new position. Without leverage this is the cash balance; with
+        leverage, cash may go negative (borrowing) until exposure reaches max_exposure_pct x equity."""
+        a = self.account()
+        if not self.s.allow_leverage:
+            return a["cash"]
+        return max(0.0, a["equity"] * self.s.max_exposure_pct - a["invested"])
+
+    def accrue_financing(self, seconds: float, now: datetime | None = None) -> float:
+        """Charge interest on borrowed cash (negative balance) for `seconds`; returns the amount."""
+        cash = self.cash()
+        if cash >= 0 or seconds <= 0:
+            return 0.0
+        amount = -cash * self.s.financing_bps_per_day / 1e4 * seconds / 86400
+        now = now or utcnow()
+        with self.db.session() as s:
+            s.add(Fill(ts=now, book="live", position_id=0, instrument="CASH", action="finance", side="-", qty=0.0,
+                       ref_price=0.0, price=0.0, fx=1.0, price_source="financing", price_ts=now, notional_eur=-cash,
+                       fee_eur=amount, slippage_eur=0.0, fx_cost_eur=0.0, cash_delta_eur=-amount,
+                       reason="interest on borrowed cash"))
+        return amount
+
     def account(self) -> dict:
         with self.db.session() as s:
             cash = self.s.initial_capital + float(s.scalar(
@@ -207,6 +229,9 @@ class PaperBroker:
                 func.coalesce(func.sum(Fill.fee_eur + Fill.borrow_eur), 0.0),
                 func.coalesce(func.sum(Fill.slippage_eur), 0.0),
                 func.coalesce(func.sum(Fill.fx_cost_eur), 0.0)).where(Fill.book == "live")).one()
+            financing = float(s.scalar(select(func.coalesce(func.sum(Fill.fee_eur), 0.0)).where(
+                Fill.book == "live", Fill.action == "finance")))
+        realized -= financing          # interest paid is a realized cost
         invested = sum(p.entry_notional_eur for p in opens)
         value = sum(self.value(p) for p in opens)
         open_costs = sum(p.fees_eur + p.fx_cost_eur for p in opens)
@@ -214,7 +239,8 @@ class PaperBroker:
         return {"currency": self.s.base_currency, "initial_capital": self.s.initial_capital,
                 "equity": equity, "cash": cash, "invested": invested, "positions_value": value,
                 "realized_pnl": realized, "unrealized_pnl": value - invested - open_costs,
-                "fees": float(fees), "slippage": float(slip), "fx_costs": float(fxc)}
+                "fees": float(fees), "slippage": float(slip), "fx_costs": float(fxc),
+                "financing": financing, "leverage": (invested / equity) if equity > 0 else 0.0}
 
     def audit(self) -> dict:
         """Replay the fill log from scratch and compare with the stored positions."""

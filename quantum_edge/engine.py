@@ -22,7 +22,7 @@ from .lab import Lab
 from .risk import Proposal, RiskManager
 from .strategies import Data, signals as strategy_signals
 
-DEFAULT_STATE = {"explore_halted": False, "status": "idle", "started_at": None, "ends_at": None, "flatten": False,
+DEFAULT_STATE = {"financing_ts": None, "explore_halted": False, "status": "idle", "started_at": None, "ends_at": None, "flatten": False,
                  "halt_reason": None, "peak_equity": None, "max_drawdown": 0.0,
                  "day": None, "day_start_equity": None}
 
@@ -203,6 +203,7 @@ class Engine:
                                          f"closed {pos.instrument} ({reason}): net €{pos.realized_pnl_eur:+.2f}")
                 if st["flatten"] and not self.broker.open_positions(None):
                     st["flatten"] = False
+                self._leverage_housekeeping(now)
                 self._track_equity(now)
             if st["status"] in ("running", "paused") and now >= datetime.fromisoformat(st["ends_at"]):
                 self._complete(now)
@@ -216,6 +217,24 @@ class Engine:
             self.evaluate_strategies(self.now())
         with self._lock:
             self._save()
+
+    def _leverage_housekeeping(self, now: datetime):
+        """Interest on borrowed cash, and the margin call when equity gets too thin."""
+        if not self.s.allow_leverage:
+            return
+        last = self.state.get("financing_ts")
+        self.state["financing_ts"] = now.isoformat()
+        if last:
+            dt = (now - datetime.fromisoformat(last)).total_seconds()
+            if 0 < dt < 6 * 3600:            # never charge for time the app was not running
+                self.broker.accrue_financing(dt, now)
+        acct = self.broker.account()
+        if acct["invested"] > 0 and self.state["status"] == "running" and \
+                acct["equity"] < self.s.liquidation_margin * acct["positions_value"]:
+            self.state.update(status="halted", flatten=True,
+                              halt_reason=f"MARGIN CALL: equity €{acct['equity']:.2f} below {self.s.liquidation_margin:.0%} of exposure")
+            self.broker.mark_and_check(now, flatten=True)
+            self.db.incident("error", "risk", self.state["halt_reason"] + " — all positions force-closed, trading halted")
 
     def _track_equity(self, now: datetime):
         st = self.state
