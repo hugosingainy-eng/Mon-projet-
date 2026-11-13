@@ -329,9 +329,9 @@ class Engine:
         out = {}
         for agent, a in stats.items():
             n = a["n"]
-            out[agent] = {"signals": n, "hit_rate": a["hits"] / n, "avg_gross_pct": a["gross"] / n * 100,
-                          "avg_net_pct": a["net"] / n * 100,
-                          "proven": n >= self.MEMORY_MIN_SIGNALS and a["net"] > 0}
+            out[agent] = {"signals": int(n), "hit_rate": float(a["hits"] / n),
+                          "avg_gross_pct": float(a["gross"] / n * 100), "avg_net_pct": float(a["net"] / n * 100),
+                          "proven": bool(n >= self.MEMORY_MIN_SIGNALS and a["net"] > 0)}
         self.agent_scores = out
         return out
 

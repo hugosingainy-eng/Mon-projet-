@@ -572,6 +572,8 @@ def test_agent_memory_scores_past_signals_against_what_happened(eng, providers, 
     assert mem["oracle"]["signals"] == 40 and mem["oracle"]["hit_rate"] == 1.0 and mem["oracle"]["proven"]
     assert mem["antioracle"]["hit_rate"] == 0.0 and not mem["antioracle"]["proven"]
     assert "newbie" not in mem                                        # outcome not known yet: not scored
+    import json
+    json.dumps(eng.state_view())                                      # the memory must be serialisable for the API
     with eng.db.session() as s:
         for a in ("oracle", "antioracle"):
             s.add(Signal(ts=utcnow(), agent=a, instrument="BTC/EUR", direction="long", confidence=0.8, summary="t"))
