@@ -332,6 +332,8 @@ class Lab:
                 .order_by(LabExperiment.score.desc()).limit(5000)).all()
         out, per, fams = [], {}, set()
         for r in rows:
+            if r.params.get("rr", 0.0) < self.s.lab_min_rr:
+                continue                     # payoff shape requested in the settings
             if trades_per_day(r) < self.s.lab_min_trades_per_day:
                 continue                     # robust but too rare to matter in a short experiment
             if per.get(r.instrument, 0) >= self.s.lab_deploy_per_instrument or (r.instrument, r.family) in fams:

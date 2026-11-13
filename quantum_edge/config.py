@@ -93,6 +93,7 @@ class Settings:
     # a five-day experiment needs strategies that actually trade: minimum average number of
     # trades per calendar day (over the whole backtest) for a configuration to be deployed
     lab_min_trades_per_day: float = 1.0
+    lab_min_rr: float = 0.0     # only deploy configurations whose target is at least this multiple of the stop
     lab_crypto_bars: int = 12000
     lab_min_bars: int = 600
     lab_seed: int = 42

@@ -1,5 +1,5 @@
 {
-  "_comment": "Settings of the running experiment (owner's choices, 12-13 Nov 2026). OBJECTIVES: +10% total return; 5 to 20 EUR net per winning trade. Simulated 3x leverage, validated strategies only, positions up to 75% of equity, 5% equity risk per trade, no forward test, research every 6 hours. Exploration of unvalidated strategies was tried and switched OFF on 13 Nov at the owner's request.",
+  "_comment": "Settings of the running experiment (owner's choices, 12-13 Nov 2026). OBJECTIVES: +10% total return; winning trades around +22 EUR, losing trades around -5 EUR. Hence: 0.5% of equity (5 EUR) risked per trade, and new strategies are deployed only when their target is at least 4x their stop. Simulated 3x leverage, validated strategies only, positions up to 75% of equity, no forward test, research every 6 hours. Exploration was switched OFF on 13 Nov.",
   "forward_min_trades": 0,
   "forward_min_hours": 0,
   "lab_min_trades_per_day": 0.3,
@@ -9,7 +9,7 @@
   "explore_weight": 0.3,
   "explore_loss_budget_eur": 150.0,
   "explore_min_trades_per_day": 20.0,
-  "risk_per_trade_pct": 0.05,
+  "risk_per_trade_pct": 0.005,
   "max_daily_loss_pct": 0.1,
   "max_class_exposure_pct": 3.0,
   "max_positions": 30,
@@ -19,6 +19,7 @@
   "lab_target": 20000,
   "relab_hours": 6.0,
   "objective_return_pct": 10.0,
-  "objective_trade_eur_min": 5.0,
-  "objective_trade_eur_max": 20.0
+  "objective_trade_eur_min": 20.0,
+  "objective_trade_eur_max": 25.0,
+  "lab_min_rr": 4.0
 }

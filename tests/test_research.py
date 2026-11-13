@@ -197,3 +197,14 @@ def test_illiquid_venue_history_is_rejected():
     assert df.attrs["source"] == "ccxt:alive" and (df["volume"] > 0).all()
     prov._ex = {"dead": Ex(0.0), "alive": Ex(0.0)}
     assert prov.history(BY_SYMBOL["BNB/EUR"], "15m", 40).empty        # nothing usable -> no data, not fake data
+
+
+def test_minimum_reward_to_risk_filter_on_deployment(settings, db, hub):
+    lab = Lab(settings, db, hub)
+    run = lab.run(800)
+    settings.lab_min_trades_per_day = 0.0
+    settings.lab_min_rr = 4.0
+    picks = lab.candidates(run)
+    assert all(p.params["rr"] >= 4.0 for p in picks)
+    settings.lab_min_rr = 0.0
+    assert len(lab.candidates(run)) >= len(picks)

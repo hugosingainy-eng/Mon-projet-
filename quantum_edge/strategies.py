@@ -276,7 +276,7 @@ NEEDS_BENCH = {"relative_strength", "pairs_ratio"}
 # Trade-management parameters shared by every family (also part of every experiment).
 COMMON_SPACE = {
     "stop_atr": [1.0, 1.5, 2.0, 3.0, 4.0],      # stop-loss distance in ATR(14)
-    "rr": [0.0, 1.0, 1.5, 2.0, 3.0],            # take-profit as a multiple of the stop (0 = none)
+    "rr": [0.0, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0],  # take-profit as a multiple of the stop (0 = none)
     "trail": [False, True],                     # trailing stop
     "max_hold": [12, 24, 48, 96, 200],          # bars
     "size": [0.1, 0.25],                        # fraction of equity per trade
