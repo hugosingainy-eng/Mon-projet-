@@ -22,6 +22,7 @@ class Proposal:
     expected_trade_pct: float = 0.0  # out-of-sample average net trade return (fraction)
     bar_turnover: float | None = None   # last bar volume × price in quote currency
     consensus: float = 0.0          # signed agent consensus for this instrument
+    book_depth: float | None = None  # resting orders on the side the order hits (quote ccy), from the live book
     exploratory: bool = False       # unvalidated strategy traded on the owner's explicit request
 
 
@@ -78,8 +79,11 @@ class RiskManager:
             spread_bps = (q.ask - q.bid) / ((q.ask + q.bid) / 2) * 1e4
             if spread_bps > s.max_spread_bps:
                 return no(f"spread {spread_bps:.1f} bps exceeds limit {s.max_spread_bps:.0f} bps")
-        if p.bar_turnover is not None and cls != "forex":
-            fx = self.hub.fx_rate(inst.quote_ccy)[0]
+        fx = self.hub.fx_rate(inst.quote_ccy)[0]
+        if p.book_depth is not None:            # real order book: the best liquidity measure we have
+            if p.book_depth * fx < s.min_bar_turnover_eur:
+                return no(f"insufficient liquidity (order book depth €{p.book_depth * fx:,.0f})")
+        elif p.bar_turnover is not None and cls != "forex":
             if p.bar_turnover * fx < s.min_bar_turnover_eur:
                 return no(f"insufficient liquidity (last bar turnover €{p.bar_turnover * fx:,.0f})")
         round_trip = 2 * s.cost_per_side(cls, inst.quote_ccy)
@@ -122,8 +126,11 @@ class RiskManager:
         power = self.broker.buying_power()
         size = min(size, room, room_class, power / cost_buffer)
         limits = {"exposure": room, "correlated exposure": room_class, "cash": power}
-        if p.bar_turnover is not None and cls != "forex":      # stay a small part of real traded volume
-            liq = p.bar_turnover * self.hub.fx_rate(inst.quote_ccy)[0] * s.max_bar_participation
+        if p.book_depth is not None:
+            limits["liquidity"] = liq = p.book_depth * fx * s.max_book_participation
+            size = min(size, liq)
+        elif p.bar_turnover is not None and cls != "forex":    # stay a small part of real traded volume
+            liq = p.bar_turnover * fx * s.max_bar_participation
             limits["liquidity"] = liq
             size = min(size, liq)
         if size < s.min_notional_eur:

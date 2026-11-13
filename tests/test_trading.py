@@ -504,3 +504,12 @@ def test_leverage_borrowing_interest_and_margin_call(settings, providers):
     assert e.state["status"] == "halted" and "MARGIN CALL" in e.state["halt_reason"]
     assert e.broker.open_positions() == []
     assert 0 < e.broker.account()["equity"] < 300                      # most of the capital is gone
+
+
+def test_order_book_depth_takes_precedence_over_bar_turnover(risk):
+    v = risk.evaluate(prop(bar_turnover=50.0, book_depth=4000.0), RUN)     # quiet bar, deep book
+    assert v.approved and v.notional_eur == pytest.approx(250.0)
+    v = risk.evaluate(prop(bar_turnover=1e7, book_depth=600.0), RUN)       # busy bar, thin book
+    assert v.approved and v.notional_eur == pytest.approx(150.0)           # 25% of the resting orders
+    v = risk.evaluate(prop(bar_turnover=1e7, book_depth=100.0), RUN)
+    assert not v.approved and "order book depth" in v.reason

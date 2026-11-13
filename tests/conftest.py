@@ -69,7 +69,8 @@ class FakeProvider:
         return out
 
     def order_book(self, inst, depth=20):
-        return {"bid": 99.98, "ask": 100.02, "spread_bps": 4.0, "imbalance": 0.1, "source": "fake"}
+        return {"bid": 99.98, "ask": 100.02, "spread_bps": 4.0, "imbalance": 0.1, "source": "fake",
+                "bid_depth": 1e6, "ask_depth": 1e6}
 
     def funding_rate(self, base):
         return None

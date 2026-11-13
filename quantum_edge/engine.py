@@ -346,6 +346,16 @@ class Engine:
             return [(a.family, a.params, a.instrument, a.timeframe)
                     for a in s.scalars(select(Strategy).where(Strategy.stage != "retired"))]
 
+    def book_depth(self, inst, side: int) -> float | None:
+        """Resting orders on the side a market order would hit, or None when no book is available."""
+        try:
+            ob = self.hub.order_book(inst)
+        except Exception:
+            return None
+        if not ob or "ask_depth" not in ob:
+            return None
+        return float(ob["ask_depth"] if side == 1 else ob["bid_depth"])
+
     def kickstart(self, now: datetime, count: int = 3) -> list[str]:
         """Owner-requested immediate entries: small exploratory positions on the instruments
         where the analysis agents currently agree most, in the direction they indicate.
@@ -374,6 +384,7 @@ class Engine:
                 inst=inst, side=side, strategy_id=None, strategy_name=name, book="live",
                 stop_dist_pct=dist / price, weight=self.s.explore_weight, expected_trade_pct=0.0,
                 bar_turnover=float(d.v[-1] * d.c[-1]) if d.has_volume else None,
+                book_depth=self.book_depth(inst, side),
                 consensus=c, exploratory=True), self.state, now)
             if not verdict.approved:
                 continue
@@ -457,6 +468,7 @@ class Engine:
             inst=inst, side=side, strategy_id=st.id, strategy_name=name, book=book,
             stop_dist_pct=dist / price, weight=st.weight, expected_trade_pct=st.expected_trade_pct,
             bar_turnover=float(d.v[-1] * d.c[-1]) if d.has_volume else None,
+                book_depth=self.book_depth(inst, side),
             consensus=self.consensus(inst.symbol), exploratory=exploring), self.state, now)
         if not verdict.approved:
             return

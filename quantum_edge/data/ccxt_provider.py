@@ -147,6 +147,8 @@ class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider
         av = sum(a[1] for a in asks[:depth])
         mid = (bids[0][0] + asks[0][0]) / 2
         return {"bid": bids[0][0], "ask": asks[0][0], "spread_bps": (asks[0][0] - bids[0][0]) / mid * 1e4,
+                "bid_depth": sum(b[0] * b[1] for b in bids[:depth]),      # resting orders, in quote currency
+                "ask_depth": sum(a[0] * a[1] for a in asks[:depth]),
                 "imbalance": (bv - av) / (bv + av) if bv + av else 0.0, "source": f"ccxt:{name}"}
 
     def funding_rate(self, base: str) -> float | None:
