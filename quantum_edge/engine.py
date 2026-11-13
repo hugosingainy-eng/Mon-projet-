@@ -519,4 +519,11 @@ class Engine:
                         "avg_duration_minutes": float(np.mean([(p.closed_at - p.opened_at).total_seconds() / 60 for p in closed])) if closed else None,
                         "expectancy": float(np.mean(pnl)) if pnl else None},
             "lab": lab,
+            "objectives": {"return_pct": self.s.objective_return_pct,
+                           "trade_eur_min": self.s.objective_trade_eur_min,
+                           "trade_eur_max": self.s.objective_trade_eur_max,
+                           "avg_win_eur": float(np.mean(wins)) if wins else None,
+                           "avg_loss_eur": float(np.mean(losses)) if losses else None,
+                           "wins_in_range": sum(1 for x in wins if x >= self.s.objective_trade_eur_min),
+                           "remaining_eur": acct["initial_capital"] * (1 + self.s.objective_return_pct / 100) - eq},
         }

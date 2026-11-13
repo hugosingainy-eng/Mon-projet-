@@ -37,6 +37,9 @@ available — the UI must show "—" in that case and never invent a value.
 }
 ```
 
+`objectives` (also in `/api/state`): `{return_pct, trade_eur_min, trade_eur_max, avg_win_eur, avg_loss_eur,
+wins_in_range, remaining_eur}` — the owner's targets and measured progress; they never trigger trades.
+
 ### `GET /api/positions`
 Array of `{id, instrument, name, asset_class, side ("long"|"short"), qty, entry_price, current_price,
 currency, entry_notional_eur, value_eur, unrealized_pnl_eur, unrealized_pct, stop_price, take_profit,

@@ -116,6 +116,20 @@ def build() -> str:
              ("Frais + glissement + change", eur(pf["fees"] + pf["slippage"] + pf["fx_costs"]), ""),
              ("Capital engagé", eur(pf["invested"]), ""),
              ("Levier utilisé", "×" + num(pf.get("leverage") or 0.0), "warn" if (pf.get("leverage") or 0) > 1 else "")]
+    ob = st.get("objectives") or {}
+    objective_html = ""
+    if ob.get("return_pct"):
+        target = pf["initial_capital"] * (1 + ob["return_pct"] / 100)
+        objective_html = (
+            '<section><h2>Objectifs fixés</h2><div class="panel facts">'
+            f'<span>Objectif de résultat <b>{pct(ob["return_pct"])}</b> soit <b>{eur(target)}</b></span>'
+            f'<span>Résultat actuel <b class="{tone(pf["total_return_pct"])}">{pct(pf["total_return_pct"])}</b></span>'
+            f'<span>Reste à gagner <b>{eur(ob["remaining_eur"])}</b></span>'
+            f'<span>Objectif par trade gagnant <b>{num(ob["trade_eur_min"], 0)} à {num(ob["trade_eur_max"], 0)} €</b></span>'
+            f'<span>Gain moyen des trades gagnants <b>{eur(ob.get("avg_win_eur"))}</b></span>'
+            f'<span>Perte moyenne des trades perdants <b>{eur(ob.get("avg_loss_eur"))}</b></span>'
+            f'<span>Trades gagnants dans la cible <b>{ob.get("wins_in_range", 0)} sur {tr["wins"]}</b></span>'
+            '</div></section>')
     tiles_html = "".join(f'<div class="tile"><span>{esc(l)}</span><b class="{c}">{v}</b></div>' for l, v, c in tiles)
 
     pos_rows = [[(esc(p["instrument"]), ""), ("achat" if p["side"] == "long" else "vente", ""), (num(p["entry_price"], 4), ""),
@@ -184,6 +198,7 @@ ul.agents b{{display:block;font-weight:600}}ul.agents span{{color:var(--dim);fon
 <span class="meta">Relevé du {datetime.now(timezone.utc).strftime("%d/%m/%Y à %H:%M")} UTC, mis à jour environ toutes les heures</span></header>
 <div class="clock"><div><span>écoulé {dur(ex["elapsed_seconds"])}</span><span>restant {dur(ex["remaining_seconds"])}</span></div><div class="bar"><i></i></div></div>
 <div class="tiles">{tiles_html}</div>
+{objective_html}
 <section><h2>Valeur du portefeuille</h2><div class="panel">{equity_chart(equity, pf["initial_capital"])}</div></section>
 <section><h2>Positions ouvertes ({len(positions)})</h2><div class="panel">{table([("Instrument", ""), ("Sens", ""), ("Entrée", ""), ("Cours", ""), ("Valeur", ""), ("Latent", ""), ("Stratégie", ""), ("Ouverte", "")], pos_rows, "Aucune position ouverte pour le moment.")}</div></section>
 <section><h2>Derniers trades clôturés</h2><div class="panel">{table([("Clôture", ""), ("Instrument", ""), ("Sens", ""), ("Résultat net", ""), ("%", ""), ("Coûts", ""), ("Sortie", ""), ("Stratégie", "")], trade_rows, "Aucun trade clôturé pour le moment.")}</div></section>

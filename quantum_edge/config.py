@@ -31,6 +31,11 @@ class Settings:
     host: str = "127.0.0.1"
     port: int = 8000
 
+    # --- owner's objectives: shown on the dashboard and tracked, never used to force trades ----
+    objective_return_pct: float = 0.0          # target total return of the experiment, in percent (0 = none)
+    objective_trade_eur_min: float = 0.0       # target net gain per winning trade, EUR
+    objective_trade_eur_max: float = 0.0
+
     # --- loop timing (seconds) --------------------------------------------------------
     cycle_seconds: float = 60.0
     crypto_quote_seconds: float = 60.0
