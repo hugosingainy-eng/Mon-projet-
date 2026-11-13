@@ -8,7 +8,7 @@
   "explore_count": 10,
   "explore_weight": 0.3,
   "explore_loss_budget_eur": 150.0,
-  "explore_min_trades_per_day": 5.0,
+  "explore_min_trades_per_day": 20.0,
   "risk_per_trade_pct": 0.05,
   "max_daily_loss_pct": 0.1,
   "max_class_exposure_pct": 3.0,
