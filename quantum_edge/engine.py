@@ -22,7 +22,7 @@ from .lab import Lab
 from .risk import Proposal, RiskManager
 from .strategies import Data, signals as strategy_signals
 
-DEFAULT_STATE = {"financing_ts": None, "explore_halted": False, "status": "idle", "started_at": None, "ends_at": None, "flatten": False,
+DEFAULT_STATE = {"consensus_halted": False, "consensus_ts": None, "financing_ts": None, "explore_halted": False, "status": "idle", "started_at": None, "ends_at": None, "flatten": False,
                  "halt_reason": None, "peak_equity": None, "max_drawdown": 0.0,
                  "day": None, "day_start_equity": None}
 
@@ -218,6 +218,8 @@ class Engine:
                 self.run_agent(agent)
         if self.state["status"] == "running":
             self.evaluate_strategies(self.now())
+            with self._lock:
+                self.consensus_trader(self.now())
         with self._lock:
             self._save()
 
@@ -360,7 +362,8 @@ class Engine:
         return float(ob["ask_depth"] if side == 1 else ob["bid_depth"])
 
     def kickstart(self, now: datetime, count: int = 3, timeframe: str = "15m", stop_mult: float = 2.0,
-                  rr: float = 1.5, hours: float = 6.0, weight: float | None = None) -> list[str]:
+                  rr: float = 1.5, hours: float = 6.0, weight: float | None = None,
+                  min_abs: float = 0.0, skip: set | None = None) -> list[str]:
         """Owner-requested immediate entries: small exploratory positions on the instruments
         where the analysis agents currently agree most, in the direction they indicate.
         These are NOT lab-validated trades; they go through the Risk Manager, carry a stop,
@@ -368,7 +371,9 @@ class Engine:
         ranked = []
         for inst in (i for i in BY_SYMBOL.values() if i.tradable and i.asset_class in self.s.explore_classes):
             c = self.consensus(inst.symbol)
-            if abs(c) > 0 and self.hub.is_fresh(inst.symbol, now) and is_market_open(inst, now):
+            if inst.symbol in (skip or ()):
+                continue
+            if abs(c) > min_abs and self.hub.is_fresh(inst.symbol, now) and is_market_open(inst, now):
                 ranked.append((abs(c), c, inst))
         opened = []
         for _, c, inst in sorted(ranked, key=lambda x: -x[0]):
@@ -405,6 +410,47 @@ class Engine:
                              f"opened {'long' if side == 1 else 'short'} {inst.symbol} €{pos.entry_notional_eur:.2f} @ {pos.entry_price:.6g} "
                              f"(kick-start on owner's request, agent consensus {c:+.2f}; not a validated strategy)")
         return opened
+
+    CONSENSUS_NAME = "explore:kickstart/agents"
+
+    def consensus_record(self) -> dict:
+        """Live track record of the agent-consensus method: net result, peak and give-back."""
+        with self.db.session() as s:
+            closed = list(s.scalars(select(Position).where(
+                Position.book == "live", Position.status == "closed",
+                Position.strategy_name == self.CONSENSUS_NAME).order_by(Position.closed_at)))
+        cum = peak = 0.0
+        for p in closed:
+            cum += p.realized_pnl_eur
+            peak = max(peak, cum)
+        return {"trades": len(closed), "net_eur": cum, "peak_eur": peak, "giveback_eur": peak - cum,
+                "wins": sum(1 for p in closed if p.realized_pnl_eur > 0),
+                "recent": {p.instrument for p in closed if (self.now() - p.closed_at).total_seconds() < 7200}}
+
+    def consensus_trader(self, now: datetime):
+        """'Keep doing what works, stop when it stops working': trade strong agent consensus
+        while the method's own live results hold; halt it after the configured give-back."""
+        st = self.state
+        if not self.s.consensus_trading or st.get("consensus_halted") or st["status"] != "running":
+            return
+        last = st.get("consensus_ts")
+        if last and (now - datetime.fromisoformat(last)).total_seconds() < 900:
+            return                                   # look for a new entry every 15 minutes
+        st["consensus_ts"] = now.isoformat()
+        rec = self.consensus_record()
+        if rec["giveback_eur"] >= self.s.consensus_stop_drawdown_eur:
+            st["consensus_halted"] = True
+            self.db.incident("warning", "performance",
+                             f"agent-consensus trading stopped: it gave back €{rec['giveback_eur']:.2f} from its peak "
+                             f"(net €{rec['net_eur']:+.2f} over {rec['trades']} trades)")
+            return
+        held = {p.instrument for p in self.broker.open_positions("live")}
+        mine = sum(1 for p in self.broker.open_positions("live") if p.strategy_name == self.CONSENSUS_NAME)
+        slots = self.s.consensus_max_positions - mine
+        if slots <= 0 or self.broker.buying_power() < 5 * self.s.min_notional_eur:
+            return
+        self.kickstart(now, count=slots, timeframe="1h", stop_mult=1.5, rr=2.0, hours=self.s.consensus_hours,
+                       weight=1.0, min_abs=self.s.consensus_threshold, skip=held | rec["recent"])
 
     def evaluate_strategies(self, now: datetime):
         with self.db.session() as s:
@@ -524,6 +570,9 @@ class Engine:
                         "avg_duration_minutes": float(np.mean([(p.closed_at - p.opened_at).total_seconds() / 60 for p in closed])) if closed else None,
                         "expectancy": float(np.mean(pnl)) if pnl else None},
             "lab": lab,
+            "consensus": ({k: v for k, v in self.consensus_record().items() if k != "recent"}
+                          | {"enabled": self.s.consensus_trading, "halted": bool(st.get("consensus_halted")),
+                             "stop_giveback_eur": self.s.consensus_stop_drawdown_eur}),
             "objectives": {"return_pct": self.s.objective_return_pct,
                            "trade_eur_min": self.s.objective_trade_eur_min,
                            "trade_eur_max": self.s.objective_trade_eur_max,

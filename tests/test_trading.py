@@ -513,3 +513,38 @@ def test_order_book_depth_takes_precedence_over_bar_turnover(risk):
     assert v.approved and v.notional_eur == pytest.approx(150.0)           # 25% of the resting orders
     v = risk.evaluate(prop(bar_turnover=1e7, book_depth=100.0), RUN)
     assert not v.approved and "order book depth" in v.reason
+
+
+def test_consensus_trading_continues_while_it_works_and_stops_after_giveback(eng, providers, settings):
+    from quantum_edge.db import Signal
+    settings.consensus_trading, settings.consensus_stop_drawdown_eur = True, 5.0
+    settings.consensus_max_positions = 1
+    eng.control("start")
+
+    def agree(sym, direction):
+        df = providers["ccxt"].history(BY_SYMBOL[sym], "1h", 300)
+        setp(providers, eng.hub, sym, float(df["close"].iloc[-1]))
+        with eng.db.session() as s:
+            for agent in ("technical", "scanner", "momentum"):
+                s.add(Signal(ts=utcnow(), agent=agent, instrument=sym, direction=direction, confidence=0.6, summary="t"))
+
+    agree("BTC/EUR", "long")
+    eng.consensus_trader(utcnow())
+    pos = eng.broker.open_positions("live")
+    assert len(pos) == 1 and pos[0].instrument == "BTC/EUR" and pos[0].stop_price is not None
+    eng.consensus_trader(utcnow() + timedelta(minutes=20))            # slot is full: nothing more
+    assert len(eng.broker.open_positions("live")) == 1
+    # weak agreement is ignored
+    with eng.db.session() as s:
+        s.add(Signal(ts=utcnow(), agent="technical", instrument="ETH/EUR", direction="long", confidence=0.3, summary="t"))
+    settings.consensus_max_positions = 2
+    eng.consensus_trader(utcnow() + timedelta(minutes=40))
+    assert len(eng.broker.open_positions("live")) == 1
+    # the method loses more than its allowed give-back -> it switches itself off
+    setp(providers, eng.hub, "BTC/EUR", eng.hub.quote("BTC/EUR").price * 0.97)
+    eng.broker.close(pos[0].id, "stop")
+    rec = eng.consensus_record()
+    assert rec["trades"] == 1 and rec["giveback_eur"] >= 5.0
+    agree("SOL/EUR", "long")
+    eng.consensus_trader(utcnow() + timedelta(hours=1))
+    assert eng.state["consensus_halted"] and eng.broker.open_positions("live") == []

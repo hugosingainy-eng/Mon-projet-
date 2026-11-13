@@ -122,6 +122,15 @@ class Settings:
     explore_weight: float = 0.2            # x max_position_pct -> 5% of equity per position
     explore_loss_budget_eur: float = 50.0  # all exploration stops once it has lost this much
 
+    # --- agent-consensus trading (OFF by default) --------------------------------------
+    # Opens positions where the analysis agents clearly agree. It is not lab-validated: it is
+    # kept only while its own live results hold up, and stops itself after a set give-back.
+    consensus_trading: bool = False
+    consensus_threshold: float = 1.2        # minimum |signed sum of agent confidences|
+    consensus_max_positions: int = 2
+    consensus_hours: float = 4.0
+    consensus_stop_drawdown_eur: float = 40.0   # stop the method once it has given back this much from its peak
+
     def cost_per_side(self, asset_class: str, quote_ccy: str) -> float:
         """Fractional one-way cost used by the backtester (fee + slippage + half spread + FX)."""
         bps = (self.fee_bps[asset_class] + self.slippage_bps[asset_class]

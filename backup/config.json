@@ -1,5 +1,5 @@
 {
-  "_comment": "Settings of the running experiment (owner's choices, 12-13 Nov 2026). OBJECTIVES: 1,050 EUR by 13 Nov 12:00 Paris time, +10% overall; winning trades of 20 EUR or more. Hence: 2% of equity (about 20 EUR) risked per trade, positions up to 100% of equity each, simulated 3x leverage, new strategies deployed only when their target is at least 4x their stop. Validated strategies only (exploration switched OFF on 13 Nov), no forward test, research every 6 hours.",
+  "_comment": "Settings of the running experiment (owner's choices, 12-13 Nov 2026). OBJECTIVES: be profitable; 1,050 EUR then +10%; winning trades of 20 EUR or more. Simulated 3x leverage, 2% of equity risked per trade, positions up to 100% of equity. Two sources of trades: lab-validated strategies, and the agent-consensus method, which is not lab-validated and is kept only while its live results hold (it stops itself after giving back 40 EUR from its peak). Research every 6 hours.",
   "forward_min_trades": 0,
   "forward_min_hours": 0,
   "lab_min_trades_per_day": 0.3,
@@ -21,5 +21,10 @@
   "objective_return_pct": 10.0,
   "objective_trade_eur_min": 20.0,
   "objective_trade_eur_max": 25.0,
-  "lab_min_rr": 4.0
+  "lab_min_rr": 4.0,
+  "consensus_trading": true,
+  "consensus_threshold": 1.2,
+  "consensus_max_positions": 2,
+  "consensus_hours": 4.0,
+  "consensus_stop_drawdown_eur": 40.0
 }

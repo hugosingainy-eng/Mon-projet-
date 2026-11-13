@@ -130,6 +130,17 @@ def build() -> str:
             f'<span>Perte moyenne des trades perdants <b>{eur(ob.get("avg_loss_eur"))}</b></span>'
             f'<span>Trades gagnants dans la cible <b>{ob.get("wins_in_range", 0)} sur {tr["wins"]}</b></span>'
             '</div></section>')
+    cs = st.get("consensus") or {}
+    if cs.get("enabled") or cs.get("trades"):
+        etat = "arrêtée (elle a trop reperdu)" if cs.get("halted") else ("active" if cs.get("enabled") else "désactivée")
+        objective_html += (
+            '<section><h2>Méthode « accord des agents » (non validée par le laboratoire, suivie sur ses résultats réels)</h2>'
+            '<div class="panel facts">'
+            f'<span>État <b>{etat}</b></span><span>Trades clôturés <b>{cs.get("trades", 0)}</b>, gagnants <b>{cs.get("wins", 0)}</b></span>'
+            f'<span>Résultat net <b class="{tone(cs.get("net_eur"))}">{eur(cs.get("net_eur"), True)}</b></span>'
+            f'<span>Plus haut atteint <b>{eur(cs.get("peak_eur"), True)}</b></span>'
+            f'<span>Reperdu depuis le plus haut <b>{eur(cs.get("giveback_eur"))}</b> (arrêt à {eur(cs.get("stop_giveback_eur"))})</span>'
+            '</div></section>')
     tiles_html = "".join(f'<div class="tile"><span>{esc(l)}</span><b class="{c}">{v}</b></div>' for l, v, c in tiles)
 
     pos_rows = [[(esc(p["instrument"]), ""), ("achat" if p["side"] == "long" else "vente", ""), (num(p["entry_price"], 4), ""),
