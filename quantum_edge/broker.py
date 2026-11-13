@@ -175,8 +175,16 @@ class PaperBroker:
                 if p.trail_dist and p.stop_price is not None:
                     p.stop_price = (max(p.stop_price, px - p.trail_dist) if p.side == 1
                                     else min(p.stop_price, px + p.trail_dist))
+                move = p.side * (px / p.entry_price - 1.0)                 # price move in our favour
+                round_trip = 2 * self.s.cost_per_side(p.asset_class, p.quote_ccy)
+                if self.s.breakeven_trigger_pct > 0 and move >= self.s.breakeven_trigger_pct:
+                    lock = p.entry_price * (1 + p.side * round_trip)       # exit here pays the costs back
+                    p.stop_price = lock if p.stop_price is None else (
+                        max(p.stop_price, lock) if p.side == 1 else min(p.stop_price, lock))
                 if flatten and p.book == "live":
                     reason = "flatten"
+                elif self.s.quick_profit_pct > 0 and move - round_trip >= self.s.quick_profit_pct:
+                    reason = "quick_profit"
                 elif p.stop_price is not None and (px <= p.stop_price if p.side == 1 else px >= p.stop_price):
                     reason = "stop"
                 elif p.take_profit is not None and (px >= p.take_profit if p.side == 1 else px <= p.take_profit):

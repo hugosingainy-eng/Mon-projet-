@@ -579,3 +579,25 @@ def test_agent_memory_scores_past_signals_against_what_happened(eng, providers, 
             s.add(Signal(ts=utcnow(), agent=a, instrument="BTC/EUR", direction="long", confidence=0.8, summary="t"))
     assert eng.consensus("BTC/EUR") == pytest.approx(0.5 + 0.8 + 0.8)
     assert eng.consensus("BTC/EUR", proven_only=True) == pytest.approx(0.8)      # only the proven agent counts
+
+
+def test_quick_profit_taking_and_breakeven_stop(broker, providers, hub, settings):
+    settings.quick_profit_pct, settings.breakeven_trigger_pct = 0.008, 0.005
+    setp(providers, hub, "BTC/EUR", 100.0)
+    p1 = broker.open(BTC, 1, 300.0, stop_price=97.0, take_profit=110.0)
+    setp(providers, hub, "BTC/EUR", 100.3)                       # small move: nothing happens
+    assert broker.mark_and_check() == [] and broker.open_positions()[0].stop_price == 97.0
+    setp(providers, hub, "BTC/EUR", 100.7)                       # +0.7%: stop moves to cost-neutral level
+    assert broker.mark_and_check() == []
+    assert broker.open_positions()[0].stop_price > 100.0
+    setp(providers, hub, "BTC/EUR", 101.3)                       # +1.3% - 0.34% costs >= 0.8%: take the gain
+    closed = broker.mark_and_check()
+    assert closed[0][1] == "quick_profit" and closed[0][0].realized_pnl_eur > 2.0
+    p2 = broker.open(BTC, -1, 300.0, stop_price=104.0)           # same logic for a short
+    setp(providers, hub, "BTC/EUR", 100.0)
+    closed = broker.mark_and_check()
+    assert closed[0][1] == "quick_profit" and closed[0][0].realized_pnl_eur > 0
+    settings.quick_profit_pct = settings.breakeven_trigger_pct = 0.0
+    p3 = broker.open(BTC, 1, 300.0, stop_price=90.0)
+    setp(providers, hub, "BTC/EUR", 103.0)
+    assert broker.mark_and_check() == []                         # off by default: strategy exits only

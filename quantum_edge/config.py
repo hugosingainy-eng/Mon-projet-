@@ -71,6 +71,11 @@ class Settings:
     allow_leverage: bool = False
     financing_bps_per_day: float = 3.0
     liquidation_margin: float = 0.22
+    # Quick profit-taking (OFF by default): close a position as soon as its gain, net of the
+    # round-trip cost, reaches quick_profit_pct of its size; and once the price has moved
+    # breakeven_trigger_pct in favour, raise the stop so the trade can no longer lose.
+    quick_profit_pct: float = 0.0
+    breakeven_trigger_pct: float = 0.0
     allow_short: bool = True
     allow_fractional: bool = True
     max_position_pct: float = 0.25

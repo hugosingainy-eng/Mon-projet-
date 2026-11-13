@@ -1,5 +1,5 @@
 {
-  "_comment": "Settings of the running experiment (owner's choices, 12-13 Nov 2026). OBJECTIVES: be profitable; 1,050 EUR then +10%. Positions of at most 300 EUR, taken only by strategies that won at least 55% of their tested trades (and about as often on unseen data). Simulated 3x leverage allowed, 2% of equity risked per trade. The agent-consensus method only counts agents whose remembered signals made money after costs, and stops itself after giving back 40 EUR. Research every 6 hours. From 13 Nov 14:10 Paris, at the owner's request: fast exploration is back ON with small 30 EUR positions on 1- and 5-minute crypto strategies (unvalidated, losing in tests), stopped automatically once exploration as a whole is 15 EUR in the red.",
+  "_comment": "Settings of the running experiment (owner's choices, 12-13 Nov 2026). OBJECTIVES: be profitable; 1,050 EUR then +10%. Positions of at most 300 EUR, taken only by strategies that won at least 55% of their tested trades (and about as often on unseen data). Simulated 3x leverage allowed, 2% of equity risked per trade. The agent-consensus method only counts agents whose remembered signals made money after costs, and stops itself after giving back 40 EUR. Research every 6 hours. From 13 Nov 14:10 Paris, at the owner's request: fast exploration is back ON with small 30 EUR positions on 1- and 5-minute crypto strategies (unvalidated, losing in tests), stopped automatically once exploration as a whole is 15 EUR in the red. From 13 Nov 15:20 Paris, at the owner's request: gains are taken as soon as a position is 0.5% ahead after costs, and the stop moves to a no-loss level once the price is 0.5% in favour.",
   "forward_min_trades": 0,
   "forward_min_hours": 0,
   "lab_min_trades_per_day": 0.3,
@@ -27,5 +27,7 @@
   "consensus_max_positions": 2,
   "consensus_hours": 4.0,
   "consensus_stop_drawdown_eur": 40.0,
-  "lab_min_win_rate": 0.55
+  "lab_min_win_rate": 0.55,
+  "quick_profit_pct": 0.005,
+  "breakeven_trigger_pct": 0.005
 }
