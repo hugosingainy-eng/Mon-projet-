@@ -463,6 +463,10 @@ class Engine:
             return
         p = st.params
         dist = p["stop_atr"] * atr
+        if exploring:
+            # very short bars move less than a round trip costs; a stop inside the cost would be
+            # hit by noise, so exploratory trades get a stop of at least 1.5x the round-trip cost
+            dist = max(dist, 1.5 * 2 * self.s.cost_per_side(inst.asset_class, inst.quote_ccy) * price)
         name = f"{'explore:' if exploring else ''}{st.family}/{st.timeframe}#{st.id}"
         verdict = self.risk.evaluate(Proposal(
             inst=inst, side=side, strategy_id=st.id, strategy_name=name, book=book,
