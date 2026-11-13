@@ -601,3 +601,18 @@ def test_quick_profit_taking_and_breakeven_stop(broker, providers, hub, settings
     p3 = broker.open(BTC, 1, 300.0, stop_price=90.0)
     setp(providers, hub, "BTC/EUR", 103.0)
     assert broker.mark_and_check() == []                         # off by default: strategy exits only
+
+
+def test_position_size_scales_with_tested_quality(eng, settings):
+    from types import SimpleNamespace as NS
+    settings.size_by_conviction, settings.lab_deploy_top = True, 10
+    seg = {k: {"avg": 0.01, "win": 0.6} for k in ("train", "val", "test")}
+    mk = lambda i, score: NS(id=f"1-{i}", family="ma_cross", params={"fast": 5 + i, **GRID_DEFAULTS}, instrument="BTC/EUR",
+                             timeframe="15m", segments=seg, score=score, evaluation="PASS")
+    eng.lab.candidates = lambda run: [mk(0, 4.0), mk(1, 2.0), mk(2, 0.4)]
+    eng.lab.verdict = lambda *a: "PASS"
+    eng.lab.exploration_picks = lambda run: []
+    eng.deploy(1)
+    with eng.db.session() as s:
+        w = [x.weight for x in s.scalars(select(Strategy).order_by(Strategy.id))]
+    assert w == pytest.approx([1.0, 0.5, settings.conviction_floor])      # best gets the full cap, weakest the floor

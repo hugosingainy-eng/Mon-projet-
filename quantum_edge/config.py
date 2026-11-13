@@ -98,6 +98,10 @@ class Settings:
     # a five-day experiment needs strategies that actually trade: minimum average number of
     # trades per calendar day (over the whole backtest) for a configuration to be deployed
     lab_min_trades_per_day: float = 1.0
+    # size by conviction: a validated strategy's position cap is scaled by its robustness score
+    # relative to the best one deployed (never below conviction_floor of the cap)
+    size_by_conviction: bool = False
+    conviction_floor: float = 0.33
     lab_min_win_rate: float = 0.0   # only deploy configurations that won at least this share of their tested trades
     lab_min_rr: float = 0.0     # only deploy configurations whose target is at least this multiple of the stop
     lab_crypto_bars: int = 12000

@@ -355,6 +355,12 @@ class Engine:
         """Called when a lab run completes: PASS configurations enter the FORWARD test."""
         cands = self.lab.candidates(run_id)
         now, added, keep = self.now(), 0, set()
+        top = max((c.score for c in cands), default=0.0)
+
+        def conviction(c) -> float:
+            if not self.s.size_by_conviction or top <= 0:
+                return 1.0
+            return float(max(self.s.conviction_floor, min(1.0, c.score / top)))
         with self.db.session() as s:
             active = list(s.scalars(select(Strategy).where(Strategy.stage != "retired")))
             index = {(a.family, str(sorted(a.params.items())), a.instrument, a.timeframe): a for a in active}
@@ -365,9 +371,11 @@ class Engine:
                 expected = float(np.mean(oos)) if oos else 0.0
                 if key in index:
                     index[key].experiment_id, index[key].expected_trade_pct = c.id, expected
+                    if self.s.size_by_conviction:
+                        index[key].weight = conviction(c)
                     continue
                 s.add(Strategy(experiment_id=c.id, family=c.family, params=c.params, instrument=c.instrument,
-                               timeframe=c.timeframe, stage="forward", weight=1.0, expected_trade_pct=expected,
+                               timeframe=c.timeframe, stage="forward", weight=conviction(c), expected_trade_pct=expected,
                                note="validated in the lab; forward test on live prices", created_at=now, updated_at=now))
                 added += 1
             for key, a in index.items():

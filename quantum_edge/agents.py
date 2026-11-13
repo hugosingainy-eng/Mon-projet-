@@ -465,9 +465,12 @@ class PerformanceAnalyst(Agent):
                 if len(live) >= eng.s.retire_min_trades and pnl < -eng.s.retire_loss_pct_of_equity * eng.s.initial_capital:
                     stage, note = "retired", f"retired: {len(live)} live trades, net €{pnl:+.2f} vs backtest {st.expected_trade_pct:+.2%}/trade"
                     retired += 1
-                elif len(live) >= 3:
+                elif len(live) >= 3 and not eng.s.size_by_conviction:
                     weight = 0.5 if avg < 0 else 0.75 if avg < st.expected_trade_pct / 2 else 1.0
-                    note = f"live avg {avg:+.2%}/trade vs backtest {st.expected_trade_pct:+.2%}; weight {weight:.2f}"
+                elif len(live) >= 3 and avg < 0:          # conviction sizing: live losers are halved once
+                    weight = min(st.weight, max(eng.s.conviction_floor / 2, st.weight / 2)) if "halved" not in st.note else st.weight
+                    note = f"live avg {avg:+.2%}/trade vs backtest {st.expected_trade_pct:+.2%}; weight {weight:.2f}" + (
+                        " (halved after live losses)" if eng.s.size_by_conviction and avg < 0 else "")
             if (stage, weight, note) != (st.stage, st.weight, st.note):
                 with eng.db.session() as s:
                     row = s.get(Strategy, st.id)
