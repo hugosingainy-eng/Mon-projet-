@@ -135,6 +135,13 @@ class Engine:
                     return False, "the strategy lab is already running"
                 scope = f" on {', '.join(classes)}" if classes else ""
                 return True, f"strategy lab started: {self.s.lab_target:,} experiments{scope}"
+            elif action == "kickstart":
+                if not confirm:
+                    return False, "confirmation required"
+                if status != "running":
+                    return False, "not running"
+                opened = self.kickstart(now)
+                msg = ("kick-start: opened " + ", ".join(opened)) if opened else "kick-start: no trade could be opened (see risk decisions)"
             elif action == "reset":
                 if not confirm:
                     return False, "confirmation required"
@@ -319,6 +326,50 @@ class Engine:
         with self.db.session() as s:
             return [(a.family, a.params, a.instrument, a.timeframe)
                     for a in s.scalars(select(Strategy).where(Strategy.stage != "retired"))]
+
+    def kickstart(self, now: datetime, count: int = 3) -> list[str]:
+        """Owner-requested immediate entries: small exploratory positions on the instruments
+        where the analysis agents currently agree most, in the direction they indicate.
+        These are NOT lab-validated trades; they go through the Risk Manager, carry a stop,
+        a target and a time limit, and count against the exploration loss budget."""
+        ranked = []
+        for inst in (i for i in BY_SYMBOL.values() if i.tradable and i.asset_class in self.s.explore_classes):
+            c = self.consensus(inst.symbol)
+            if abs(c) > 0 and self.hub.is_fresh(inst.symbol, now) and is_market_open(inst, now):
+                ranked.append((abs(c), c, inst))
+        opened = []
+        for _, c, inst in sorted(ranked, key=lambda x: -x[0]):
+            if len(opened) >= count:
+                break
+            df = self.hub.candles(inst, "15m", bars=300)
+            if len(df) < 60:
+                continue
+            d = Data(df)
+            atr = float(d.ind("atr", 14)[-1])
+            price = self.hub.quote(inst.symbol).price
+            if not np.isfinite(atr) or atr <= 0:
+                continue
+            side, dist = (1 if c > 0 else -1), 2.0 * atr
+            name = "explore:kickstart/agents"
+            verdict = self.risk.evaluate(Proposal(
+                inst=inst, side=side, strategy_id=None, strategy_name=name, book="live",
+                stop_dist_pct=dist / price, weight=self.s.explore_weight, expected_trade_pct=0.0,
+                bar_turnover=float(d.v[-1] * d.c[-1]) if d.has_volume else None,
+                consensus=c, exploratory=True), self.state, now)
+            if not verdict.approved:
+                continue
+            try:
+                pos = self.broker.open(inst, side, verdict.notional_eur, "live", strategy_name=name,
+                                       stop_price=price - side * dist, take_profit=price + side * 1.5 * dist,
+                                       expires_at=now + timedelta(hours=6), now=now)
+            except BrokerError as e:
+                self.incident("warning", "execution", f"kick-start {inst.symbol}: {e}")
+                continue
+            opened.append(f"{'long' if side == 1 else 'short'} {inst.symbol} €{pos.entry_notional_eur:.2f}")
+            self.db.incident("warning", "execution",
+                             f"opened {'long' if side == 1 else 'short'} {inst.symbol} €{pos.entry_notional_eur:.2f} @ {pos.entry_price:.6g} "
+                             f"(kick-start on owner's request, agent consensus {c:+.2f}; not a validated strategy)")
+        return opened
 
     def evaluate_strategies(self, now: datetime):
         with self.db.session() as s:

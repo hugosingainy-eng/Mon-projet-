@@ -20,7 +20,7 @@ from .db import Decision, EquitySnapshot, Incident, News, Position, Signal
 from .engine import Engine
 from .instruments import BY_SYMBOL, UNIVERSE, is_market_open
 
-ACTIONS = ("start", "pause", "resume", "stop", "emergency_stop", "run_experiments", "reset")
+ACTIONS = ("start", "pause", "resume", "stop", "emergency_stop", "run_experiments", "reset", "kickstart")
 
 
 def create_app(settings: Settings | None = None, providers: dict | None = None,

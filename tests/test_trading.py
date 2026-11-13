@@ -443,3 +443,23 @@ def test_order_size_is_capped_by_market_liquidity(risk):
     assert not v.approved and "liquidity" in v.reason
     v = risk.evaluate(prop(bar_turnover=600.0), RUN)           # would allow 60, fine; 10% of 190 would be < 20
     assert v.approved and v.notional_eur == pytest.approx(60.0)
+
+
+def test_kickstart_opens_small_stopped_positions_in_consensus_direction(eng, providers, settings):
+    from quantum_edge.db import Signal
+    assert not eng.control("kickstart", confirm=True)[0]            # experiment not running
+    eng.control("start")
+    assert not eng.control("kickstart")[0]                          # needs confirmation
+    for sym, direction in (("BTC/EUR", "short"), ("ETH/EUR", "long")):
+        df = providers["ccxt"].history(BY_SYMBOL[sym], "15m", 300)
+        setp(providers, eng.hub, sym, float(df["close"].iloc[-1]))
+        with eng.db.session() as s:
+            s.add(Signal(ts=utcnow(), agent="technical", instrument=sym, direction=direction, confidence=0.6, summary="t"))
+    ok, msg = eng.control("kickstart", confirm=True)
+    assert ok and "short BTC/EUR" in msg and "long ETH/EUR" in msg
+    pos = {p.instrument: p for p in eng.broker.open_positions("live")}
+    assert set(pos) == {"BTC/EUR", "ETH/EUR"}                       # only where agents have a view
+    b = pos["BTC/EUR"]
+    assert b.side == -1 and b.stop_price > b.entry_price > b.take_profit and b.expires_at is not None
+    assert all(p.entry_notional_eur <= 50.0 + 1e-6 and p.strategy_name.startswith("explore:") for p in pos.values())
+    assert eng.broker.audit()["ok"]
