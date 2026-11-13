@@ -361,12 +361,15 @@ class Lab:
             vals = [r.segments[k]["avg"] for k in ("val", "test") if r.segments[k]["avg"] is not None]
             return sum(vals) / len(vals) if vals else -1.0
         rows = sorted(rows, key=oos_avg, reverse=True)      # least bad first
-        out, seen = [], set()
+        out, seen, fams = [], {}, set()
         for r in rows:
-            if (BY_SYMBOL[r.instrument].asset_class not in self.s.explore_classes or r.instrument in seen
+            if (BY_SYMBOL[r.instrument].asset_class not in self.s.explore_classes
+                    or seen.get(r.instrument, 0) >= self.s.explore_per_instrument
+                    or (r.instrument, r.family, r.timeframe) in fams
                     or trades_per_day(r) < self.s.explore_min_trades_per_day):
                 continue
-            seen.add(r.instrument)
+            seen[r.instrument] = seen.get(r.instrument, 0) + 1
+            fams.add((r.instrument, r.family, r.timeframe))
             out.append(r)
             if len(out) >= self.s.explore_count:
                 break

@@ -127,6 +127,7 @@ class Settings:
     # traded with small positions EVEN THOUGH they did not pass validation. This exists only
     # because the owner asked to see the bot trade; expected result is a slow loss to costs.
     explore_count: int = 0
+    explore_per_instrument: int = 1
     explore_classes: list = field(default_factory=lambda: ["crypto"])
     explore_min_trades_per_day: float = 2.0
     explore_weight: float = 0.2            # x max_position_pct -> 5% of equity per position

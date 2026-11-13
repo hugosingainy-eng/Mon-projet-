@@ -562,6 +562,8 @@ class Engine:
             return
         if le[-1] == se[-1]:
             return
+        if exploring and any(x.instrument == inst.symbol for x in self.broker.open_positions("live")):
+            return                                   # one position per instrument: skip quietly
         side = 1 if le[-1] else -1
         atr = float(d.ind("atr", 14)[-1])
         price = self.hub.quote(inst.symbol).price

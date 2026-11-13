@@ -434,6 +434,10 @@ def test_focused_research_run_only_uses_requested_markets(settings, db, hub):
     settings.explore_count = 3
     picks = lab.exploration_picks(1)
     assert len({p.instrument for p in picks}) == len(picks) <= 3
+    settings.explore_count, settings.explore_per_instrument = 30, 3
+    many = lab.exploration_picks(1)
+    from collections import Counter
+    assert max(Counter(p.instrument for p in many).values()) <= 3 and len(many) >= len(picks)
 
 
 def test_order_size_is_capped_by_market_liquidity(risk):

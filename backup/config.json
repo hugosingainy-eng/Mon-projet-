@@ -5,10 +5,10 @@
   "lab_min_trades_per_day": 0.3,
   "lab_deploy_top": 50,
   "lab_deploy_per_instrument": 3,
-  "explore_count": 22,
+  "explore_count": 66,
   "explore_weight": 0.045,
   "explore_loss_budget_eur": 15.0,
-  "explore_min_trades_per_day": 60.0,
+  "explore_min_trades_per_day": 20.0,
   "risk_per_trade_pct": 0.02,
   "max_daily_loss_pct": 0.1,
   "max_class_exposure_pct": 3.0,
@@ -31,5 +31,6 @@
   "quick_profit_pct": 0.005,
   "breakeven_trigger_pct": 0.005,
   "size_by_conviction": true,
-  "conviction_floor": 0.33
+  "conviction_floor": 0.33,
+  "explore_per_instrument": 3
 }
