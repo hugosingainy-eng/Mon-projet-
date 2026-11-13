@@ -140,7 +140,10 @@ class Engine:
                     return False, "confirmation required"
                 if status != "running":
                     return False, "not running"
-                opened = self.kickstart(now)
+                o = options or {}
+                opened = self.kickstart(now, count=int(o.get("count", 3)), timeframe=o.get("timeframe", "15m"),
+                                        stop_mult=float(o.get("stop_atr", 2.0)), rr=float(o.get("rr", 1.5)),
+                                        hours=float(o.get("hours", 6.0)), weight=o.get("weight"))
                 msg = ("kick-start: opened " + ", ".join(opened)) if opened else "kick-start: no trade could be opened (see risk decisions)"
             elif action == "reset":
                 if not confirm:
@@ -356,7 +359,8 @@ class Engine:
             return None
         return float(ob["ask_depth"] if side == 1 else ob["bid_depth"])
 
-    def kickstart(self, now: datetime, count: int = 3) -> list[str]:
+    def kickstart(self, now: datetime, count: int = 3, timeframe: str = "15m", stop_mult: float = 2.0,
+                  rr: float = 1.5, hours: float = 6.0, weight: float | None = None) -> list[str]:
         """Owner-requested immediate entries: small exploratory positions on the instruments
         where the analysis agents currently agree most, in the direction they indicate.
         These are NOT lab-validated trades; they go through the Risk Manager, carry a stop,
@@ -370,7 +374,7 @@ class Engine:
         for _, c, inst in sorted(ranked, key=lambda x: -x[0]):
             if len(opened) >= count:
                 break
-            df = self.hub.candles(inst, "15m", bars=300)
+            df = self.hub.candles(inst, timeframe, bars=300)
             if len(df) < 60:
                 continue
             d = Data(df)
@@ -378,11 +382,12 @@ class Engine:
             price = self.hub.quote(inst.symbol).price
             if not np.isfinite(atr) or atr <= 0:
                 continue
-            side, dist = (1 if c > 0 else -1), 2.0 * atr
+            side, dist = (1 if c > 0 else -1), stop_mult * atr
             name = "explore:kickstart/agents"
+            w = self.s.explore_weight if weight is None else max(0.0, min(float(weight), 1.0))
             verdict = self.risk.evaluate(Proposal(
                 inst=inst, side=side, strategy_id=None, strategy_name=name, book="live",
-                stop_dist_pct=dist / price, weight=self.s.explore_weight, expected_trade_pct=0.0,
+                stop_dist_pct=dist / price, weight=w, expected_trade_pct=0.0,
                 bar_turnover=float(d.v[-1] * d.c[-1]) if d.has_volume else None,
                 book_depth=self.book_depth(inst, side),
                 consensus=c, exploratory=True), self.state, now)
@@ -390,8 +395,8 @@ class Engine:
                 continue
             try:
                 pos = self.broker.open(inst, side, verdict.notional_eur, "live", strategy_name=name,
-                                       stop_price=price - side * dist, take_profit=price + side * 1.5 * dist,
-                                       expires_at=now + timedelta(hours=6), now=now)
+                                       stop_price=price - side * dist, take_profit=price + side * rr * dist,
+                                       expires_at=now + timedelta(hours=hours), now=now)
             except BrokerError as e:
                 self.incident("warning", "execution", f"kick-start {inst.symbol}: {e}")
                 continue
