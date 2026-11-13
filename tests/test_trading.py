@@ -530,6 +530,10 @@ def test_consensus_trading_continues_while_it_works_and_stops_after_giveback(eng
 
     agree("BTC/EUR", "long")
     eng.consensus_trader(utcnow())
+    assert eng.broker.open_positions("live") == []                    # no agent has a proven record yet
+    eng.agent_scores = {a: {"proven": True} for a in ("technical", "scanner", "momentum")}
+    eng.state["consensus_ts"] = None
+    eng.consensus_trader(utcnow())
     pos = eng.broker.open_positions("live")
     assert len(pos) == 1 and pos[0].instrument == "BTC/EUR" and pos[0].stop_price is not None
     eng.consensus_trader(utcnow() + timedelta(minutes=20))            # slot is full: nothing more
@@ -548,3 +552,28 @@ def test_consensus_trading_continues_while_it_works_and_stops_after_giveback(eng
     agree("SOL/EUR", "long")
     eng.consensus_trader(utcnow() + timedelta(hours=1))
     assert eng.state["consensus_halted"] and eng.broker.open_positions("live") == []
+
+
+def test_agent_memory_scores_past_signals_against_what_happened(eng, providers, settings):
+    from quantum_edge.db import Signal
+    inst = BY_SYMBOL["BTC/EUR"]
+    eng.hub.prefetch([inst], "15m", 0)
+    df = eng.hub.cached_candles(inst, "15m")
+    c = df["close"].to_numpy()
+    with eng.db.session() as s:
+        for k in range(40):                                           # 40 hourly signals, outcome known
+            i = len(df) - 400 + k * 4
+            went_up = c[i + 8] > c[i]
+            ts = df.index[i].to_pydatetime()
+            s.add(Signal(ts=ts, agent="oracle", instrument="BTC/EUR", direction="long" if went_up else "short", confidence=0.5, summary="t"))
+            s.add(Signal(ts=ts, agent="antioracle", instrument="BTC/EUR", direction="short" if went_up else "long", confidence=0.5, summary="t"))
+        s.add(Signal(ts=utcnow(), agent="newbie", instrument="BTC/EUR", direction="long", confidence=0.5, summary="t"))
+    mem = eng.agent_memory(lookback_hours=24 * 30)
+    assert mem["oracle"]["signals"] == 40 and mem["oracle"]["hit_rate"] == 1.0 and mem["oracle"]["proven"]
+    assert mem["antioracle"]["hit_rate"] == 0.0 and not mem["antioracle"]["proven"]
+    assert "newbie" not in mem                                        # outcome not known yet: not scored
+    with eng.db.session() as s:
+        for a in ("oracle", "antioracle"):
+            s.add(Signal(ts=utcnow(), agent=a, instrument="BTC/EUR", direction="long", confidence=0.8, summary="t"))
+    assert eng.consensus("BTC/EUR") == pytest.approx(0.5 + 0.8 + 0.8)
+    assert eng.consensus("BTC/EUR", proven_only=True) == pytest.approx(0.8)      # only the proven agent counts

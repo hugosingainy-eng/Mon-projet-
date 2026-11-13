@@ -208,3 +208,12 @@ def test_minimum_reward_to_risk_filter_on_deployment(settings, db, hub):
     assert all(p.params["rr"] >= 4.0 for p in picks)
     settings.lab_min_rr = 0.0
     assert len(lab.candidates(run)) >= len(picks)
+
+
+def test_minimum_win_rate_filter_on_deployment(settings, db, hub):
+    lab = Lab(settings, db, hub)
+    run = lab.run(800)
+    settings.lab_min_trades_per_day = 0.0
+    settings.lab_min_win_rate = 0.55
+    picks = lab.candidates(run)
+    assert all(p.win_rate >= 0.55 and min(p.segments[k]["win"] for k in ("val", "test")) >= 0.50 for p in picks)

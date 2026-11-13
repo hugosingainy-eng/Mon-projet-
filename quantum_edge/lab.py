@@ -332,6 +332,9 @@ class Lab:
                 .order_by(LabExperiment.score.desc()).limit(5000)).all()
         out, per, fams = [], {}, set()
         for r in rows:
+            oos_win = min((r.segments[k]["win"] or 0.0) for k in ("val", "test"))
+            if (r.win_rate or 0.0) < self.s.lab_min_win_rate or oos_win < self.s.lab_min_win_rate - 0.05:
+                continue                     # must win often, on unseen data too
             if r.params.get("rr", 0.0) < self.s.lab_min_rr:
                 continue                     # payoff shape requested in the settings
             if trades_per_day(r) < self.s.lab_min_trades_per_day:

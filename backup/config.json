@@ -1,5 +1,5 @@
 {
-  "_comment": "Settings of the running experiment (owner's choices, 12-13 Nov 2026). OBJECTIVES: be profitable; 1,050 EUR then +10%; winning trades of 20 EUR or more. Simulated 3x leverage, 2% of equity risked per trade, positions up to 100% of equity. Two sources of trades: lab-validated strategies, and the agent-consensus method, which is not lab-validated and is kept only while its live results hold (it stops itself after giving back 40 EUR from its peak). Research every 6 hours.",
+  "_comment": "Settings of the running experiment (owner's choices, 12-13 Nov 2026). OBJECTIVES: be profitable; 1,050 EUR then +10%. Positions of at most 300 EUR, taken only by strategies that won at least 55% of their tested trades (and about as often on unseen data). Simulated 3x leverage allowed, 2% of equity risked per trade. The agent-consensus method only counts agents whose remembered signals made money after costs, and stops itself after giving back 40 EUR. Research every 6 hours.",
   "forward_min_trades": 0,
   "forward_min_hours": 0,
   "lab_min_trades_per_day": 0.3,
@@ -15,16 +15,17 @@
   "max_positions": 30,
   "allow_leverage": true,
   "max_exposure_pct": 3.0,
-  "max_position_pct": 1.0,
+  "max_position_pct": 0.3,
   "lab_target": 20000,
   "relab_hours": 6.0,
   "objective_return_pct": 10.0,
   "objective_trade_eur_min": 20.0,
   "objective_trade_eur_max": 25.0,
-  "lab_min_rr": 4.0,
+  "lab_min_rr": 0.0,
   "consensus_trading": true,
   "consensus_threshold": 1.2,
   "consensus_max_positions": 2,
   "consensus_hours": 4.0,
-  "consensus_stop_drawdown_eur": 40.0
+  "consensus_stop_drawdown_eur": 40.0,
+  "lab_min_win_rate": 0.55
 }

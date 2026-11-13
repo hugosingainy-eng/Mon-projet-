@@ -141,6 +141,15 @@ def build() -> str:
             f'<span>Plus haut atteint <b>{eur(cs.get("peak_eur"), True)}</b></span>'
             f'<span>Reperdu depuis le plus haut <b>{eur(cs.get("giveback_eur"))}</b> (arrêt à {eur(cs.get("stop_giveback_eur"))})</span>'
             '</div></section>')
+    mem = st.get("agent_memory") or {}
+    if mem:
+        mrows = [[(esc(a), ""), (str(m["signals"]), ""), (pct(m["hit_rate"] * 100, False), ""),
+                  (pct(m["avg_gross_pct"]), tone(m["avg_gross_pct"])), (pct(m["avg_net_pct"]), tone(m["avg_net_pct"])),
+                  ("oui : ses signaux comptent" if m["proven"] else "non : ses signaux sont ignorés", "pos" if m["proven"] else "neg")]
+                 for a, m in sorted(mem.items())]
+        objective_html += ('<section><h2>Mémoire des agents — ce qui s\'est passé 2 heures après leurs signaux</h2><div class="panel">'
+                           + table([("Agent", ""), ("Signaux mesurés", ""), ("Bonne direction", ""), ("Mouvement moyen", ""),
+                                    ("Après frais", ""), ("Fiable", "")], mrows, "Pas encore assez de signaux.") + '</div></section>')
     tiles_html = "".join(f'<div class="tile"><span>{esc(l)}</span><b class="{c}">{v}</b></div>' for l, v, c in tiles)
 
     pos_rows = [[(esc(p["instrument"]), ""), ("achat" if p["side"] == "long" else "vente", ""), (num(p["entry_price"], 4), ""),

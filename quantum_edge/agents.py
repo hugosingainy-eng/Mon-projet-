@@ -426,6 +426,8 @@ class PerformanceAnalyst(Agent):
     def run(self, eng):
         promoted = retired = 0
         now = eng.now()
+        memory = eng.agent_memory()             # refresh what each agent's past signals were worth
+        proven = sorted(a for a, m in memory.items() if m["proven"])
         with eng.db.session() as s:
             explore_pnl = float(sum(p.realized_pnl_eur for p in s.scalars(select(Position).where(
                 Position.book == "live", Position.status == "closed", Position.strategy_name.like("explore:%")))))
@@ -471,7 +473,8 @@ class PerformanceAnalyst(Agent):
                     row = s.get(Strategy, st.id)
                     row.stage, row.weight, row.note, row.updated_at = stage, weight, note, now
         explore_note = f"; exploration net €{explore_pnl:+.2f} of €{eng.s.explore_loss_budget_eur:.0f} budget" if eng.s.explore_count > 0 else ""
-        return f"{len(strategies)} active strategies reviewed; {promoted} promoted, {retired} retired{explore_note}", []
+        mem_note = f"; agent memory: {len(proven)} of {len(memory)} agents profitable after costs" if memory else ""
+        return f"{len(strategies)} active strategies reviewed; {promoted} promoted, {retired} retired{explore_note}{mem_note}", []
 
 
 class Supervisor(Agent):

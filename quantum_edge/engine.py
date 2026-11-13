@@ -47,6 +47,7 @@ class Engine:
         self.lab.revalidate = self._active_configs
         self.agents = build_agents()
         self.market_stats: dict[str, dict] = {}
+        self.agent_scores: dict[str, dict] = {}
         self.focus: list[str] = []
         self.loop_lag = 0.0
         self._lock = threading.RLock()
@@ -293,8 +294,50 @@ class Engine:
             self.incident("error", agent.id, f"agent failed, will retry: {agent.last_error}")
         agent.last_run = self.now()
 
-    def consensus(self, symbol: str) -> float:
-        """Signed sum of each analysis agent's latest signal (last 30 minutes)."""
+    MEMORY_MIN_SIGNALS = 30
+
+    def agent_memory(self, horizon_hours: float = 2.0, lookback_hours: float = 72.0) -> dict:
+        """What actually happened after each agent's past signals: for every distinct signal
+        (one per agent / instrument / direction / hour) the price move over the next
+        `horizon_hours`, in the signal's direction, before and after round-trip costs.
+        Uses candles already in the cache; an agent is 'proven' only with enough signals
+        and a positive average result after costs."""
+        since = self.now() - timedelta(hours=lookback_hours)
+        with self.db.session() as s:
+            rows = list(s.scalars(select(Signal).where(Signal.ts >= since, Signal.direction.in_(("long", "short")))
+                                  .order_by(Signal.ts)))
+        seen, stats = set(), {}
+        steps = int(horizon_hours * 4)
+        for r in rows:
+            inst = BY_SYMBOL.get(r.instrument)
+            key = (r.agent, r.instrument, r.direction, r.ts.strftime("%Y%m%d%H"))
+            if inst is None or key in seen:
+                continue
+            seen.add(key)
+            df = self.hub.cached_candles(inst, "15m")
+            if df is None or len(df) < steps + 2:
+                continue
+            i = int(df.index.searchsorted(np.datetime64(r.ts.replace(tzinfo=None)))) if df.index.tz is None \
+                else int(df.index.searchsorted(r.ts))
+            if i + steps >= len(df):
+                continue                      # outcome not known yet
+            c = df["close"].to_numpy(float)
+            gross = (c[i + steps] / c[i] - 1) * (1 if r.direction == "long" else -1)
+            net = gross - 2 * self.s.cost_per_side(inst.asset_class, inst.quote_ccy)
+            a = stats.setdefault(r.agent, {"n": 0, "hits": 0, "gross": 0.0, "net": 0.0})
+            a["n"] += 1; a["hits"] += gross > 0; a["gross"] += gross; a["net"] += net
+        out = {}
+        for agent, a in stats.items():
+            n = a["n"]
+            out[agent] = {"signals": n, "hit_rate": a["hits"] / n, "avg_gross_pct": a["gross"] / n * 100,
+                          "avg_net_pct": a["net"] / n * 100,
+                          "proven": n >= self.MEMORY_MIN_SIGNALS and a["net"] > 0}
+        self.agent_scores = out
+        return out
+
+    def consensus(self, symbol: str, proven_only: bool = False) -> float:
+        """Signed sum of each analysis agent's latest signal (last 30 minutes). With
+        `proven_only`, agents whose remembered signals lost money after costs count for zero."""
         since = self.now() - timedelta(minutes=30)
         with self.db.session() as s:
             rows = list(s.scalars(select(Signal).where(Signal.instrument == symbol, Signal.ts >= since)
@@ -302,6 +345,9 @@ class Engine:
         latest = {}
         for r in rows:
             latest.setdefault(r.agent, r)
+        if proven_only:
+            scores = getattr(self, "agent_scores", {})
+            latest = {a: r for a, r in latest.items() if scores.get(a, {}).get("proven")}
         return sum({"long": 1, "short": -1}.get(r.direction, 0) * r.confidence for r in latest.values())
 
     # --- strategy pipeline ------------------------------------------------------------
@@ -363,16 +409,16 @@ class Engine:
 
     def kickstart(self, now: datetime, count: int = 3, timeframe: str = "15m", stop_mult: float = 2.0,
                   rr: float = 1.5, hours: float = 6.0, weight: float | None = None,
-                  min_abs: float = 0.0, skip: set | None = None) -> list[str]:
+                  min_abs: float = 0.0, skip: set | None = None, proven_only: bool = False) -> list[str]:
         """Owner-requested immediate entries: small exploratory positions on the instruments
         where the analysis agents currently agree most, in the direction they indicate.
         These are NOT lab-validated trades; they go through the Risk Manager, carry a stop,
         a target and a time limit, and count against the exploration loss budget."""
         ranked = []
         for inst in (i for i in BY_SYMBOL.values() if i.tradable and i.asset_class in self.s.explore_classes):
-            c = self.consensus(inst.symbol)
             if inst.symbol in (skip or ()):
                 continue
+            c = self.consensus(inst.symbol, proven_only=proven_only)
             if abs(c) > min_abs and self.hub.is_fresh(inst.symbol, now) and is_market_open(inst, now):
                 ranked.append((abs(c), c, inst))
         opened = []
@@ -450,7 +496,8 @@ class Engine:
         if slots <= 0 or self.broker.buying_power() < 5 * self.s.min_notional_eur:
             return
         self.kickstart(now, count=slots, timeframe="1h", stop_mult=1.5, rr=2.0, hours=self.s.consensus_hours,
-                       weight=1.0, min_abs=self.s.consensus_threshold, skip=held | rec["recent"])
+                       weight=1.0, min_abs=self.s.consensus_threshold, skip=held | rec["recent"],
+                       proven_only=True)       # only agents whose past signals made money count
 
     def evaluate_strategies(self, now: datetime):
         with self.db.session() as s:
@@ -573,6 +620,7 @@ class Engine:
             "consensus": ({k: v for k, v in self.consensus_record().items() if k != "recent"}
                           | {"enabled": self.s.consensus_trading, "halted": bool(st.get("consensus_halted")),
                              "stop_giveback_eur": self.s.consensus_stop_drawdown_eur}),
+            "agent_memory": self.agent_scores,
             "objectives": {"return_pct": self.s.objective_return_pct,
                            "trade_eur_min": self.s.objective_trade_eur_min,
                            "trade_eur_max": self.s.objective_trade_eur_max,
