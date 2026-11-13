@@ -51,11 +51,31 @@ UNIVERSE: list[Instrument] = [
     _crypto("BNB", "BNB"), _crypto("XRP", "XRP"), _crypto("DOGE", "Dogecoin"),
     _crypto("LINK", "Chainlink"), _crypto("AVAX", "Avalanche"), _crypto("ADA", "Cardano"),
     _crypto("LTC", "Litecoin"),
+    # further EUR pairs; any that no reachable venue lists simply has no data and is never traded
+    _crypto("DOT", "Polkadot"), _crypto("ATOM", "Cosmos"), _crypto("UNI", "Uniswap"), _crypto("TRX", "TRON"),
+    _crypto("SHIB", "Shiba Inu"), _crypto("NEAR", "NEAR Protocol"), _crypto("AAVE", "Aave"),
+    _crypto("XLM", "Stellar"), _crypto("BCH", "Bitcoin Cash"), _crypto("ALGO", "Algorand"),
+    _crypto("SUI", "Sui"), _crypto("POL", "Polygon"),
     # equities
     _eq("NVDA", "NVIDIA"), _eq("TSLA", "Tesla"), _eq("AAPL", "Apple"), _eq("MSFT", "Microsoft"),
     _eq("AMZN", "Amazon"), _eq("META", "Meta"), _eq("GOOGL", "Alphabet"), _eq("AMD", "AMD"),
     _eq("PLTR", "Palantir"), _eq("COIN", "Coinbase"), _eq("AVGO", "Broadcom"), _eq("NFLX", "Netflix"),
     _eq("JPM", "JPMorgan"), _eq("MU", "Micron"),
+    # food, beverages and consumer staples
+    _eq("KO", "Coca-Cola"), _eq("PEP", "PepsiCo"), _eq("MCD", "McDonald's"), _eq("MDLZ", "Mondelez"),
+    _eq("GIS", "General Mills"), _eq("KHC", "Kraft Heinz"), _eq("SBUX", "Starbucks"), _eq("PG", "Procter & Gamble"),
+    _eq("WMT", "Walmart"), _eq("COST", "Costco"),
+    # health care
+    _eq("JNJ", "Johnson & Johnson"), _eq("LLY", "Eli Lilly"), _eq("UNH", "UnitedHealth"), _eq("PFE", "Pfizer"),
+    # energy and industry
+    _eq("XOM", "Exxon Mobil"), _eq("CVX", "Chevron"), _eq("CAT", "Caterpillar"), _eq("BA", "Boeing"),
+    _eq("GE", "GE Aerospace"),
+    # finance and payments
+    _eq("BAC", "Bank of America"), _eq("GS", "Goldman Sachs"), _eq("V", "Visa"), _eq("MA", "Mastercard"),
+    # consumer, media and other technology
+    _eq("NKE", "Nike"), _eq("DIS", "Disney"), _eq("HD", "Home Depot"), _eq("UBER", "Uber"),
+    _eq("ORCL", "Oracle"), _eq("CRM", "Salesforce"), _eq("INTC", "Intel"), _eq("SHOP", "Shopify"),
+    _eq("MSTR", "Strategy (MicroStrategy)"),
     # index / commodity exposure through tradable ETFs
     Instrument("SPY", "S&P 500 ETF", "etf", "yahoo", "SPY", "USD", True, "us", "QQQ"),
     _etf("QQQ", "Nasdaq 100 ETF"), _etf("DIA", "Dow Jones ETF"), _etf("EWG", "Germany (DAX proxy) ETF"),

@@ -3,9 +3,9 @@
   "forward_min_trades": 0,
   "forward_min_hours": 0,
   "lab_min_trades_per_day": 0.3,
-  "lab_deploy_top": 30,
+  "lab_deploy_top": 50,
   "lab_deploy_per_instrument": 3,
-  "explore_count": 10,
+  "explore_count": 22,
   "explore_weight": 0.3,
   "explore_loss_budget_eur": 150.0,
   "explore_min_trades_per_day": 20.0,
@@ -15,5 +15,6 @@
   "max_positions": 30,
   "allow_leverage": true,
   "max_exposure_pct": 3.0,
-  "max_position_pct": 0.5
+  "max_position_pct": 0.5,
+  "lab_target": 20000
 }
