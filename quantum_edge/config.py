@@ -76,6 +76,9 @@ class Settings:
     # breakeven_trigger_pct in favour, raise the stop so the trade can no longer lose.
     quick_profit_pct: float = 0.0
     breakeven_trigger_pct: float = 0.0
+    # Loss cap (OFF by default): close a position as soon as the price has moved this far
+    # against it, even if its own stop is further away.
+    max_position_loss_pct: float = 0.0
     allow_short: bool = True
     allow_fractional: bool = True
     max_position_pct: float = 0.25

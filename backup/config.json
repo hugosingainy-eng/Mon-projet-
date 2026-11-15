@@ -28,9 +28,10 @@
   "consensus_hours": 4.0,
   "consensus_stop_drawdown_eur": 40.0,
   "lab_min_win_rate": 0.55,
-  "quick_profit_pct": 0.0,
-  "breakeven_trigger_pct": 0.0,
+  "quick_profit_pct": 0.015,
+  "breakeven_trigger_pct": 0.008,
   "size_by_conviction": true,
   "conviction_floor": 0.33,
-  "explore_per_instrument": 3
+  "explore_per_instrument": 3,
+  "max_position_loss_pct": 0.012
 }

@@ -185,6 +185,8 @@ class PaperBroker:
                     reason = "flatten"
                 elif self.s.quick_profit_pct > 0 and move - round_trip >= self.s.quick_profit_pct:
                     reason = "quick_profit"
+                elif self.s.max_position_loss_pct > 0 and -move >= self.s.max_position_loss_pct:
+                    reason = "loss_cap"
                 elif p.stop_price is not None and (px <= p.stop_price if p.side == 1 else px >= p.stop_price):
                     reason = "stop"
                 elif p.take_profit is not None and (px >= p.take_profit if p.side == 1 else px <= p.take_profit):

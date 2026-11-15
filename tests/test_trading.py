@@ -607,6 +607,21 @@ def test_quick_profit_taking_and_breakeven_stop(broker, providers, hub, settings
     assert broker.mark_and_check() == []                         # off by default: strategy exits only
 
 
+def test_loss_cap_closes_before_a_distant_stop(broker, providers, hub, settings):
+    settings.max_position_loss_pct = 0.012
+    setp(providers, hub, "BTC/EUR", 100.0)
+    broker.open(BTC, -1, 300.0, stop_price=104.0)                # stop is 4% away
+    setp(providers, hub, "BTC/EUR", 101.0)                       # -1.0%: still inside the cap
+    assert broker.mark_and_check() == []
+    setp(providers, hub, "BTC/EUR", 101.3)                       # -1.3%: cap closes it, long before the stop
+    closed = broker.mark_and_check()
+    assert closed[0][1] == "loss_cap" and closed[0][0].realized_pnl_eur < 0
+    settings.max_position_loss_pct = 0.0
+    broker.open(BTC, -1, 300.0, stop_price=104.0)
+    setp(providers, hub, "BTC/EUR", 103.0)
+    assert broker.mark_and_check() == []                         # off by default: only the stop applies
+
+
 def test_position_size_scales_with_tested_quality(eng, settings):
     from types import SimpleNamespace as NS
     settings.size_by_conviction, settings.lab_deploy_top = True, 10
