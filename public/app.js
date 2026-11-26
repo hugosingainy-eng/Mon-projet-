@@ -10,16 +10,25 @@ const STARTERS = [
 ];
 
 // ——— État ———
-// profile : { name, mode, memory }   messages : [{ role, content }]
+// profile : { name, mode, tone, memory }   messages : [{ role, content }]
 let profile = null;
 let messages = [];
 let busy = false;
+
+const MODES = {
+  ecoute: "Écoute-moi",
+  comprendre: "Aide-moi à comprendre",
+  honnete: "Sois honnête",
+  solutions: "Trouve des solutions",
+  rassure: "Rassure-moi",
+  challenge: "Challenge-moi",
+};
 
 function load() {
   try {
     const saved = JSON.parse(localStorage.getItem(KEY));
     if (saved?.profile) {
-      profile = { mode: "ecoute", ...saved.profile };
+      profile = { mode: "ecoute", tone: "gentil", ...saved.profile };
       messages = Array.isArray(saved.messages) ? saved.messages : [];
     }
   } catch { /* stockage indisponible : on fonctionne sans mémoire */ }
@@ -111,13 +120,30 @@ function greeting() {
     : `${hello}${who}. Ici, tu peux tout dire, rien ne me choque et rien ne sort d'ici. Qu'est-ce qui t'amène ?`;
 }
 
-function showChat() {
+// La question « Comment veux-tu que je t'aide aujourd'hui ? », reposée à chaque visite.
+function renderModes(open) {
+  $("mode-btn").textContent = `${MODES[profile.mode]} · changer`;
+  if (open !== undefined) $("modes").hidden = !open;
+  $("mode-chips").replaceChildren(...Object.entries(MODES).map(([id, label]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.setAttribute("aria-pressed", id === profile.mode);
+    b.onclick = () => { profile.mode = id; save(); renderModes(false); $("input").focus({ preventScroll: true }); };
+    return b;
+  }));
+  $("mode-btn").hidden = !$("modes").hidden;
+  if (!$("modes").hidden) $("starters").hidden = true;
+  else renderStarters();
+}
+
+function showChat(returning = false) {
   $("welcome").hidden = true;
   $("chat").hidden = false;
   $("messages").replaceChildren();
   for (const m of messages) addBubble(m.role, m.content);
   addBubble("assistant", greeting());
-  renderStarters();
+  renderModes(returning);
   $("input").focus({ preventScroll: true });
 }
 
@@ -142,6 +168,7 @@ async function send(text) {
   busy = true;
   $("send").disabled = true;
   $("starters").hidden = true;
+  renderModes(false);
 
   messages.push({ role: "user", content: text });
   save();
@@ -155,7 +182,7 @@ async function send(text) {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages, name: profile.name, mode: profile.mode }),
+      body: JSON.stringify({ messages, name: profile.name, mode: profile.mode, tone: profile.tone }),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -225,6 +252,7 @@ $("welcome-form").addEventListener("submit", (e) => {
   profile = {
     name: $("name-input").value.trim(),
     mode: document.querySelector('input[name="mode"]:checked').value,
+    tone: document.querySelector('input[name="tone"]:checked').value,
     memory: $("memory-input").checked,
   };
   save();
@@ -235,6 +263,7 @@ $("welcome-form").addEventListener("submit", (e) => {
 $("settings-btn").onclick = () => {
   $("set-name").value = profile.name;
   document.querySelector(`input[name="set-mode"][value="${profile.mode}"]`).checked = true;
+  document.querySelector(`input[name="set-tone"][value="${profile.tone}"]`).checked = true;
   $("set-memory").checked = profile.memory;
   $("settings").showModal();
 };
@@ -242,8 +271,10 @@ $("settings").addEventListener("close", () => {
   if (!profile) return;
   profile.name = $("set-name").value.trim();
   profile.mode = document.querySelector('input[name="set-mode"]:checked').value;
+  profile.tone = document.querySelector('input[name="set-tone"]:checked').value;
   profile.memory = $("set-memory").checked;
   save();
+  renderModes();
 });
 $("erase").onclick = () => {
   if (!confirm("Effacer toute la conversation et tes réglages de cet appareil ?")) return;
@@ -263,5 +294,7 @@ for (const d of document.querySelectorAll("dialog")) {
 
 // ——— Démarrage ———
 load();
-if (profile) showChat();
+if (profile) showChat(true);
 else $("welcome").hidden = false;
+
+$("mode-btn").onclick = () => renderModes(true);

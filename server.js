@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Anthropic from "@anthropic-ai/sdk";
-import { SYSTEM_PROMPT, MODES, personalContext } from "./prompt.js";
+import { SYSTEM_PROMPT, MODES, TONES, personalContext } from "./prompt.js";
 
 const PORT = process.env.PORT || 3000;
 const MODEL = process.env.CONFIE_MODEL || "claude-opus-5-5";
@@ -96,6 +96,7 @@ async function handleChat(req, res) {
   }
   const name = typeof body.name === "string" ? body.name.replace(/[^\p{L}\p{M} '-]/gu, "").trim().slice(0, 40) : "";
   const mode = Object.hasOwn(MODES, body.mode) ? body.mode : "ecoute";
+  const tone = Object.hasOwn(TONES, body.tone) ? body.tone : "gentil";
 
   const stream = client.beta.messages.stream({
     model: MODEL,
@@ -106,7 +107,7 @@ async function handleChat(req, res) {
     fallbacks: "default",
     system: [
       { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
-      { type: "text", text: personalContext({ mode, name }) },
+      { type: "text", text: personalContext({ mode, tone, name }) },
     ],
     messages,
   });

@@ -5,7 +5,8 @@
   "description": "Confie — un espace d'écoute IA pour l'amour et les relations",
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "verif": "node verif/verifier.mjs"
   },
   "engines": {
     "node": ">=20"
