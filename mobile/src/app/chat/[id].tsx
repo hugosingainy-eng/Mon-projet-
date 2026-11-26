@@ -14,6 +14,7 @@ import { useChats, type Message } from '@/store/chats';
 import { useSettings } from '@/store/settings';
 import { HIT, MAX_WIDTH, radius, shadow, space, type, useColors } from '@/theme';
 import { Button, Chip, ChipGroup, Field, Icon, IconButton, Row, Txt } from '@/ui';
+import { PlantArt } from '@/ui/Illustrations';
 
 const STARTERS = ['Je ne sais pas par où commencer', 'J\'ai besoin de vider mon sac', 'Il s\'est passé quelque chose', 'J\'ai une question que je n\'ose poser à personne'];
 
@@ -83,7 +84,7 @@ export default function ChatScreen() {
         contentContainerStyle={{ width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center', paddingHorizontal: space.xl, paddingTop: space.lg, paddingBottom: space.xl, gap: space.lg, flexGrow: 1 }}>
         {empty ? (
           <Animated.View entering={FadeIn.duration(500)} style={{ flexGrow: 1, justifyContent: 'center', gap: space.md }}>
-            <Icon name="leaf" size={32} strokeWidth={1.3} />
+            <View style={{ marginLeft: -space.sm, marginBottom: -space.sm }}><PlantArt size={84} /></View>
             <Txt variant="title">{name ? `Je t'écoute, ${name}.` : 'Je t\'écoute.'}</Txt>
             <Txt color="textSoft">Prends ton temps. Tu n'as pas besoin de tout expliquer parfaitement.</Txt>
             <View style={{ gap: space.sm, marginTop: space.lg }} testID="mode-question">

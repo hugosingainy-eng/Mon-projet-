@@ -1,7 +1,10 @@
 import React from 'react';
+import { View } from 'react-native';
 import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
 
-import { useColors } from '@/theme';
+import { radius, space, useColors } from '@/theme';
+
+import { Txt } from './index';
 
 // Visages d'humeur, au trait, du plus difficile (1) au plus léger (5).
 const MOUTHS = ['M8.5 16.2c1.2-1.6 5.8-1.6 7 0', 'M9 15.8c1-.9 5-.9 6 0', 'M9 15.2h6', 'M9 14.6c1 1.2 5 1.2 6 0', 'M8.3 14c1.4 2.6 6 2.6 7.4 0'] as const;
@@ -100,5 +103,40 @@ export function VideoArt({ size = 96 }: Art) {
       <Path d="M36 78h24" stroke={c.sage} strokeWidth={2} strokeLinecap="round" />
       <Circle cx={74} cy={32} r={3} fill={c.accent} />
     </Svg>
+  );
+}
+
+/** Pousses qui grandissent : le chemin parcouru. */
+export function GrowthArt({ size = 96 }: Art) {
+  const c = useColors();
+  const sprout = (x: number, h: number, o: number) => (
+    <React.Fragment key={x}>
+      <Path d={`M${x} 78V${78 - h}`} stroke={c.primary} strokeWidth={1.4} strokeLinecap="round" />
+      <Path d={`M${x} ${78 - h * 0.55}c-${h * 0.32} 0-${h * 0.45}-${h * 0.2}-${h * 0.45}-${h * 0.48} ${h * 0.32} 0 ${h * 0.45} ${h * 0.2} ${h * 0.45} ${h * 0.48}Z`} fill={c.sage} opacity={o} />
+      <Path d={`M${x} ${78 - h * 0.8}c0-${h * 0.3} ${h * 0.15}-${h * 0.45} ${h * 0.45}-${h * 0.45} 0 ${h * 0.3}-${h * 0.15} ${h * 0.45}-${h * 0.45} ${h * 0.45}Z`} fill={c.sage} opacity={o} />
+    </React.Fragment>
+  );
+  return (
+    <Svg width={size} height={size} viewBox="0 0 96 96" accessibilityElementsHidden importantForAccessibility="no">
+      <Ellipse cx={48} cy={80} rx={34} ry={4} fill={c.sage} opacity={0.25} />
+      {sprout(22, 18, 0.6)}
+      {sprout(46, 32, 0.8)}
+      {sprout(72, 48, 1)}
+      <Circle cx={80} cy={18} r={5} fill={c.accent} opacity={0.8} />
+    </Svg>
+  );
+}
+
+/** Carte d'en-tête verte, commune à tous les onglets. */
+export function Hero({ caption, title, text, art, children }: { caption?: string; title: string; text?: string; art: React.ReactNode; children?: React.ReactNode }) {
+  const c = useColors();
+  return (
+    <View style={{ marginTop: space.lg, backgroundColor: c.surfaceAlt, borderRadius: radius.lg + 4, padding: space.xl, overflow: 'hidden' }}>
+      <View style={{ position: 'absolute', right: -6, top: 6, opacity: 0.95 }}>{art}</View>
+      {caption ? <Txt variant="caption" color="textSoft" style={{ marginRight: 92 }}>{caption}</Txt> : null}
+      <Txt variant="title" style={{ marginTop: caption ? space.xs : 0, marginRight: 88 }}>{title}</Txt>
+      {text ? <Txt variant="small" color="textSoft" style={{ marginTop: space.sm, marginRight: 72 }}>{text}</Txt> : null}
+      {children ? <View style={{ marginTop: space.lg }}>{children}</View> : null}
+    </View>
   );
 }

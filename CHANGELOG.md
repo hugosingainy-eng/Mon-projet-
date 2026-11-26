@@ -3,6 +3,7 @@
 ## 0.3.0 — Accueil illustré
 - Accueil refait d'après les références fournies : carte verte « Comment tu te sens aujourd'hui ? » avec saisie directe, visages d'humeur, raccourcis, cartes illustrées « Pour toi ».
 - Illustrations vectorielles (plante, respiration, carnet, vidéo) et visages d'humeur dessinés dans la palette.
+- Même carte verte illustrée sur Journal, Exercices, Progrès et Profil ; pastilles d'icône sur chaque exercice ; plante sur l'écran de conversation vide.
 - Barre d'onglets avec pastille sur l'onglet actif ; écran de bienvenue plus vert.
 
 ## 0.2.0 — Application mobile complète

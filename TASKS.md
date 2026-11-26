@@ -39,7 +39,7 @@ Légende : ✅ fait et vérifié · 🟡 partiel · ⛔ bloqué (dépend du prop
 | 🟡 | iOS / Android | Code commun qui compile ; testé uniquement en version web |
 | 🟡 | Notifications | La préférence est enregistrée ; aucun rappel n'est réellement programmé |
 | 🟡 | Images | Illustration vectorielle maison, référence générée avec Canva ; pas de photos (connecteurs à connecter par le propriétaire) |
-| 🟡 | Qualité du design | Écrans cohérents et calmes ; auto-évaluation autour de 8/10, pas encore le 9/10 visé. Seuls l'accueil, la bienvenue et le point d'humeur suivent les nouvelles références ; journal, exercices, progrès et profil restent à illustrer dans le même style |
+| 🟡 | Qualité du design | Écrans cohérents et calmes ; auto-évaluation autour de 8/10, pas encore le 9/10 visé. Tous les onglets suivent les références (carte verte illustrée) ; le mode vocal, la mémoire, les vidéos et les réglages détaillés restent plus sobres |
 
 ## Bloqué — dépend du propriétaire
 

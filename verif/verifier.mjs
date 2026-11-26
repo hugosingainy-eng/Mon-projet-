@@ -175,6 +175,11 @@ const EXIGENCES = [
       for (let n = 1; n <= 5; n++) await see(tid(page, `home-mood-${n}`), `le visage d'humeur ${n} manque sur l'accueil`);
       for (const w of ["Prends un moment pour toi", "À voix haute", "Pour toi", "Respirer en paix", "Écrire pour soi"]) await see(tid(page, "home").getByText(w, { exact: true }), `l'accueil ne contient pas « ${w} »`);
       need((await tid(page, "home").locator("svg").count()) >= 12, "les illustrations ne s'affichent pas");
+      for (const [name, id, title] of [["Journal", "journal", "Rien que pour toi"], ["Exercices", "exercises", "À ton rythme"], ["Progrès", "progress", "Pas à pas"], ["Profil", "profile", "Ton espace"]]) {
+        await tab(page, name); await see(tid(page, id).getByText(title, { exact: true }), `l'onglet ${name} n'a pas la carte verte illustrée`);
+        need((await tid(page, id).locator("svg").count()) >= 1, `pas d'illustration sur l'onglet ${name}`);
+      }
+      await tab(page, "Accueil");
       await tid(page, "home-mood-4").click(); await tid(page, "mood").waitFor();
       await tid(page, "mood-save").click(); await tid(page, "home").waitFor();
       need(((await stored(page, "confie.wellbeing")).moods ?? [])[0]?.mood === 4, "le visage choisi sur l'accueil n'est pas repris dans le point d'humeur");

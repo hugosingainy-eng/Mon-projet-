@@ -9,6 +9,7 @@ import { helpfulExercises, lastDays, times, topEmotions, weekPhrases } from '@/f
 import { todaysMood, useWellbeing } from '@/store/wellbeing';
 import { HIT, radius, space, useColors } from '@/theme';
 import { Button, Divider, Empty, Field, Icon, IconButton, Row, Screen, SectionTitle, Txt } from '@/ui';
+import { GrowthArt, Hero } from '@/ui/Illustrations';
 
 export default function Progres() {
   const c = useColors();
@@ -39,9 +40,8 @@ export default function Progres() {
 
   return (
     <Screen edges={['top']} testID="progress">
-      <Animated.View entering={FadeInDown.duration(450)} style={{ marginTop: space.xxl, gap: space.sm }}>
-        <Txt variant="display">Ton chemin</Txt>
-        <Txt color="textSoft">{"Quelques repères pour voir d'où tu viens, à ton rythme."}</Txt>
+      <Animated.View entering={FadeInDown.duration(450)}>
+        <Hero caption="Pas à pas" title="Ton chemin" text="Quelques repères pour voir d'où tu viens, à ton rythme." art={<GrowthArt size={104} />} />
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(100).duration(450)}>

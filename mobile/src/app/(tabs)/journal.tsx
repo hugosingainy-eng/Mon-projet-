@@ -6,6 +6,7 @@ import { entryDate } from '@/features/journal/format';
 import { useWellbeing, type JournalEntry } from '@/store/wellbeing';
 import { space, useColors } from '@/theme';
 import { Button, Divider, Empty, Icon, Screen, Txt } from '@/ui';
+import { Hero, JournalArt } from '@/ui/Illustrations';
 
 export default function Journal() {
   const c = useColors();
@@ -14,12 +15,9 @@ export default function Journal() {
 
   return (
     <Screen edges={['top']} testID="journal">
-      <View style={{ gap: space.sm, marginTop: space.xxl }}>
-        <Txt variant="title">Journal</Txt>
-        <Txt color="textSoft">Un endroit pour poser tes pensées, sans avoir à les expliquer à qui que ce soit.</Txt>
-      </View>
-
-      <Button label="Écrire" icon="edit" style={{ marginTop: space.xl }} onPress={() => router.push('/ecrire')} testID="journal-write" />
+      <Hero caption="Rien que pour toi" title="Journal" text="Un endroit pour poser tes pensées, sans avoir à les expliquer à qui que ce soit." art={<JournalArt size={104} />}>
+        <Button label="Écrire" icon="edit" onPress={() => router.push('/ecrire')} testID="journal-write" />
+      </Hero>
 
       {entries.length === 0 ? (
         <Empty title="Ta première page t'attend" text="Quelques lignes suffisent. Tu peux écrire librement ou partir d'une question." />

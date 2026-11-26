@@ -11,6 +11,7 @@ import { hasSupabase } from '@/lib/config';
 import { useSettings } from '@/store/settings';
 import { space, useColors } from '@/theme';
 import { Chip, ChipGroup, Divider, Field, Icon, Row, Screen, SectionTitle, Toggle, Txt } from '@/ui';
+import { Hero, PlantArt } from '@/ui/Illustrations';
 
 const FRANKNESS = [
   { value: 1, label: 'Tout en douceur' },
@@ -55,9 +56,8 @@ export default function Profile() {
 
   return (
     <Screen edges={['top']} testID="profile">
-      <Animated.View entering={FadeInDown.duration(400)} style={{ marginTop: space.xxl, gap: space.sm }}>
-        <Txt variant="title">Profil</Txt>
-        <Txt color="textSoft">Règle Confie à ta façon. Tu peux tout changer quand tu veux.</Txt>
+      <Animated.View entering={FadeInDown.duration(400)}>
+        <Hero caption="Ton espace" title="Profil" text="Règle Confie à ta façon. Tu peux tout changer quand tu veux." art={<PlantArt size={104} />} />
       </Animated.View>
 
       <View style={{ marginTop: space.xl }}>
