@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { EXERCISES, type Exercise, type ExerciseCategory } from '@/content/exercises';
 import { formatMinutes } from '@/features/exercises/format';
@@ -35,7 +35,7 @@ export default function Exercises() {
         {CATEGORIES.map((name) => <Chip key={name} label={name} selected={category === name} onPress={() => setCategory(category === name ? null : name)} />)}
       </ScrollView>
 
-      <Animated.View key={category ?? 'tout'} entering={FadeIn.duration(400)} style={{ marginTop: space.md }}>
+      <Animated.View key={category ?? 'tout'} style={{ marginTop: space.md }}>
         {groups.map((g) => (
           <View key={g.name} style={{ marginTop: space.xl }}>
             <Txt variant="smallMedium" color="textMuted" accessibilityRole="header" style={{ marginBottom: space.xs }}>{g.name}</Txt>

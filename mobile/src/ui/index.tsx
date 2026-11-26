@@ -106,7 +106,7 @@ export function IconButton({ name, label, onPress, color, filled, size = 22, tes
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={6}
-      onPress={() => { tap(); onPress?.(); }}
+      onPress={(e) => { e?.preventDefault?.(); e?.stopPropagation?.(); tap(); onPress?.(); }}
       style={({ pressed }) => [styles.iconButton, filled && { backgroundColor: c.surface }, pressed && { opacity: 0.6 }]}>
       <Icon name={name} size={size} color={color ?? c.textSoft} />
     </Pressable>

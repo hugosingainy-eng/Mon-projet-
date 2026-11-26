@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Orb, type OrbMode } from '@/features/voice/Orb';
@@ -10,6 +10,7 @@ import { useVoiceConversation, type VoicePhase } from '@/features/voice/useVoice
 import { useSettings } from '@/store/settings';
 import { HIT, MAX_WIDTH, space, useColors } from '@/theme';
 import { Button, Icon, Toggle, Txt, type IconName } from '@/ui';
+import { goHome } from '@/lib/nav';
 
 // Le mode vocal : une conversation mains libres, plein écran.
 //
@@ -28,7 +29,7 @@ const ORB_MODE: Record<VoicePhase, OrbMode> = {
 };
 
 export default function VoiceScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>();
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
@@ -43,14 +44,16 @@ export default function VoiceScreen() {
 
   // En quittant l'écran, le hook arrête micro, voix et génération (nettoyage au démontage).
   const quit = () => (router.canGoBack() ? router.back() : router.replace({ pathname: '/chat/[id]', params: { id } }));
-  const write = () => { v.stopAll(); router.replace({ pathname: '/chat/[id]', params: { id } }); };
+  // Ouvert depuis la conversation : on y revient. Ouvert depuis l'accueil : on ouvre la conversation à la place.
+  // (Sans cela, deux écrans de conversation s'empilaient et le bouton retour semblait ne rien faire.)
+  const write = () => { v.stopAll(); if (from === 'chat' && router.canGoBack()) router.back(); else router.replace({ pathname: '/chat/[id]', params: { id } }); };
   const help = () => { v.pause(); router.push('/aide'); };
 
   if (!v.chat) {
     return (
       <View testID="voice" style={{ flex: 1, backgroundColor: c.bg, alignItems: 'center', justifyContent: 'center', gap: space.lg, padding: space.xl }}>
         <Txt testID="voice-state" center color="textSoft">Cette conversation n'existe plus.</Txt>
-        <Button label="Retour à l'accueil" kind="soft" onPress={() => router.replace('/(tabs)')} />
+        <Button label="Retour à l'accueil" kind="soft" onPress={goHome} />
       </View>
     );
   }
@@ -90,7 +93,7 @@ export default function VoiceScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 56, paddingHorizontal: space.xl, gap: space.md }}>
           <View style={{ flexShrink: 1 }}>
             {v.crisis ? (
-              <Animated.View entering={FadeIn.duration(600)}>
+              <Animated.View>
                 <Button label="Aide urgente" icon="phone" kind="ghost" small onPress={help} />
               </Animated.View>
             ) : null}
@@ -177,7 +180,7 @@ export default function VoiceScreen() {
 function Panel({ text, note, warn, children }: { text: string; note?: string; warn?: boolean; children: React.ReactNode }) {
   const c = useColors();
   return (
-    <Animated.View entering={FadeIn.duration(400)} style={{ alignSelf: 'stretch', alignItems: 'center', gap: space.lg }} accessibilityLiveRegion="polite">
+    <Animated.View style={{ alignSelf: 'stretch', alignItems: 'center', gap: space.lg }} accessibilityLiveRegion="polite">
       <View style={{ gap: space.sm, maxWidth: 340 }}>
         <Txt center color="textSoft" style={warn ? { color: c.warn } : undefined}>{text}</Txt>
         {note ? <Txt variant="caption" color="textMuted" center>{note}</Txt> : null}

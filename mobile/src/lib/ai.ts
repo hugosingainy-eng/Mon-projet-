@@ -9,7 +9,7 @@ export type ChatTurn = { role: 'user' | 'assistant'; content: string };
 export type ChatContext = {
   name: string;
   mode: ModeId;
-  style: StyleId;
+  styles: StyleId[];
   frankness: number;
   topic: TopicId | null;
   voice: boolean;
@@ -40,7 +40,8 @@ export async function streamChat(messages: ChatTurn[], context: ChatContext, onT
   if (viaBridge) {
     try { return await viaBridge(body, onText, signal); } catch (e) {
       if ((e as Error)?.name === 'AbortError') throw e;
-      throw new AiError(MESSAGES.server, 'server');
+      const unavailable = (e as Error)?.message === 'indisponible';
+      throw new AiError(unavailable ? 'L\'IA n\'est pas disponible dans cet aperçu sur cet appareil. Essaie depuis un ordinateur, ou accepte la demande d\'autorisation si elle s\'affiche.' : MESSAGES.server, unavailable ? 'config' : 'server');
     }
   }
 

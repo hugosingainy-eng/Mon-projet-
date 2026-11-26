@@ -9,7 +9,7 @@ create extension if not exists "pgcrypto";
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   display_name text check (char_length(display_name) <= 40),
-  style text not null default 'douce' check (style in ('douce','franche','positive','ecoute','analyse')),
+  styles text[] not null default '{douce}' check (styles <@ array['douce','franche','positive','ecoute','analyse']),
   frankness smallint not null default 2 check (frankness between 1 and 3),
   default_mode text not null default 'ecoute' check (default_mode in ('ecoute','comprendre','honnete','rassure','solutions','challenge','motive')),
   memory_enabled boolean not null default false,

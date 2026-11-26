@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { entryDate } from '@/features/journal/format';
 import { useWellbeing, type JournalEntry } from '@/store/wellbeing';
@@ -22,7 +22,7 @@ export default function Journal() {
       {entries.length === 0 ? (
         <Empty title="Ta première page t'attend" text="Quelques lignes suffisent. Tu peux écrire librement ou partir d'une question." />
       ) : (
-        <Animated.View entering={FadeIn.duration(400)} style={{ marginTop: space.xl }}>
+        <Animated.View style={{ marginTop: space.xl }}>
           {entries.map((e, i) => (
             <View key={e.id}>
               {i > 0 ? <Divider /> : null}

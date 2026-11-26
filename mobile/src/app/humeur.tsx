@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { EMOTIONS, MOOD_LABELS } from '@/content/modes';
 import { todaysMood, useWellbeing, type MoodEntry } from '@/store/wellbeing';
@@ -68,7 +68,7 @@ export default function Humeur() {
           <IconButton name="close" label="Fermer" onPress={close} testID="mood-close" />
         </View>
 
-        <Animated.View entering={FadeInDown.duration(450)} style={{ gap: space.sm, marginTop: space.lg }}>
+        <Animated.View style={{ gap: space.sm, marginTop: space.lg }}>
           <Txt variant="title">{'Comment tu te sens, là, maintenant ?'}</Txt>
           <Txt color="textSoft">
             {existing
@@ -77,7 +77,7 @@ export default function Humeur() {
           </Txt>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(100).duration(450)} accessibilityRole="radiogroup" accessibilityLabel="Humeur générale" style={{ flexDirection: 'row', marginTop: space.xxl, marginHorizontal: -space.xs }}>
+        <Animated.View accessibilityRole="radiogroup" accessibilityLabel="Humeur générale" style={{ flexDirection: 'row', marginTop: space.xxl, marginHorizontal: -space.xs }}>
           {MOODS.map((n) => {
             const selected = mood === n;
             return (
@@ -97,7 +97,7 @@ export default function Humeur() {
         </Animated.View>
 
         {mood !== null ? (
-          <Animated.View entering={FadeIn.duration(400)} style={{ marginTop: space.xl, gap: space.xxl }}>
+          <Animated.View style={{ marginTop: space.xl, gap: space.xxl }}>
             <View style={{ gap: space.lg }}>
               <Divider />
               <Txt variant="small" color="textMuted">{"C'est noté. La suite est facultative, tu peux enregistrer dès maintenant."}</Txt>

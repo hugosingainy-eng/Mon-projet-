@@ -124,7 +124,11 @@ export function cleanContext(raw = {}) {
   return {
     name: line(c.name, 40).replace(/[^\p{L}\p{M} '-]/gu, ""),
     mode: Object.hasOwn(MODES, c.mode) ? c.mode : "ecoute",
-    style: Object.hasOwn(STYLES, c.style) ? c.style : "douce",
+    // Plusieurs styles peuvent être cochés ; l'ancien champ `style` (un seul) reste accepté.
+    styles: (() => {
+      const list = (Array.isArray(c.styles) ? c.styles : [c.style]).filter((x) => typeof x === "string" && Object.hasOwn(STYLES, x));
+      return list.length ? [...new Set(list)] : ["douce"];
+    })(),
     frankness: [1, 2, 3].includes(c.frankness) ? c.frankness : 2,
     topic: Object.hasOwn(TOPICS, c.topic) ? c.topic : null,
     voice: c.voice === true,
@@ -138,7 +142,9 @@ export function personalContext(ctx) {
   const c = cleanContext(ctx);
   const parts = [
     `Pour cette conversation, la personne a choisi : ${MODES[c.mode]}`,
-    STYLES[c.style],
+    c.styles.length === 1
+      ? STYLES[c.styles[0]]
+      : `La personne a coché plusieurs façons de lui parler ; combine-les naturellement, sans en privilégier une seule :\n${c.styles.map((id) => `- ${STYLES[id].replace("Style général : ", "")}`).join("\n")}`,
     FRANKNESS[c.frankness],
   ];
   if (c.name) parts.push(`La personne s'appelle ${c.name}. Utilise son prénom de temps en temps, naturellement.`);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import Svg, { Circle, Line } from 'react-native-svg';
 
 import { MOOD_LABELS } from '@/content/modes';
@@ -38,7 +38,7 @@ export function MoodChart({ days }: { days: DayPoint[] }) {
           accessibilityRole="image"
           accessibilityLabel={summary}>
           {w > 0 ? (
-            <Animated.View entering={FadeIn.duration(500)}>
+            <Animated.View>
               <Svg width={w} height={H}>
                 {[1, 3, 5].map((m) => (
                   <Line key={m} x1={PAD} x2={w - PAD} y1={y(m)} y2={y(m)} stroke={c.line} strokeWidth={1} />

@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { exerciseById } from '@/content/exercises';
 import { MoodChart } from '@/features/progress/MoodChart';
@@ -40,11 +40,11 @@ export default function Progres() {
 
   return (
     <Screen edges={['top']} testID="progress">
-      <Animated.View entering={FadeInDown.duration(450)}>
+      <Animated.View>
         <Hero caption="Pas à pas" title="Ton chemin" text="Quelques repères pour voir d'où tu viens, à ton rythme." art={<GrowthArt size={104} />} />
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(100).duration(450)}>
+      <Animated.View>
         <SectionTitle>Humeur, 14 derniers jours</SectionTitle>
         {moods.length === 0 ? (
           <Empty title="Rien à afficher pour l'instant" text="Note ton humeur de temps en temps, et tu verras ici comment elle évolue." />
@@ -71,7 +71,7 @@ export default function Progres() {
       </Animated.View>
 
       {emotions.length > 0 ? (
-        <Animated.View entering={FadeIn.delay(200).duration(450)}>
+        <Animated.View>
           <SectionTitle>Ce qui revient le plus</SectionTitle>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
             {emotions.map((e) => (
@@ -84,7 +84,7 @@ export default function Progres() {
         </Animated.View>
       ) : null}
 
-      <Animated.View entering={FadeIn.delay(250).duration(450)}>
+      <Animated.View>
         <SectionTitle>Ce que tu as fait pour toi</SectionTitle>
         <Row
           icon="breathe"
@@ -103,7 +103,7 @@ export default function Progres() {
         />
       </Animated.View>
 
-      <Animated.View entering={FadeIn.delay(300).duration(450)}>
+      <Animated.View>
         <SectionTitle>Tes objectifs</SectionTitle>
         {goals.length === 0 ? (
           <Txt variant="small" color="textSoft" style={{ marginBottom: space.lg }}>

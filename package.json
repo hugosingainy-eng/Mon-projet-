@@ -10,7 +10,8 @@
     "build": "cd mobile && npx expo export -p web",
     "typecheck": "cd mobile && npx tsc --noEmit",
     "test": "node --test test/*.test.mjs",
-    "preview:build": "node scripts/build-preview.mjs"
+    "preview:build": "node scripts/build-preview.mjs",
+    "parcours": "node verif/parcours.mjs"
   },
   "engines": {
     "node": ">=20"

@@ -1,12 +1,13 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Linking, Pressable, View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
 
 import { exerciseById } from '@/content/exercises';
 import { searchVideos, type Video } from '@/lib/ai';
 import { useWellbeing } from '@/store/wellbeing';
 import { radius, space, useColors } from '@/theme';
 import { Icon, IconButton, Txt } from '@/ui';
+import { linkProps } from '@/ui/ExternalLink';
 
 /** Vidéos proposées par l'IA pour un sujet. N'affiche que des vidéos vérifiées par le serveur ; sinon, un lien de recherche. */
 export function VideoSuggestion({ query }: { query: string }) {
@@ -24,7 +25,7 @@ export function VideoSuggestion({ query }: { query: string }) {
   if (!state) return null;
   if (!state.verified || state.videos.length === 0) {
     return (
-      <Pressable accessibilityRole="link" accessibilityLabel={`Chercher sur YouTube : ${query}`} onPress={() => Linking.openURL(state.searchUrl)} style={({ pressed }) => [{ flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, borderRadius: radius.md, backgroundColor: c.surfaceAlt }, pressed && { opacity: 0.7 }]}>
+      <Pressable accessibilityRole="link" accessibilityLabel={`Chercher sur YouTube : ${query}`} {...linkProps(state.searchUrl)} style={({ pressed }) => [{ flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, borderRadius: radius.md, backgroundColor: c.surfaceAlt }, pressed && { opacity: 0.7 }]}>
         <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: c.sage, alignItems: 'center', justifyContent: 'center' }}><Icon name="play" size={16} color={c.surface} /></View>
         <View style={{ flex: 1 }}>
           <Txt variant="smallMedium">{query}</Txt>
@@ -38,7 +39,7 @@ export function VideoSuggestion({ query }: { query: string }) {
       {state.videos.slice(0, 2).map((v) => {
         const isSaved = saved.some((s) => s.id === v.id);
         return (
-          <Pressable key={v.id} accessibilityRole="link" accessibilityLabel={`Ouvrir la vidéo ${v.title}`} onPress={() => Linking.openURL(v.url)} style={({ pressed }) => [{ flexDirection: 'row', gap: space.md, padding: space.sm, borderRadius: radius.md, backgroundColor: c.surfaceAlt, alignItems: 'center' }, pressed && { opacity: 0.7 }]}>
+          <Pressable key={v.id} accessibilityRole="link" accessibilityLabel={`Ouvrir la vidéo ${v.title}`} {...linkProps(v.url)} style={({ pressed }) => [{ flexDirection: 'row', gap: space.md, padding: space.sm, borderRadius: radius.md, backgroundColor: c.surfaceAlt, alignItems: 'center' }, pressed && { opacity: 0.7 }]}>
             {v.thumbnail ? <Image source={{ uri: v.thumbnail }} style={{ width: 96, height: 54, borderRadius: radius.sm, backgroundColor: c.line }} accessibilityIgnoresInvertColors /> : null}
             <View style={{ flex: 1 }}>
               <Txt variant="smallMedium" numberOfLines={2}>{v.title}</Txt>

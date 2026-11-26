@@ -11,6 +11,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { parcours } from "./parcours.mjs";
+
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const read = (f) => fs.readFileSync(path.join(ROOT, f), "utf8");
 const exists = (f) => fs.existsSync(path.join(ROOT, f));
@@ -38,8 +40,8 @@ const REPLY = "Je t'entends, Léa. Ça fait beaucoup à porter.\n\nQu'est-ce qui
 const MODE_LABELS = ["Écoute-moi", "Aide-moi à comprendre", "Sois honnête", "Rassure-moi", "Trouve des solutions", "Challenge-moi", "Motive-moi"];
 const TOPIC_LABELS = ["Amour et relations", "Moral et émotions", "Stress et anxiété", "Confiance en soi", "Motivation", "Solitude", "Autre sujet"];
 
-const persisted = (state) => JSON.stringify({ state, version: 1 });
-const SETTINGS = { onboarded: true, consentAt: 1, name: "Léa", topics: [], style: "douce", frankness: 2, defaultMode: "ecoute", memory: "on", prefersVoice: false, notifications: false, appearance: "light", voiceId: null, voiceRate: 1, showTranscript: true, shareJournalWithAi: false };
+const persisted = (state) => JSON.stringify({ state, version: 2 });
+const SETTINGS = { onboarded: true, consentAt: 1, name: "Léa", topics: [], styles: ["douce"], frankness: 2, defaultMode: "ecoute", memory: "on", prefersVoice: false, notifications: false, appearance: "light", voiceId: null, voiceRate: 1, showTranscript: true, shareJournalWithAi: false };
 
 /** Ouvre l'app. `settings` = personne déjà inscrite (null = première visite). */
 async function open(browser, { settings = SETTINGS, reply = REPLY, width = 390, height = 844, offline = false, route = "/" } = {}) {
@@ -96,9 +98,10 @@ const EXIGENCES = [
       await see(page.getByText("Franche et directe"), "le choix « Franche et directe » n'est pas dans le profil");
       await see(page.getByText("Douce et bienveillante"), "le choix « Douce et bienveillante » n'est pas dans le profil");
       await page.getByText("Franche et directe").last().click();
-      await page.waitForFunction(() => JSON.parse(localStorage.getItem("confie.settings")).state.style === "franche");
+      await page.waitForFunction(() => JSON.parse(localStorage.getItem("confie.settings")).state.styles.includes("franche"));
+      await page.getByText("Terminé", { exact: true }).click();
       await tab(page, "Accueil"); await startChat(page); await say(page, "bonjour");
-      need(sent[0].context.style === "franche", "le style choisi n'est pas transmis à l'IA");
+      need(sent[0].context.styles.includes("franche"), "le style choisi n'est pas transmis à l'IA");
       need([1, 2, 3].includes(sent[0].context.frankness), "le niveau de franchise n'est pas transmis");
     }) },
   { demande: "Positif", test: () => { promptHas("Reste positif"); need(STYLES.positive, "style positif absent"); } },
@@ -213,6 +216,26 @@ const EXIGENCES = [
       need(sent[1].context.mode === "rassure", "changer de mode en cours de conversation n'a pas d'effet");
     }) },
 
+  { demande: "Je veux plusieurs choix dans « Comment préfères-tu qu'on te parle ? », il peut cocher plusieurs choses", test: (b) => session(b, { settings: null }, async ({ page, sent }) => {
+      await page.getByText("Commencer", { exact: true }).click(); await tid(page, "onboarding").waitFor();
+      await page.getByText("Passer", { exact: true }).click(); await page.getByText("Passer", { exact: true }).click();
+      await see(page.getByText("Comment préfères-tu qu'on te parle ?"), "l'étape n'apparaît pas");
+      await see(page.getByText(/Tu peux en cocher plusieurs/), "l'écran ne dit pas qu'on peut en cocher plusieurs");
+      for (const id of ["franche", "positive", "analyse"]) await tid(page, `style-${id}`).click();
+      await tid(page, "style-analyse").click(); // décocher
+      for (let i = 0; i < 3; i++) { await page.getByText("Continuer", { exact: true }).click(); await page.waitForTimeout(150); }
+      await page.getByLabel("J'ai compris et j'accepte").click(); await page.getByText("Entrer", { exact: true }).click(); await tid(page, "home").waitFor();
+      const saved = (await stored(page, "confie.settings")).styles;
+      need(JSON.stringify(saved) === JSON.stringify(["franche", "positive"]), `les choix cochés ne sont pas enregistrés (${JSON.stringify(saved)})`);
+      await startChat(page); await say(page, "bonjour");
+      need(JSON.stringify(sent[0].context.styles) === JSON.stringify(["franche", "positive"]), "les choix cochés ne sont pas tous transmis à l'IA");
+    }) },
+  { demande: "Ça bug, après il n'y a rien : revois tout ce que tu as fait car rien ne marche", test: async () => {
+      const r = await parcours({ quiet: true });
+      need(r.ok, `parcours réel (aperçu publié, écran d'iPhone, au doigt) : ${r.failures.length} échec(s) sur ${r.steps} — ${r.failures[0]}`);
+      throw new Partiel(`les ${r.steps} étapes du parcours réel passent ici (aperçu publié, écran d'iPhone, au doigt, y compris stockage bloqué), mais je ne peux pas le vérifier sur ton téléphone : c'est toi qui confirmes`);
+    } },
+
   // Message 4 — la vérification
   { demande: "Une vérification qui vérifie à chaque fois si tu as écouté et fait tout ce que je t'ai demandé", test: () => {
       need(read(".claude/settings.json").includes("verif/verifier.mjs"), "le crochet de fin de réponse n'est pas installé");
@@ -261,8 +284,8 @@ const EXIGENCES = [
       await see(page.getByText("Mon titre"), "renommer ne fonctionne pas ou l'historique est vide");
       await page.getByText("Mon titre").click(); await tid(page, "chat").waitFor();
       await see(page.getByText("premier message"), "reprendre une conversation ne recharge pas les messages");
-      page.once("dialog", (d) => d.accept());
-      await page.getByLabel("Options de la conversation").click(); await page.getByText("Supprimer la conversation").click();
+      await page.getByLabel("Options de la conversation").last().click(); await page.getByText("Supprimer la conversation").click();
+      await tid(page, "confirm-yes").click();
       await tid(page, "home").waitFor();
       need(Object.keys((await stored(page, "confie.chats")).chats ?? {}).length === 0, "supprimer ne supprime pas la conversation");
     }) },
@@ -326,8 +349,7 @@ const EXIGENCES = [
       for (const w of ["ranchise", "Mémoire", "Voix", "Langue", "Sombre", "Confidentialité"]) need(t.includes(w), `le profil ne contient pas « ${w} »`);
       await page.goto(BASE + "/confidentialite"); await tid(page, "privacy").waitFor();
       await see(tid(page, "export"), "export des données absent");
-      page.once("dialog", (d) => d.accept());
-      await tid(page, "delete-all").click(); await tid(page, "welcome").waitFor({ timeout: 8000 });
+      await tid(page, "delete-all").click(); await tid(page, "confirm-yes").click(); await tid(page, "welcome").waitFor({ timeout: 8000 });
       await page.waitForTimeout(400);
       const left = await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("confie.")).map((k) => localStorage.getItem(k)).join(""));
       need(!left.includes("Léa"), "après suppression, des données personnelles restent sur l'appareil");

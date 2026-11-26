@@ -27,6 +27,8 @@ Légende : ✅ fait et vérifié · 🟡 partiel · ⛔ bloqué (dépend du prop
 | ✅ | Documentation complète et brouillons juridiques | `docs/` |
 
 | ✅ | Accueil illustré d'après les références du propriétaire (carte verte, visages d'humeur, cartes illustrées) | `npm run verif` |
+| ✅ | Choix multiples dans « Comment préfères-tu qu'on te parle ? » | `npm run verif`, `npm run parcours` |
+| ✅ | Parcours réel de toute l'app (aperçu publié, écran d'iPhone, au doigt, stockage bloqué) | `npm run parcours` : 46 étapes |
 | ✅ | Aperçu en ligne avec IA branchée (lien dans le README) | testé localement avec une IA simulée ; non vérifié dans la page publiée |
 
 ## Partiel
@@ -56,6 +58,7 @@ Légende : ✅ fait et vérifié · 🟡 partiel · ⛔ bloqué (dépend du prop
 
 | | Tâche |
 |---|---|
+| ⬜ | Tester sur un vrai iPhone (Safari) : le parcours automatique tourne sur Chromium en émulation, pas sur le navigateur d'Apple |
 | ⬜ | Relire de vraies conversations avec l'IA sur les 14 scénarios de `docs/TESTING.md` et ajuster les consignes |
 | ⬜ | Tester et corriger le mode vocal sur iPhone et Android |
 | ⬜ | Vérifier le jeton Supabase sur le serveur, limites par compte, suppression de compte |
@@ -65,5 +68,4 @@ Légende : ✅ fait et vérifié · 🟡 partiel · ⛔ bloqué (dépend du prop
 | ⬜ | Abonnement freemium, sans jamais bloquer l'aide urgente |
 | ⬜ | Relecture des exercices et des consignes de crise par un·e psychologue |
 | ⬜ | Empêcher l'écran de s'éteindre en mode vocal, mouvement réduit sur le cercle de respiration |
-| ⬜ | Remplacer les confirmations du navigateur par une feuille intégrée (elles sont bloquées dans l'aperçu en ligne) |
 | ⬜ | Fiches App Store / Google Play, captures, builds signés |

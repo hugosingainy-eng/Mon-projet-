@@ -11,7 +11,7 @@ type Settings = {
   consentAt: number | null; // consentement à l'envoi des messages au fournisseur d'IA
   name: string;
   topics: TopicId[];
-  style: StyleId;
+  styles: StyleId[]; // plusieurs façons de parler peuvent être cochées
   frankness: 1 | 2 | 3; // 1 = tout en douceur … 3 = sans filtre
   defaultMode: ModeId;
   memory: MemoryMode;
@@ -31,7 +31,7 @@ const initial = {
   consentAt: null,
   name: '',
   topics: [] as TopicId[],
-  style: 'douce' as StyleId,
+  styles: ['douce'] as StyleId[],
   frankness: 2 as const,
   defaultMode: 'ecoute' as ModeId,
   memory: 'off' as MemoryMode, // la mémoire n'est jamais activée sans choix explicite
@@ -51,6 +51,17 @@ export const useSettings = create<Settings>()(
       set: (patch) => set(patch),
       reset: () => set(initial),
     }),
-    { name: 'confie.settings', storage: deviceStorage, version: 1 },
+    {
+      name: 'confie.settings',
+      storage: deviceStorage,
+      version: 2,
+      // v1 n'avait qu'un seul style : on le reprend dans la nouvelle liste.
+      migrate: (old: unknown, version) => {
+        const s = (old ?? {}) as Record<string, unknown>;
+        if (version < 2 && !Array.isArray(s.styles)) s.styles = typeof s.style === 'string' ? [s.style] : ['douce'];
+        delete s.style;
+        return s as never;
+      },
+    },
   ),
 );

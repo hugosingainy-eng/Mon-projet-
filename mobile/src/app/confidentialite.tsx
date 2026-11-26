@@ -11,6 +11,7 @@ import { useSettings } from '@/store/settings';
 import { useWellbeing } from '@/store/wellbeing';
 import { space, useColors } from '@/theme';
 import { Divider, Header, Icon, Row, Screen, SectionTitle, Txt, type IconName } from '@/ui';
+import { restart } from '@/lib/nav';
 
 const SENT = [
   'Les messages de la conversation en cours, au moment où tu en envoies un.',
@@ -63,7 +64,10 @@ export default function Privacy() {
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-        setNote('Le fichier a été téléchargé.');
+        // Certains environnements bloquent les téléchargements : on copie aussi les données, pour ne jamais échouer en silence.
+        let copied = false;
+        try { await navigator.clipboard.writeText(json); copied = true; } catch { /* presse-papiers refusé */ }
+        setNote(copied ? 'Tes données sont prêtes. Si aucun fichier ne s\'est téléchargé, elles ont aussi été copiées : colle-les dans une note.' : 'Le téléchargement a été lancé. S\'il ne démarre pas, ouvre l\'app dans un navigateur.');
       } else {
         await Share.share({ message: json, title: 'Mes données Confie' });
         setNote(null);
@@ -86,7 +90,7 @@ export default function Privacy() {
           useWellbeing.getState().clear();
           useSettings.getState().reset();
           await wipeDevice();
-          router.replace('/bienvenue');
+          restart();
         } catch {
           setNote('La suppression n\'a pas abouti. Réessaie dans un instant.');
         }

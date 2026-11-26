@@ -1,12 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { MODES, STYLES, TOPICS, type ModeId, type StyleId, type TopicId } from '@/content/modes';
+import { enterApp } from '@/lib/nav';
 import { useSettings } from '@/store/settings';
 import { space, useColors } from '@/theme';
-import { Button, Chip, ChipGroup, Field, Header, Row, Screen, Toggle, Txt } from '@/ui';
+import { Button, Chip, ChipGroup, Field, Header, Icon, Row, Screen, Toggle, Txt } from '@/ui';
 
 const FRANKNESS = ['Tout en douceur', 'Équilibré', 'Sans filtre'] as const;
 
@@ -16,7 +17,8 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [topics, setTopics] = useState<TopicId[]>([]);
-  const [style, setStyle] = useState<StyleId>('douce');
+  const [styles, setStyles] = useState<StyleId[]>([]);
+  const toggleStyle = (id: StyleId) => setStyles((x) => (x.includes(id) ? x.filter((y) => y !== id) : [...x, id]));
   const [frankness, setFrankness] = useState<1 | 2 | 3>(2);
   const [mode, setMode] = useState<ModeId>('ecoute');
   const [memory, setMemory] = useState(false);
@@ -39,10 +41,10 @@ export default function Onboarding() {
     },
     {
       title: 'Comment préfères-tu qu\'on te parle ?',
-      hint: 'Tu pourras changer à tout moment.',
+      hint: 'Tu peux en cocher plusieurs. Tu pourras changer à tout moment.',
       body: (
         <View style={{ gap: space.xl }}>
-          <View>{STYLES.map((s) => <Row key={s.id} title={s.label} hint={s.hint} onPress={() => setStyle(s.id)} right={<Radio on={style === s.id} />} />)}</View>
+          <View>{STYLES.map((s) => <Row key={s.id} testID={`style-${s.id}`} title={s.label} hint={s.hint} onPress={() => toggleStyle(s.id)} right={<Check on={styles.includes(s.id)} />} />)}</View>
           <View style={{ gap: space.md }}>
             <Txt variant="smallMedium">Niveau de franchise</Txt>
             <ChipGroup>{FRANKNESS.map((f, i) => <Chip key={f} label={f} selected={frankness === i + 1} onPress={() => setFrankness((i + 1) as 1 | 2 | 3)} />)}</ChipGroup>
@@ -82,13 +84,15 @@ export default function Onboarding() {
 
   const last = step === steps.length - 1;
   const finish = () => {
-    save({ onboarded: true, consentAt: Date.now(), name: name.trim(), topics, style, frankness, defaultMode: mode, memory: memory ? 'on' : 'off', prefersVoice: voice, notifications });
-    router.replace('/(tabs)');
+    save({ onboarded: true, consentAt: Date.now(), name: name.trim(), topics, styles: styles.length ? styles : ['douce'], frankness, defaultMode: mode, memory: memory ? 'on' : 'off', prefersVoice: voice, notifications });
+    enterApp();
   };
   const current = steps[step];
 
   return (
+    // `key` : chaque étape repart du haut de la page (sinon elle s'affiche déjà défilée, titre coupé).
     <Screen
+      key={step}
       testID="onboarding"
       footer={
         <View style={{ gap: space.xs }}>
@@ -100,7 +104,7 @@ export default function Onboarding() {
       <View style={{ flexDirection: 'row', gap: 6, marginTop: space.sm, marginBottom: space.xxl }} accessibilityLabel={`Étape ${step + 1} sur ${steps.length}`}>
         {steps.map((_, i) => <View key={i} style={{ flex: 1, height: 3, borderRadius: 2, backgroundColor: i <= step ? c.sage : c.line }} />)}
       </View>
-      <Animated.View key={step} entering={FadeIn.duration(350)} style={{ gap: space.md }}>
+      <Animated.View key={step} style={{ gap: space.md }}>
         <Txt variant="title">{current.title}</Txt>
         {current.hint ? <Txt variant="small" color="textSoft">{current.hint}</Txt> : null}
         <View style={{ marginTop: space.lg }}>{current.body}</View>
@@ -109,10 +113,19 @@ export default function Onboarding() {
   );
 }
 
+function Check({ on }: { on: boolean }) {
+  const c = useColors();
+  return (
+    <View style={{ width: 24, height: 24, borderRadius: 7, borderWidth: 1.5, borderColor: on ? c.primary : c.textMuted, backgroundColor: on ? c.primary : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+      {on ? <Icon name="check" size={16} color={c.onPrimary} strokeWidth={2.4} /> : null}
+    </View>
+  );
+}
+
 function Radio({ on }: { on: boolean }) {
   const c = useColors();
   return (
-    <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: on ? c.primary : c.line, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: on ? c.primary : c.textMuted, alignItems: 'center', justifyContent: 'center' }}>
       {on ? <View style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: c.primary }} /> : null}
     </View>
   );

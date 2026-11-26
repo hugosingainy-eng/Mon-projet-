@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
-import { Image, Linking, Pressable, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { Image, Pressable, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { searchVideos, type Video } from '@/lib/ai';
 import { useWellbeing } from '@/store/wellbeing';
 import { radius, space, useColors } from '@/theme';
 import { Chip, ChipGroup, Divider, Empty, Header, Icon, IconButton, Screen, SectionTitle, Txt } from '@/ui';
+import { linkProps } from '@/ui/ExternalLink';
 
 // Les requêtes orientent la recherche vers des explications données par des professionnels,
 // sans jamais affirmer nous-mêmes la qualification d'une chaîne.
@@ -27,7 +28,6 @@ const CATEGORIES = [
 type Category = (typeof CATEGORIES)[number];
 type Result = { verified: boolean; videos: Video[]; searchUrl: string };
 
-const open = (url: string) => { Linking.openURL(url).catch(() => {}); };
 
 export default function Videos() {
   const c = useColors();
@@ -64,11 +64,11 @@ export default function Videos() {
           {!result ? (
             <Txt variant="small" color="textMuted">Recherche en cours…</Txt>
           ) : result.verified && result.videos.length > 0 ? (
-            <Animated.View entering={FadeIn.duration(300)} style={{ gap: space.sm }}>
+            <Animated.View style={{ gap: space.sm }}>
               {result.videos.map((v) => {
                 const isSaved = saved.some((s) => s.id === v.id);
                 return (
-                  <Pressable key={v.id} accessibilityRole="link" accessibilityLabel={`Ouvrir la vidéo ${v.title}, chaîne ${v.channel}`} onPress={() => open(v.url)} style={({ pressed }) => [tile, { padding: space.sm }, pressed && { opacity: 0.7 }]}>
+                  <Pressable key={v.id} accessibilityRole="link" accessibilityLabel={`Ouvrir la vidéo ${v.title}, chaîne ${v.channel}`} {...linkProps(v.url)} style={({ pressed }) => [tile, { padding: space.sm }, pressed && { opacity: 0.7 }]}>
                     {v.thumbnail ? <Image source={{ uri: v.thumbnail }} style={{ width: 112, height: 63, borderRadius: radius.sm, backgroundColor: c.line }} accessibilityIgnoresInvertColors /> : null}
                     <View style={{ flex: 1 }}>
                       <Txt variant="smallMedium" numberOfLines={2}>{v.title}</Txt>
@@ -83,8 +83,8 @@ export default function Videos() {
               </Txt>
             </Animated.View>
           ) : (
-            <Animated.View entering={FadeIn.duration(300)} style={{ gap: space.md }}>
-              <Pressable accessibilityRole="link" accessibilityLabel={`Chercher sur YouTube : ${category.label}`} onPress={() => open(result.searchUrl)} style={({ pressed }) => [tile, { padding: space.md }, pressed && { opacity: 0.7 }]}>
+            <Animated.View style={{ gap: space.md }}>
+              <Pressable accessibilityRole="link" accessibilityLabel={`Chercher sur YouTube : ${category.label}`} {...linkProps(result.searchUrl)} style={({ pressed }) => [tile, { padding: space.md }, pressed && { opacity: 0.7 }]}>
                 <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: c.sage, alignItems: 'center', justifyContent: 'center' }}><Icon name="play" size={16} color={c.surface} /></View>
                 <View style={{ flex: 1 }}>
                   <Txt variant="smallMedium">{category.label}</Txt>
@@ -110,7 +110,7 @@ export default function Videos() {
           <View key={v.id}>
             {i > 0 ? <Divider /> : null}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
-              <Pressable accessibilityRole="link" accessibilityLabel={`Ouvrir la vidéo ${v.title}, chaîne ${v.channel}`} onPress={() => open(v.url)} style={({ pressed }) => [{ flex: 1, minHeight: 60, paddingVertical: space.md, justifyContent: 'center' }, pressed && { opacity: 0.6 }]}>
+              <Pressable accessibilityRole="link" accessibilityLabel={`Ouvrir la vidéo ${v.title}, chaîne ${v.channel}`} {...linkProps(v.url)} style={({ pressed }) => [{ flex: 1, minHeight: 60, paddingVertical: space.md, justifyContent: 'center' }, pressed && { opacity: 0.6 }]}>
                 <Txt variant="bodyMedium" numberOfLines={2}>{v.title}</Txt>
                 <Txt variant="small" color="textMuted" numberOfLines={1}>{v.channel} · {v.category}</Txt>
               </Pressable>

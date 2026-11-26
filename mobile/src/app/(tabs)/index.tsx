@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, TextInput, View, type TextStyle } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { MOOD_LABELS, TOPICS, type TopicId } from '@/content/modes';
 import { greetingFor } from '@/lib/hydration';
@@ -44,7 +44,7 @@ export default function Home() {
 
   return (
     <Screen edges={['top']} testID="home">
-      <Animated.View entering={FadeIn.duration(450)}>
+      <Animated.View>
         {/* Qui est là */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md, height: 64, marginRight: -space.sm }}>
           <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: c.primary, alignItems: 'center', justifyContent: 'center' }}>

@@ -32,7 +32,7 @@ export function useChatSession(chatId: string) {
       const context: ChatContext = {
         name: settings.name,
         mode: current.mode,
-        style: settings.style,
+        styles: settings.styles?.length ? settings.styles : ['douce'],
         frankness: settings.frankness,
         topic: current.topic,
         voice: !!opts.voice,

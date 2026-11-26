@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { Sheet } from '@/features/chat/ModeSheet';
 import { confirmAction } from '@/features/profile/confirm';
@@ -62,7 +62,7 @@ export default function MemoryScreen() {
         <>
           <SectionTitle>{list.length > 1 ? `${list.length} éléments` : '1 élément'}</SectionTitle>
           {list.map((item, i) => (
-            <Animated.View key={item.id} entering={FadeIn.duration(250)} layout={LinearTransition.duration(200)}>
+            <Animated.View key={item.id} layout={LinearTransition.duration(200)}>
               {i > 0 ? <Divider /> : null}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingVertical: space.md }}>
                 <View style={{ flex: 1, gap: space.xs }}>

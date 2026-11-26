@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { exerciseById, type Exercise } from '@/content/exercises';
 import { BreathGuide } from '@/features/exercises/BreathGuide';
@@ -43,7 +43,7 @@ export default function ExerciseScreen() {
     const answer = (helpful: boolean | null) => { useWellbeing.getState().logExercise(exercise.id, helpful); leave(); };
     return (
       <Screen testID="exercise" scroll={false}>
-        <Animated.View entering={FadeIn.duration(600)} style={{ flex: 1, justifyContent: 'center', gap: space.xxl }}>
+        <Animated.View style={{ flex: 1, justifyContent: 'center', gap: space.xxl }}>
           <View style={{ gap: space.sm }}>
             <Txt variant="title">Est-ce que ça t'a aidé ?</Txt>
             <Txt color="textSoft">Il n'y a pas de bonne réponse. Ça me permet seulement de te proposer ce qui te convient.</Txt>
@@ -72,7 +72,7 @@ function Detail({ exercise }: { exercise: Exercise }) {
     ? `${breathPhases(exercise.breath).map((p) => `${p.word.toLowerCase()} ${p.seconds} s`).join(' · ')} · ${exercise.breath.cycles} cycles`
     : null;
   return (
-    <Animated.View entering={FadeIn.duration(500)}>
+    <Animated.View>
       <View style={{ gap: space.sm, marginTop: space.lg }}>
         <Txt variant="caption" color="textMuted">{exercise.category} · {formatMinutes(exercise.minutes)}</Txt>
         <Txt variant="title" accessibilityRole="header">{exercise.title}</Txt>
@@ -126,7 +126,7 @@ function StepGuide({ steps, onEnd }: { steps: string[]; onEnd: () => void }) {
       <View accessibilityRole="progressbar" accessibilityLabel={`Étape ${index + 1} sur ${steps.length}`} style={{ flexDirection: 'row', gap: space.xs, marginTop: space.md }}>
         {steps.map((s, i) => <View key={s} style={{ flex: 1, height: 3, borderRadius: radius.pill, backgroundColor: i <= index ? c.sage : c.line }} />)}
       </View>
-      <Animated.View key={index} entering={FadeIn.duration(500)} style={{ flex: 1, justifyContent: 'center', gap: space.lg }}>
+      <Animated.View key={index} style={{ flex: 1, justifyContent: 'center', gap: space.lg }}>
         <Txt variant="small" color="textMuted">Étape {index + 1} sur {steps.length}</Txt>
         <Txt variant="title">{steps[index]}</Txt>
         <Txt variant="small" color="textSoft">Prends le temps qu'il te faut.</Txt>

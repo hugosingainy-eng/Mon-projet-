@@ -21,7 +21,7 @@ Confie est une IA. Elle ne remplace ni un psychologue ni un médecin, et le dit 
 
 https://claude.ai/artifact/Y9ZESVL36Bh792HCb2KtPZ
 
-Aperçu privé de l'app (visible par le propriétaire, partageable depuis le menu Partager de la page). L'IA y répond par Claude, sans clé à fournir. Limites de l'aperçu : pas de mode vocal (micro bloqué), pas de vidéos vérifiées, et les suppressions avec confirmation ne fonctionnent pas. Il se reconstruit avec `npm run preview:build`.
+Aperçu privé de l'app (visible par le propriétaire, partageable depuis le menu Partager de la page). L'IA y répond par Claude, sans clé à fournir. Limites de l'aperçu : pas de mode vocal (micro bloqué) et pas de vidéos vérifiées (lien de recherche YouTube à la place). Il se reconstruit avec `npm run preview:build`.
 
 ## État réel du projet
 
@@ -45,7 +45,7 @@ npm run build                       # construit la version web de l'app
 ANTHROPIC_API_KEY=... npm start     # ouvre http://localhost:3000
 ```
 
-Vérifications : `npm test` · `npm run typecheck` · `npm run verif`.
+Vérifications : `npm test` · `npm run typecheck` · `npm run parcours` · `npm run verif`.
 
 ## Documentation
 

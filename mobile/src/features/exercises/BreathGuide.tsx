@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import Animated, { cancelAnimation, Easing, FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import type { Exercise } from '@/content/exercises';
 import { space, useColors } from '@/theme';
@@ -53,7 +53,7 @@ export function BreathGuide({ breath, onEnd }: { breath: NonNullable<Exercise['b
   const word = started ? phase.word : 'Installe-toi';
 
   return (
-    <Animated.View entering={FadeIn.duration(600)} style={{ flex: 1 }} testID="breath-guide">
+    <Animated.View style={{ flex: 1 }} testID="breath-guide">
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.xxl }}>
         <View style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' }}>
           <View style={{ position: 'absolute', width: SIZE, height: SIZE, borderRadius: SIZE / 2, borderWidth: 1, borderColor: c.line }} />

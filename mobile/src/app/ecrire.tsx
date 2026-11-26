@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { EMOTIONS } from '@/content/modes';
 import { RichText } from '@/features/chat/RichText';
@@ -12,6 +12,7 @@ import { useSettings } from '@/store/settings';
 import { useWellbeing } from '@/store/wellbeing';
 import { radius, space, useColors } from '@/theme';
 import { Button, Chip, ChipGroup, Divider, Empty, Field, Header, IconButton, Row, Screen, Toggle, Txt } from '@/ui';
+import { confirmAction } from '@/ui/confirm';
 
 const leave = () => (router.canGoBack() ? router.back() : router.replace('/journal'));
 
@@ -55,8 +56,7 @@ export default function JournalEditor() {
   const confirmDelete = () => {
     if (!entryId) return;
     const doIt = () => { abort.current?.abort(); useWellbeing.getState().removeJournal(entryId); leave(); };
-    if (Platform.OS === 'web') { if (globalThis.confirm?.('Supprimer cette page ?')) doIt(); }
-    else Alert.alert('Supprimer cette page ?', 'Elle sera effacée de ton téléphone.', [{ text: 'Annuler', style: 'cancel' }, { text: 'Supprimer', style: 'destructive', onPress: doIt }]);
+    confirmAction({ title: 'Supprimer cette page ?', message: 'Elle sera effacée de ton téléphone.', confirmLabel: 'Supprimer', onConfirm: doIt });
   };
 
   const reflect = async () => {
@@ -67,7 +67,7 @@ export default function JournalEditor() {
     const context: ChatContext = {
       name: settings.name,
       mode: 'comprendre',
-      style: settings.style,
+      styles: settings.styles?.length ? settings.styles : ['douce'],
       frankness: settings.frankness,
       topic: null,
       voice: false,
@@ -162,7 +162,7 @@ export default function JournalEditor() {
         </View>
 
         {share && !reflection && !busy ? (
-          <Animated.View entering={FadeIn.duration(400)} style={{ marginTop: space.lg, gap: space.sm }}>
+          <Animated.View style={{ marginTop: space.lg, gap: space.sm }}>
             <Button label="Demander une réflexion à l'IA" kind="soft" icon="leaf" disabled={!clean} onPress={reflect} testID="journal-reflect" />
             <Txt variant="caption" color="textMuted">Le texte de cette page sera envoyé à l'IA pour qu'elle puisse te répondre. Rien d'autre de ton journal n'est transmis.</Txt>
           </Animated.View>
@@ -173,7 +173,7 @@ export default function JournalEditor() {
         ) : null}
 
         {busy || reflection ? (
-          <Animated.View entering={FadeIn.duration(500)} testID="journal-reflection" style={{ marginTop: space.xl, padding: space.xl, borderRadius: radius.lg, backgroundColor: c.surfaceAlt, gap: space.md }}>
+          <Animated.View testID="journal-reflection" style={{ marginTop: space.xl, padding: space.xl, borderRadius: radius.lg, backgroundColor: c.surfaceAlt, gap: space.md }}>
             <Txt variant="smallMedium" color="textSoft">Réflexion de l'IA</Txt>
             {reflection?.text ? <RichText text={reflection.text} /> : <Txt color="textMuted">Je lis ta page…</Txt>}
             {reflection?.crisis ? <Button label="Voir les numéros d'aide" kind="ghost" small icon="phone" onPress={() => router.push('/aide')} /> : null}

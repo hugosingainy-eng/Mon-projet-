@@ -15,7 +15,9 @@ export function useHydrated() {
     const check = () => { if (stores.every((s) => s.persist.hasHydrated())) setReady(true); };
     const unsubs = stores.map((s) => s.persist.onFinishHydration(check));
     check();
-    return () => unsubs.forEach((u) => u());
+    // Filet de sécurité : si la relecture ne répond pas, on démarre quand même plutôt que de rester sur une page vide.
+    const timer = setTimeout(() => setReady(true), 2500);
+    return () => { clearTimeout(timer); unsubs.forEach((u) => u()); };
   }, [ready]);
   return ready;
 }

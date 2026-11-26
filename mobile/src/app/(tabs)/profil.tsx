@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { MODES, STYLES } from '@/content/modes';
 import { ModeSheet, Sheet } from '@/features/chat/ModeSheet';
@@ -10,7 +10,7 @@ import { listFrenchVoices, VOICE_RATES, type FrenchVoice } from '@/features/prof
 import { hasSupabase } from '@/lib/config';
 import { useSettings } from '@/store/settings';
 import { space, useColors } from '@/theme';
-import { Chip, ChipGroup, Divider, Field, Icon, Row, Screen, SectionTitle, Toggle, Txt } from '@/ui';
+import { Button, Chip, ChipGroup, Divider, Field, Icon, Row, Screen, SectionTitle, Toggle, Txt } from '@/ui';
 import { Hero, PlantArt } from '@/ui/Illustrations';
 
 const FRANKNESS = [
@@ -47,7 +47,13 @@ export default function Profile() {
     return () => { alive = false; };
   }, []);
 
-  const style = STYLES.find((x) => x.id === s.style) ?? STYLES[0];
+  const chosen = STYLES.filter((x) => (s.styles ?? []).includes(x.id));
+  const styleHint = chosen.length ? chosen.map((x) => x.label).join(', ') : STYLES[0].label;
+  const toggleStyle = (id: (typeof STYLES)[number]['id']) => {
+    const cur = s.styles ?? [];
+    const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+    s.set({ styles: next.length ? next : cur }); // toujours au moins un style
+  };
   const mode = MODES.find((x) => x.id === s.defaultMode) ?? MODES[0];
   const voice = voices?.find((v) => v.id === s.voiceId);
   const voiceHint = voices === null ? 'Recherche des voix…' : voices.length === 0 ? 'Aucune voix française trouvée sur cet appareil' : voice?.label ?? 'Voix par défaut de l\'appareil';
@@ -56,7 +62,7 @@ export default function Profile() {
 
   return (
     <Screen edges={['top']} testID="profile">
-      <Animated.View entering={FadeInDown.duration(400)}>
+      <Animated.View>
         <Hero caption="Ton espace" title="Profil" text="Règle Confie à ta façon. Tu peux tout changer quand tu veux." art={<PlantArt size={104} />} />
       </Animated.View>
 
@@ -65,7 +71,7 @@ export default function Profile() {
       </View>
 
       <SectionTitle>Ma façon d'échanger</SectionTitle>
-      <Row icon="sliders" title="Style" hint={style.label} onPress={() => setSheet('style')} />
+      <Row icon="sliders" title="Style" hint={styleHint} onPress={() => setSheet('style')} />
       <Divider />
       <Row icon="leaf" title="Mode par défaut" hint={mode.label} onPress={() => setSheet('mode')} />
       <Divider />
@@ -122,10 +128,12 @@ export default function Profile() {
         Confie est une IA. Elle ne remplace pas un professionnel de santé.
       </Txt>
 
-      <Sheet visible={sheet === 'style'} onClose={() => setSheet(null)} title="Quel style te convient ?">
+      <Sheet visible={sheet === 'style'} onClose={() => setSheet(null)} title="Comment préfères-tu qu'on te parle ?">
+        <Txt variant="small" color="textSoft">Tu peux en cocher plusieurs.</Txt>
         {STYLES.map((x) => (
-          <Row key={x.id} title={x.label} hint={x.hint} onPress={() => { s.set({ style: x.id }); setSheet(null); }} right={tick(s.style === x.id)} />
+          <Row key={x.id} testID={`style-${x.id}`} title={x.label} hint={x.hint} onPress={() => toggleStyle(x.id)} right={tick((s.styles ?? []).includes(x.id))} />
         ))}
+        <Button label="Terminé" onPress={() => setSheet(null)} style={{ marginTop: space.md }} />
       </Sheet>
       <ModeSheet visible={sheet === 'mode'} value={s.defaultMode} onPick={(defaultMode) => s.set({ defaultMode })} onClose={() => setSheet(null)} />
       <Sheet visible={sheet === 'voice'} onClose={() => setSheet(null)} title="Choisir une voix">
