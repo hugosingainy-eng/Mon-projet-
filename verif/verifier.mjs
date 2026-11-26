@@ -233,9 +233,9 @@ const EXIGENCES = [
       need(typeof s.consentAt === "number", "le consentement n'est pas enregistré");
     }) },
   { demande: "Home : « Bonjour, comment tu te sens aujourd'hui ? », « Je suis là pour t'écouter », Commencer une conversation, check-in, journal, exercices, vidéos, progrès", test: (b) => session(b, {}, async ({ page }) => {
-      const t = (await tid(page, "home").innerText()).replace(/\u00a0/g, " ").toLowerCase();
-      need(/bonjour|bonsoir/.test(t), "l'accueil ne salue pas la personne");
-      for (const w of ["Comment tu te sens aujourd'hui ?", "Tu peux prendre ton temps", "Je suis là pour t'écouter", "Commencer une conversation", "Vidéos"]) need(t.includes(w.toLowerCase()), `l'accueil ne contient pas « ${w} »`);
+      // Les blocs de l'accueil apparaissent en fondu l'un après l'autre : on attend chacun.
+      await see(tid(page, "home").getByText(/^(Bonjour|Bonsoir)$/), "l'accueil ne salue pas la personne");
+      for (const w of [/Comment tu te sens aujourd'hui/, /Tu peux prendre ton temps/, /Je suis là pour t'écouter/, /Commencer une conversation/, /^Vidéos$/]) await see(tid(page, "home").getByText(w), `l'accueil ne contient pas « ${w.source} »`);
       await see(tid(page, "checkin"), "check-in émotionnel absent");
       for (const n of ["Journal", "Exercices", "Progrès", "Profil"]) await see(page.getByRole("tab", { name: n }), `onglet ${n} absent`);
     }) },

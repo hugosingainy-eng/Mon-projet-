@@ -121,8 +121,8 @@ export default function Home() {
         <Txt variant="smallMedium">Pour toi</Txt>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -space.xl }} contentContainerStyle={{ paddingHorizontal: space.xl, gap: space.md }}>
           <Feature title="Respirer en paix" hint="5 min · guidé" art={<BreathArt size={92} />} tint={c.surfaceAlt} onPress={() => router.push({ pathname: '/exercice/[id]', params: { id: 'coherence' } })} />
-          <Feature title="Écrire pour soi" hint="Ton journal privé" art={<JournalArt size={92} />} tint={c.surface} onPress={() => router.push('/ecrire')} />
-          <Feature title="Vidéos" hint="Pour aller plus loin" art={<VideoArt size={92} />} tint={c.surfaceAlt} onPress={() => router.push('/videos')} />
+          <Feature title="Vidéos" hint="Pour aller plus loin" art={<VideoArt size={92} />} tint={c.surface} onPress={() => router.push('/videos')} />
+          <Feature title="Écrire pour soi" hint="Ton journal privé" art={<JournalArt size={92} />} tint={c.surfaceAlt} onPress={() => router.push('/ecrire')} />
           <Feature title="S'ancrer" hint="4 min · les cinq sens" art={<PlantArt size={92} />} tint={c.surface} onPress={() => router.push({ pathname: '/exercice/[id]', params: { id: 'ancrage-54321' } })} />
         </ScrollView>
       </Animated.View>
