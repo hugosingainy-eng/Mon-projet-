@@ -58,7 +58,7 @@ def selfcheck() -> int:
             failures += 1
             print(f"[FAIL] {label}: {type(e).__name__}: {e}")
 
-    cx, yh = CcxtProvider(s.crypto_exchanges, s.crypto_history_exchanges), YahooProvider()
+    cx, yh = CcxtProvider(s.crypto_exchanges, s.crypto_history_exchanges, s.crypto_prefer_exchange), YahooProvider()
     cryptos = [i for i in UNIVERSE if i.provider == "ccxt"]
 
     def crypto_quotes():

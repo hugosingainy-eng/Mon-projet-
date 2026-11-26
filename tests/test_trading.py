@@ -430,7 +430,7 @@ def test_focused_research_run_only_uses_requested_markets(settings, db, hub):
     with db.session() as s:
         from quantum_edge.db import LabExperiment
         rows = s.execute(select(LabExperiment.instrument, LabExperiment.timeframe).distinct()).all()
-    assert rows and all(i.endswith("/EUR") and tf == "15m" for i, tf in rows)
+    assert rows and all(BY_SYMBOL[i].asset_class == "crypto" and tf == "15m" for i, tf in rows)
     settings.explore_count = 3
     picks = lab.exploration_picks(1)
     assert len({p.instrument for p in picks}) == len(picks) <= 3
@@ -635,3 +635,19 @@ def test_position_size_scales_with_tested_quality(eng, settings):
     with eng.db.session() as s:
         w = [x.weight for x in s.scalars(select(Strategy).order_by(Strategy.id))]
     assert w == pytest.approx([1.0, 0.5, settings.conviction_floor])      # best gets the full cap, weakest the floor
+
+
+def test_usdt_quoted_crypto_converts_through_usdt_eur_with_small_leg_cost(broker, providers, hub, settings):
+    zec = BY_SYMBOL["ZEC/USDT"]
+    assert BY_SYMBOL["USDT/EUR"].tradable is False                # the rate is watched, never traded
+    setp(providers, hub, "USDT/EUR", 0.9)                         # 1 USDT = 0.90 EUR
+    setp(providers, hub, "ZEC/USDT", 50.0)
+    pos = broker.open(zec, 1, 450.0)
+    assert np.isclose(pos.entry_fx, 0.9) and np.isclose(pos.qty * pos.entry_price * 0.9, 450.0)
+    assert np.isclose(broker.account()["fx_costs"], 450.0 * settings.stable_fx_cost_bps / 1e4)
+    assert settings.cost_per_side("crypto", "USDT") < settings.cost_per_side("equity", "USD") + 0.01
+    assert np.isclose(settings.cost_per_side("crypto", "USDT") - settings.cost_per_side("crypto", "EUR"),
+                      settings.stable_fx_cost_bps / 1e4)
+    hub.quotes.pop("USDT/EUR")                                    # no conversion rate -> no trade
+    with pytest.raises(BrokerError):
+        broker.open(BY_SYMBOL["TAO/USDT"], 1, 100.0)

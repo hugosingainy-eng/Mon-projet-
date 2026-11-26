@@ -217,3 +217,13 @@ def test_minimum_win_rate_filter_on_deployment(settings, db, hub):
     settings.lab_min_win_rate = 0.55
     picks = lab.candidates(run)
     assert all(p.win_rate >= 0.55 and min(p.segments[k]["win"] for k in ("val", "test")) >= 0.50 for p in picks)
+
+
+def test_crypto_venue_preference_by_quote_currency():
+    from quantum_edge.data.ccxt_provider import CcxtProvider
+    class Ex:
+        rateLimit = 0
+        def __init__(self, syms): self.markets = {s: {"active": True, "spot": True} for s in syms}
+    prov = CcxtProvider(["kraken", "okx"], ["kraken", "okx"], {"USDT": "okx"})
+    prov._ex = {"kraken": Ex(["BTC/EUR", "ZEC/USDT"]), "okx": Ex(["BTC/EUR", "ZEC/USDT"])}
+    assert prov._route_for("ZEC/USDT") == "okx" and prov._route_for("BTC/EUR") == "kraken"

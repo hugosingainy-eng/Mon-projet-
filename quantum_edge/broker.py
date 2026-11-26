@@ -62,9 +62,7 @@ class PaperBroker:
         return r[0]
 
     def _fx_cost_rate(self, inst: Instrument) -> float:
-        if inst.quote_ccy == self.s.base_currency or inst.asset_class == "forex":
-            return 0.0
-        return self.s.fx_cost_bps / 1e4
+        return self.s.fx_cost_rate(inst.asset_class, inst.quote_ccy)
 
     # --- orders -----------------------------------------------------------------------
     def open(self, inst: Instrument, side: int, notional_eur: float, book: str = "live", *,

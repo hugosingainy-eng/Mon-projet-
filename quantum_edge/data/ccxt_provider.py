@@ -18,8 +18,10 @@ class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider
     name = "ccxt"
     MAX_EMPTY_BARS = 0.2      # share of zero-volume candles above which a venue's history is rejected
 
-    def __init__(self, exchanges: list[str], history_exchanges: list[str] | None = None):
+    def __init__(self, exchanges: list[str], history_exchanges: list[str] | None = None,
+                 prefer: dict[str, str] | None = None):
         self.exchange_names = exchanges
+        self.prefer = prefer or {}            # quote currency -> venue tried first
         # venues tried in order for candles; some (e.g. Kraken) only serve ~720 bars
         self.history_names = history_exchanges or exchanges
         self._ex: dict[str, object] = {}
@@ -38,6 +40,10 @@ class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider
             self._ex[name] = ex
         return self._ex[name]
 
+    def _ordered(self, names: list[str], symbol: str) -> list[str]:
+        first = self.prefer.get(symbol.rsplit("/", 1)[-1])
+        return [first] + [n for n in names if n != first] if first in names else names
+
     def supports(self, inst: Instrument) -> bool:
         return self._route_for(inst.provider_symbol) is not None
 
@@ -47,7 +53,7 @@ class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider
         if symbol in self._unsupported:
             return None
         reachable = 0
-        for name in self.exchange_names:
+        for name in self._ordered(self.exchange_names, symbol):
             try:
                 ex = self._exchange(name)
             except Exception as e:
@@ -92,7 +98,7 @@ class CcxtProvider(MarketDataProvider, HistoricalDataProvider, OrderBookProvider
         """Candles from the first venue that can serve (nearly) the requested depth; otherwise
         the longest series found. The venue used is recorded in `df.attrs["source"]`."""
         best = empty_frame()
-        for name in self.history_names:
+        for name in self._ordered(self.history_names, inst.provider_symbol):
             try:
                 ex = self._exchange(name)
                 if inst.provider_symbol not in ex.markets:

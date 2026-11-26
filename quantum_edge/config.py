@@ -47,8 +47,8 @@ class Settings:
     relab_hours: float = 24.0
 
     # --- data -------------------------------------------------------------------------
-    crypto_exchanges: list = field(default_factory=lambda: ["binance", "kraken"])          # live quotes
-    crypto_history_exchanges: list = field(default_factory=lambda: ["binance", "bitstamp", "kraken"])
+    crypto_exchanges: list = field(default_factory=lambda: ["binance", "kraken", "okx"])          # live quotes
+    crypto_history_exchanges: list = field(default_factory=lambda: ["binance", "bitstamp", "kraken", "okx"])
     max_quote_age: dict = field(default_factory=lambda: {
         "crypto": 180, "equity": 1200, "etf": 1200, "forex": 600, "index": 1200, "commodity": 1200})
     sec_user_agent: str = ""  # SEC EDGAR requires a contact User-Agent; empty = Elite filings disabled
@@ -62,6 +62,12 @@ class Settings:
     half_spread_bps: dict = field(default_factory=lambda: {
         "crypto": 2.0, "equity": 2.0, "etf": 2.0, "forex": 1.0, "index": 2.0, "commodity": 3.0})
     fx_cost_bps: float = 5.0            # charged on each conversion EUR <-> quote currency
+    # Stable-coin quoted crypto (e.g. SOL/USDT): the account keeps its trading balance in the
+    # stable coin between trades, so each side carries only this small conversion allowance.
+    stable_quote_ccys: list = field(default_factory=lambda: ["USDT"])
+    stable_fx_cost_bps: float = 1.0
+    # venue preferred for a quote currency (most of the liquidity of USDT pairs is on OKX)
+    crypto_prefer_exchange: dict = field(default_factory=lambda: {"USDT": "okx"})
     short_borrow_bps_per_day: float = 3.0
 
     # --- risk limits ("aggressive, no leverage") --------------------------------------
@@ -149,9 +155,15 @@ class Settings:
         """Fractional one-way cost used by the backtester (fee + slippage + half spread + FX)."""
         bps = (self.fee_bps[asset_class] + self.slippage_bps[asset_class]
                + self.half_spread_bps[asset_class])
-        if quote_ccy != self.base_currency and asset_class != "forex":
-            bps += self.fx_cost_bps
-        return bps / 1e4
+        return bps / 1e4 + self.fx_cost_rate(asset_class, quote_ccy)
+
+    def fx_cost_rate(self, asset_class: str, quote_ccy: str) -> float:
+        """Fractional conversion cost per side between the account currency and the quote currency."""
+        if quote_ccy == self.base_currency or asset_class == "forex":
+            return 0.0
+        if quote_ccy in self.stable_quote_ccys:
+            return self.stable_fx_cost_bps / 1e4
+        return self.fx_cost_bps / 1e4
 
 
 def load_settings(path: str | None = None) -> Settings:

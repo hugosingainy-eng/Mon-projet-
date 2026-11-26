@@ -20,6 +20,7 @@ _FX_PATH = {
     "JPY": [("EURUSD", -1), ("USDJPY", -1)],
     "CHF": [("EURUSD", -1), ("USDCHF", -1)],
     "CAD": [("EURUSD", -1), ("USDCAD", -1)],
+    "USDT": [("USDT/EUR", 1)],
 }
 
 
@@ -140,7 +141,7 @@ class DataHub:
                 return None
             rate *= q.price ** power
             oldest = q.ts if oldest is None else min(oldest, q.ts)
-        return rate, "yahoo:" + "*".join(p for p, _ in path), oldest
+        return rate, ("ccxt:" if "/" in path[0][0] else "yahoo:") + "*".join(p for p, _ in path), oldest
 
     # --- microstructure ---------------------------------------------------------------
     def order_book(self, inst: Instrument):

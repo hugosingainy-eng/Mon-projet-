@@ -30,7 +30,7 @@ DEFAULT_STATE = {"consensus_halted": False, "consensus_ts": None, "financing_ts"
 def default_providers(settings: Settings) -> dict:
     from .data.ccxt_provider import CcxtProvider
     from .data.yahoo_provider import YahooProvider
-    return {"ccxt": CcxtProvider(settings.crypto_exchanges, settings.crypto_history_exchanges), "yahoo": YahooProvider()}
+    return {"ccxt": CcxtProvider(settings.crypto_exchanges, settings.crypto_history_exchanges, settings.crypto_prefer_exchange), "yahoo": YahooProvider()}
 
 
 class Engine:

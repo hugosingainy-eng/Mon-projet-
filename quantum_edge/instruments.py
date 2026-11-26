@@ -41,6 +41,13 @@ def _crypto(base, name):
                       None if base == "BTC" else "BTC/EUR")
 
 
+def _crypto_usdt(base, name):
+    """Crypto quoted in the USDT stable coin (deeper books than the EUR pair); P&L is
+    converted to EUR with the exchange's own USDT/EUR market."""
+    sym = f"{base}/USDT"
+    return Instrument(sym, name, "crypto", "ccxt", sym, "USDT", True, "24x7", "BTC/EUR")
+
+
 def _watch(sym, name, cls, ysym, ccy, session, note):
     return Instrument(sym, name, cls, "yahoo", ysym, ccy, False, session, None, note)
 
@@ -56,6 +63,12 @@ UNIVERSE: list[Instrument] = [
     _crypto("SHIB", "Shiba Inu"), _crypto("NEAR", "NEAR Protocol"), _crypto("AAVE", "Aave"),
     _crypto("XLM", "Stellar"), _crypto("BCH", "Bitcoin Cash"), _crypto("ALGO", "Algorand"),
     _crypto("SUI", "Sui"), _crypto("POL", "Polygon"),
+    # liquid USDT-quoted coins (third run) and the conversion rate they need
+    _crypto_usdt("ZEC", "Zcash"), _crypto_usdt("HYPE", "Hyperliquid"), _crypto_usdt("PEPE", "Pepe"),
+    _crypto_usdt("OKB", "OKB"), _crypto_usdt("WLD", "Worldcoin"), _crypto_usdt("TAO", "Bittensor"),
+    _crypto_usdt("FIL", "Filecoin"), _crypto_usdt("ARB", "Arbitrum"),
+    Instrument("USDT/EUR", "Tether / euro", "crypto", "ccxt", "USDT/EUR", "EUR", False, "24x7", None,
+               "conversion rate for USDT-quoted pairs; not traded"),
     # equities
     _eq("NVDA", "NVIDIA"), _eq("TSLA", "Tesla"), _eq("AAPL", "Apple"), _eq("MSFT", "Microsoft"),
     _eq("AMZN", "Amazon"), _eq("META", "Meta"), _eq("GOOGL", "Alphabet"), _eq("AMD", "AMD"),
