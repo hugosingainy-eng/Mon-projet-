@@ -1,5 +1,5 @@
 {
-  "_comment": "Settings of the THIRD run, started 26 Nov 2026 at 10:49 UTC from 5,000 EUR at the owner's request: wider crypto universe (OKX added, USDT-quoted coins) and, since 26 Nov about 12:30 UTC, the SCALPER: 30-100 quick trades a day on 5-minute bars with positions of 500-1,000 EUR, chosen by the owner after being told that 1,974 back-tested variants of short-term techniques were all unprofitable after costs (expected loss 90-180 EUR a day). Each position has a 0.8% stop, a 1.6% target and a 3-hour limit; stop to break-even after +0.8%; more size on set-ups that test or trade positive; an instrument that keeps losing is left for the day; the day stops at -3% (150 EUR). Agent-consensus trading is off. Runs 1 and 2 are archived in backup/.",
+  "_comment": "Settings of the THIRD run, started 26 Nov 2026 at 10:49 UTC from 5,000 EUR at the owner's request: wider crypto universe (OKX added, USDT-quoted coins) and, since 26 Nov about 12:30 UTC, the SCALPER: 30-100 quick trades a day on 5-minute bars with positions of 500-1,000 EUR, chosen by the owner after being told that 1,974 back-tested variants of short-term techniques were all unprofitable after costs (expected loss 90-180 EUR a day). Each position has a 0.8% stop, a 1.6% target and a 3-hour limit; stop to break-even after +0.8%; more size on set-ups that test or trade positive; an instrument that keeps losing is left for the day; the day stops at -3% (150 EUR). Agent-consensus trading is off. Runs 1 and 2 are archived in backup/. UPDATE 26 Nov ~11:20 UTC, at the owner's request ('make +200 EUR in an hour possible by putting more money or more positions'): simulated leverage raised to the 3x maximum (about 15,000 EUR exposed), positions of 1,500-2,000 EUR, up to 10 at once and 10 new ones an hour. The owner was told this multiplies losses as much as gains; the day still stops at -3% (150 EUR).",
   "forward_min_trades": 0,
   "forward_min_hours": 0,
   "lab_min_trades_per_day": 0.3,
@@ -11,11 +11,11 @@
   "explore_min_trades_per_day": 20.0,
   "risk_per_trade_pct": 0.01,
   "max_daily_loss_pct": 0.03,
-  "max_class_exposure_pct": 1.5,
+  "max_class_exposure_pct": 3.0,
   "max_positions": 12,
   "allow_leverage": true,
-  "max_exposure_pct": 1.5,
-  "max_position_pct": 0.2,
+  "max_exposure_pct": 3.0,
+  "max_position_pct": 0.4,
   "lab_target": 20000,
   "relab_hours": 6.0,
   "objective_return_pct": 100.0,
@@ -51,7 +51,9 @@
     "equity",
     "etf"
   ],
-  "scalp_trades_per_day": 60,
-  "scalp_max_trades_per_day": 100,
-  "scalp_max_positions": 8
+  "scalp_trades_per_day": 120,
+  "scalp_max_trades_per_day": 240,
+  "scalp_max_positions": 10,
+  "scalp_weight": 0.75,
+  "scalp_weight_best": 1.0
 }
