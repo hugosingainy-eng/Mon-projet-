@@ -16,7 +16,7 @@ export function Botanical({ size = 220 }: { size?: number }) {
     [116, 146, 1], [124, 128, 1], [133, 110, 1], [143, 93, 0.95], [154, 78, 0.85],
   ] as const;
   return (
-    <Svg width={size} height={size} viewBox="0 0 240 240" accessibilityElementsHidden importantForAccessibility="no">
+    <Svg width={size} height={size} viewBox="36 36 172 172" accessibilityElementsHidden importantForAccessibility="no">
       <Path d="M52 176c-6-28 18-50 48-46 22 3 34-12 54-6 26 8 34 40 16 60-20 22-58 22-88 18-16-2-27-12-30-26Z" fill={c.sageLight} />
       <Circle cx={150} cy={138} r={30} fill={c.sage} opacity={0.55} />
       <Circle cx={126} cy={152} r={11} fill={c.primary} opacity={0.85} />

@@ -26,6 +26,7 @@ Légende : ✅ fait et vérifié · 🟡 partiel · ⛔ bloqué (dépend du prop
 | ✅ | Vérification automatique des demandes à chaque fin de réponse | `verif/verifier.mjs`, `.claude/settings.json` |
 | ✅ | Documentation complète et brouillons juridiques | `docs/` |
 
+| ✅ | Accueil illustré d'après les références du propriétaire (carte verte, visages d'humeur, cartes illustrées) | `npm run verif` |
 | ✅ | Aperçu en ligne avec IA branchée (lien dans le README) | testé localement avec une IA simulée ; non vérifié dans la page publiée |
 
 ## Partiel
@@ -38,7 +39,7 @@ Légende : ✅ fait et vérifié · 🟡 partiel · ⛔ bloqué (dépend du prop
 | 🟡 | iOS / Android | Code commun qui compile ; testé uniquement en version web |
 | 🟡 | Notifications | La préférence est enregistrée ; aucun rappel n'est réellement programmé |
 | 🟡 | Images | Illustration vectorielle maison, référence générée avec Canva ; pas de photos (connecteurs à connecter par le propriétaire) |
-| 🟡 | Qualité du design | Écrans cohérents et calmes ; auto-évaluation autour de 8/10, pas encore le 9/10 visé. À reprendre : contrôles du mode vocal, densité du profil, états vides |
+| 🟡 | Qualité du design | Écrans cohérents et calmes ; auto-évaluation autour de 8/10, pas encore le 9/10 visé. Seuls l'accueil, la bienvenue et le point d'humeur suivent les nouvelles références ; journal, exercices, progrès et profil restent à illustrer dans le même style |
 
 ## Bloqué — dépend du propriétaire
 

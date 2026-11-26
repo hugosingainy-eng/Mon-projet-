@@ -2,11 +2,12 @@ import { router } from 'expo-router';
 import { View } from 'react-native';
 
 import { hasSupabase } from '@/lib/config';
-import { space } from '@/theme';
+import { radius, space, useColors } from '@/theme';
 import { Button, Icon, Screen, Txt } from '@/ui';
 import { Botanical } from '@/ui/Botanical';
 
 export default function Welcome() {
+  const c = useColors();
   return (
     <Screen
       scroll={false}
@@ -21,7 +22,7 @@ export default function Welcome() {
         </View>
       }>
       <View style={{ flex: 1, justifyContent: 'center', gap: space.xl }}>
-        <View style={{ marginLeft: -space.lg, marginBottom: -space.md }}><Botanical size={200} /></View>
+        <View style={{ backgroundColor: c.surfaceAlt, borderRadius: radius.lg + 6, alignItems: 'center', paddingVertical: space.lg }}><Botanical size={190} /></View>
         <Txt variant="display">Tu peux tout dire.{'\n'}Ici, tu n'as pas à faire semblant.</Txt>
         <Txt color="textSoft" style={{ maxWidth: 340 }}>
           Un espace pour toi, à n'importe quelle heure. Parler librement, être écouté, comprendre, avancer.

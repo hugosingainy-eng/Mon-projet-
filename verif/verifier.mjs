@@ -171,6 +171,18 @@ const EXIGENCES = [
       throw new Partiel("une illustration a été générée avec Canva comme référence, puis redessinée en vectoriel ; les connecteurs CoDesign et Higgsfield exigent une connexion du propriétaire et l'image Canva en haute définition ne peut pas être téléchargée d'ici");
     } },
 
+  { demande: "Je veux une interface comme ça (références : carte verte « comment tu te sens », visages d'humeur, raccourcis, cartes illustrées, plantes)", test: (b) => session(b, {}, async ({ page, sent }) => {
+      for (let n = 1; n <= 5; n++) await see(tid(page, `home-mood-${n}`), `le visage d'humeur ${n} manque sur l'accueil`);
+      for (const w of ["Prends un moment pour toi", "À voix haute", "Pour toi", "Respirer en paix", "Écrire pour soi"]) await see(tid(page, "home").getByText(w, { exact: true }), `l'accueil ne contient pas « ${w} »`);
+      need((await tid(page, "home").locator("svg").count()) >= 12, "les illustrations ne s'affichent pas");
+      await tid(page, "home-mood-4").click(); await tid(page, "mood").waitFor();
+      await tid(page, "mood-save").click(); await tid(page, "home").waitFor();
+      need(((await stored(page, "confie.wellbeing")).moods ?? [])[0]?.mood === 4, "le visage choisi sur l'accueil n'est pas repris dans le point d'humeur");
+      await tid(page, "home-input").fill("Je me sens perdue"); await tid(page, "home-send").click();
+      await tid(page, "ai-message").first().waitFor({ timeout: 8000 });
+      need(sent[0].messages[0].content === "Je me sens perdue", "ce qu'on écrit dans la carte verte n'ouvre pas la conversation");
+    }) },
+
   // Message 3 — la question du mode
   { demande: "Comment veux-tu que je t'aide aujourd'hui ? Écoute-moi / Aide-moi à comprendre / Sois honnête / Trouve des solutions / Rassure-moi / Challenge-moi (+ Motive-moi), modifiable à tout moment", test: (b) => session(b, {}, async ({ page, sent }) => {
       need(Object.keys(MODES).length === 7, "il n'y a pas sept modes dans les consignes");
@@ -216,8 +228,9 @@ const EXIGENCES = [
       need(typeof s.consentAt === "number", "le consentement n'est pas enregistré");
     }) },
   { demande: "Home : « Bonjour, comment tu te sens aujourd'hui ? », « Je suis là pour t'écouter », Commencer une conversation, check-in, journal, exercices, vidéos, progrès", test: (b) => session(b, {}, async ({ page }) => {
-      const t = await tid(page, "home").innerText();
-      for (const w of ["comment tu te sens aujourd'hui", "Tu peux prendre ton temps", "Je suis là pour t'écouter", "Commencer une conversation", "Vidéos"]) need(t.includes(w), `l'accueil ne contient pas « ${w} »`);
+      const t = (await tid(page, "home").innerText()).replace(/\u00a0/g, " ").toLowerCase();
+      need(/bonjour|bonsoir/.test(t), "l'accueil ne salue pas la personne");
+      for (const w of ["Comment tu te sens aujourd'hui ?", "Tu peux prendre ton temps", "Je suis là pour t'écouter", "Commencer une conversation", "Vidéos"]) need(t.includes(w.toLowerCase()), `l'accueil ne contient pas « ${w} »`);
       await see(tid(page, "checkin"), "check-in émotionnel absent");
       for (const n of ["Journal", "Exercices", "Progrès", "Profil"]) await see(page.getByRole("tab", { name: n }), `onglet ${n} absent`);
     }) },
@@ -256,7 +269,7 @@ const EXIGENCES = [
       await session(b, {}, async ({ page, errors }) => {
         await startChat(page); await tid(page, "voice").click();
         await page.locator('[data-testid="voice"]').last().waitFor({ timeout: 8000 });
-        await see(page.getByText(/Écrire/), "pas de retour vers l'écrit depuis le mode vocal");
+        await see(page.locator('[data-testid="voice"]').last().getByText(/Écrire/), "pas de retour vers l'écrit depuis le mode vocal");
         need(errors.length === 0, `erreur à l'ouverture du mode vocal : ${errors[0]}`);
       });
       throw new Partiel("l'écran s'ouvre et gère l'absence de micro, mais la conversation à voix haute n'a pas pu être essayée sans vrai micro ni téléphone");

@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -7,6 +7,7 @@ import { EMOTIONS, MOOD_LABELS } from '@/content/modes';
 import { todaysMood, useWellbeing, type MoodEntry } from '@/store/wellbeing';
 import { HIT, radius, space, useColors } from '@/theme';
 import { Button, Chip, ChipGroup, Divider, Field, Icon, IconButton, Scale, Screen, Txt } from '@/ui';
+import { MoodFace } from '@/ui/Illustrations';
 
 const MOODS = [1, 2, 3, 4, 5] as const;
 const SLEEP_DEFAULT = 7;
@@ -25,7 +26,10 @@ export default function Humeur() {
   const saveMood = useWellbeing((s) => s.saveMood);
   const [existing] = React.useState(() => todaysMood(moods));
 
-  const [mood, setMood] = React.useState<MoodEntry['mood'] | null>(null);
+  // L'accueil peut ouvrir cet écran avec une humeur déjà choisie (?m=4).
+  const { m } = useLocalSearchParams<{ m?: string }>();
+  const preset = Number(m);
+  const [mood, setMood] = React.useState<MoodEntry['mood'] | null>(preset >= 1 && preset <= 5 ? (preset as MoodEntry['mood']) : null);
   const [emotions, setEmotions] = React.useState<string[]>([]);
   const [intensity, setIntensity] = React.useState(0); // 0 = non renseigné
   const [stress, setStress] = React.useState(0); // 0 = non renseigné
@@ -85,10 +89,7 @@ export default function Humeur() {
                 accessibilityState={{ selected, checked: selected }}
                 onPress={() => setMood(n)}
                 style={({ pressed }) => [{ flex: 1, alignItems: 'center', gap: space.sm, paddingVertical: space.sm, minHeight: 88 }, pressed && { opacity: 0.7 }]}>
-                <View style={{ width: HIT, height: HIT, borderRadius: HIT / 2, borderWidth: 1, alignItems: 'center', justifyContent: 'center', borderColor: selected ? c.sage : c.line, backgroundColor: selected ? c.surfaceAlt : 'transparent' }}>
-                  {/* Le point grandit avec l'humeur : un repère visuel, sans visage ni jugement. */}
-                  <View style={{ width: 6 + n * 4, height: 6 + n * 4, borderRadius: radius.pill, backgroundColor: selected ? c.primary : c.sage }} />
-                </View>
+                <MoodFace level={n} size={HIT} selected={selected} />
                 <Txt variant="caption" color={selected ? 'text' : 'textMuted'} center numberOfLines={2}>{MOOD_LABELS[n - 1]}</Txt>
               </Pressable>
             );

@@ -33,8 +33,10 @@ export default function TabsLayout() {
                   accessibilityLabel={tab.label}
                   accessibilityState={{ selected: focused }}
                   onPress={() => navigateToTab(route.key)}
-                  style={{ flex: 1, alignItems: 'center', paddingTop: space.md, paddingBottom: space.xs, gap: 3 }}>
-                  <Icon name={tab.icon} size={22} color={focused ? c.primary : c.textMuted} strokeWidth={focused ? 1.9 : 1.5} />
+                  style={{ flex: 1, alignItems: 'center', paddingTop: space.sm, paddingBottom: space.xs, gap: 2 }}>
+                  <View style={{ width: 52, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: focused ? c.surfaceAlt : 'transparent' }}>
+                    <Icon name={tab.icon} size={22} color={focused ? c.primary : c.textMuted} strokeWidth={focused ? 1.9 : 1.5} />
+                  </View>
                   <Text style={[type.caption, { color: focused ? c.primary : c.textMuted }]}>{tab.label}</Text>
                 </Pressable>
               );
