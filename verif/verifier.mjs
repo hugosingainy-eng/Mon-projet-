@@ -106,7 +106,7 @@ const EXIGENCES = [
   { demande: "Répond", test: async (b) => {
       await session(b, {}, async ({ page }) => { await startChat(page); await say(page, "bonjour"); await see(tid(page, "chat").getByText(/Je t'entends/), "la réponse ne s'affiche pas"); });
       const { ready } = await (await fetch(BASE + "/api/status")).json();
-      if (!ready) throw new Partiel("l'affichage des réponses fonctionne, mais l'IA réelle n'est pas branchée ici : il faut une clé API Anthropic sur le serveur");
+      if (!ready) throw new Partiel("l'IA répond dans l'aperçu en ligne (lien du README, non vérifié depuis la page publiée) ; sur le serveur, il faut encore une clé API Anthropic");
     } },
   { demande: "Écoute à n'importe quelle heure 24/24", test: () => { throw new Partiel("l'app n'est pas encore hébergée en ligne : il faut un hébergeur pour le serveur"); } },
   { demande: "Mémoire ou non", test: async (b) => {
@@ -191,7 +191,10 @@ const EXIGENCES = [
     } },
 
   // Message 5 — le lien
-  { demande: "Envoie un lien de l'application", test: () => { if (!/https:\/\/claude\.ai\/\S+/.test(readme)) throw new Partiel("pas encore de lien public : l'app n'est pas hébergée"); } },
+  { demande: "Envoie un lien de l'application", test: () => {
+      need(/https:\/\/claude\.ai\/artifact\/\S+/.test(readme), "aucun lien vers l'application dans le README");
+      throw new Partiel("un lien d'aperçu privé existe (README) ; ce n'est pas encore une app hébergée ni publiée sur les stores");
+    } },
 
   // Brief — écrans
   { demande: "Welcome screen : Commencer, présentation courte, informations sur l'IA et la confidentialité", test: (b) => session(b, { settings: null }, async ({ page }) => {

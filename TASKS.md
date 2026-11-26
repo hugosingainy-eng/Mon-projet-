@@ -26,6 +26,8 @@ Légende : ✅ fait et vérifié · 🟡 partiel · ⛔ bloqué (dépend du prop
 | ✅ | Vérification automatique des demandes à chaque fin de réponse | `verif/verifier.mjs`, `.claude/settings.json` |
 | ✅ | Documentation complète et brouillons juridiques | `docs/` |
 
+| ✅ | Aperçu en ligne avec IA branchée (lien dans le README) | testé localement avec une IA simulée ; non vérifié dans la page publiée |
+
 ## Partiel
 
 | | Tâche | Ce qui manque |
@@ -62,4 +64,5 @@ Légende : ✅ fait et vérifié · 🟡 partiel · ⛔ bloqué (dépend du prop
 | ⬜ | Abonnement freemium, sans jamais bloquer l'aide urgente |
 | ⬜ | Relecture des exercices et des consignes de crise par un·e psychologue |
 | ⬜ | Empêcher l'écran de s'éteindre en mode vocal, mouvement réduit sur le cercle de respiration |
+| ⬜ | Remplacer les confirmations du navigateur par une feuille intégrée (elles sont bloquées dans l'aperçu en ligne) |
 | ⬜ | Fiches App Store / Google Play, captures, builds signés |

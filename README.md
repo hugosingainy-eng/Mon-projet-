@@ -17,6 +17,12 @@ Confie est une IA. Elle ne remplace ni un psychologue ni un médecin, et le dit 
 - **Aide urgente** toujours accessible (3114, 15, 112, 3919, 119, 114).
 - Thème clair et sombre, export et suppression de toutes ses données.
 
+## Aperçu en ligne
+
+https://claude.ai/artifact/Y9ZESVL36Bh792HCb2KtPZ
+
+Aperçu privé de l'app (visible par le propriétaire, partageable depuis le menu Partager de la page). L'IA y répond par Claude, sans clé à fournir. Limites de l'aperçu : pas de mode vocal (micro bloqué), pas de vidéos vérifiées, et les suppressions avec confirmation ne fonctionnent pas. Il se reconstruit avec `npm run preview:build`.
+
 ## État réel du projet
 
 L'app compile et fonctionne ; elle a été testée dans un navigateur mobile simulé avec des réponses d'IA simulées. Elle n'est pas encore publiée. Pour qu'elle réponde vraiment et soit disponible 24h/24, il faut les éléments ci-dessous, que seul le propriétaire peut fournir.

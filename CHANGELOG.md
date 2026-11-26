@@ -8,6 +8,7 @@
 - Serveur : contexte nettoyé, recherche de vidéos via l'API YouTube, en-têtes de sécurité, CORS restreint.
 - Schéma Supabase avec sécurité au niveau des lignes.
 - Tests automatiques, vérification des demandes, documentation.
+- Aperçu en ligne publiable (`npm run preview:build`), où l'IA répond sans clé.
 - La première interface web (0.1) est retirée, remplacée par la version web de l'app.
 
 ## 0.1.0 — Première version web
