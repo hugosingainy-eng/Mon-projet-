@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "verif": "node verif/verifier.mjs"
+    "verif": "node verif/verifier.mjs",
+    "build": "cd mobile && npx expo export -p web",
+    "typecheck": "cd mobile && npx tsc --noEmit",
+    "test": "node --test test/*.test.mjs"
   },
   "engines": {
     "node": ">=20"

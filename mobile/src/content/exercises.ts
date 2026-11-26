@@ -1,0 +1,255 @@
+export type ExerciseCategory =
+  | 'Respiration' | 'Ancrage' | 'Relaxation' | 'Stress' | 'Pensées répétitives'
+  | 'Réflexion' | 'Communication' | 'Confiance en soi' | 'Sommeil' | 'Objectifs';
+
+export type Exercise = {
+  id: string;
+  title: string;
+  category: ExerciseCategory;
+  minutes: number;
+  goal: string; // l'objectif, en une phrase
+  why: string; // l'explication : pourquoi ça peut aider
+  steps: string[]; // instructions simples
+  limits?: string; // quand cet exercice ne suffit pas
+  // Rythme guidé pour les exercices de respiration (secondes).
+  breath?: { inhale: number; hold?: number; exhale: number; holdAfter?: number; cycles: number };
+  source: string; // d'où vient la technique
+};
+
+// Les identifiants sont ceux que l'IA peut recommander (EXERCISE_IDS dans prompt.js) : ne pas les renommer.
+// Aucune promesse de résultat, aucune étude ni statistique inventée : seulement le nom de la technique d'origine.
+export const EXERCISES: Exercise[] = [
+  {
+    id: 'coherence',
+    title: 'Respiration lente',
+    category: 'Respiration',
+    minutes: 5,
+    goal: 'Faire redescendre la tension en quelques minutes.',
+    why: 'Quand le stress monte, la respiration devient courte et rapide. La ralentir volontairement, avec une expiration aussi longue que l\'inspiration, peut aider le corps à retrouver un rythme plus calme. Ça ne règle pas ce qui te préoccupe, mais ça peut te redonner un peu d\'espace pour y faire face.',
+    steps: [
+      'Installe-toi confortablement, le dos soutenu, les épaules relâchées.',
+      'Inspire par le nez pendant 5 secondes, sans forcer.',
+      'Expire doucement pendant 5 secondes, par le nez ou par la bouche.',
+      'Continue à ce rythme. Si ton attention s\'échappe, reviens simplement au souffle.',
+    ],
+    limits: 'Si tu ressens des vertiges ou une gêne, arrête et reprends ta respiration normale. Si tu as un problème respiratoire ou cardiaque, demande l\'avis de ton médecin avant de pratiquer.',
+    breath: { inhale: 5, exhale: 5, cycles: 30 },
+    source: 'Respiration lente rythmée, autour de six respirations par minute, souvent appelée « cohérence cardiaque ».',
+  },
+  {
+    id: 'respiration-478',
+    title: 'Respiration 4-7-8',
+    category: 'Respiration',
+    minutes: 2,
+    goal: 'T\'apaiser avant de dormir ou quand l\'agitation monte.',
+    why: 'Une expiration plus longue que l\'inspiration invite le corps à ralentir, et compter occupe l\'esprit pendant quelques instants. Beaucoup de personnes trouvent ce rythme utile au coucher. Il peut te sembler étrange au début : c\'est normal, et ce n\'est pas grave s\'il ne te convient pas.',
+    steps: [
+      'Assieds-toi ou allonge-toi, la mâchoire détendue.',
+      'Inspire tranquillement par le nez en comptant jusqu\'à 4.',
+      'Retiens ton souffle en comptant jusqu\'à 7, sans te crisper.',
+      'Expire lentement par la bouche en comptant jusqu\'à 8.',
+      'Fais quatre cycles, pas plus pour commencer.',
+    ],
+    limits: 'Si retenir ton souffle est inconfortable, raccourcis les temps en gardant l\'expiration plus longue. En cas de vertige, arrête. Si tu es enceinte ou si tu as un problème respiratoire ou cardiaque, parles-en d\'abord à un médecin.',
+    breath: { inhale: 4, hold: 7, exhale: 8, cycles: 4 },
+    source: 'Respiration 4-7-8, popularisée par le Dr Andrew Weil et inspirée du pranayama (yoga).',
+  },
+  {
+    id: 'ancrage-54321',
+    title: 'Ancrage par les cinq sens',
+    category: 'Ancrage',
+    minutes: 4,
+    goal: 'Revenir dans l\'instant présent quand l\'angoisse monte.',
+    why: 'Quand l\'angoisse grimpe, l\'attention reste collée aux pensées et aux sensations inquiétantes. La diriger vers ce que tu perçois autour de toi peut aider à interrompre cet emballement et à te sentir de nouveau « ici ».',
+    steps: [
+      'Pose les pieds au sol et sens le contact avec ce qui te porte.',
+      'Nomme 5 choses que tu vois, en prenant le temps de les regarder.',
+      'Repère 4 choses que tu peux toucher, et touche-les si c\'est possible.',
+      'Écoute 3 sons, proches ou lointains.',
+      'Cherche 2 odeurs, même légères.',
+      'Remarque 1 goût dans ta bouche, ou bois une gorgée d\'eau.',
+      'Termine par une respiration lente et regarde comment tu te sens.',
+    ],
+    limits: 'Cet exercice aide à traverser un moment difficile, il ne traite pas ce qui le provoque. Si les crises d\'angoisse reviennent souvent, parles-en à un médecin ou à un psychologue. En cas de douleur dans la poitrine ou de malaise inhabituel, appelle le 15.',
+    source: 'Technique d\'ancrage « 5-4-3-2-1 », couramment utilisée en psychologie pour la gestion de l\'anxiété.',
+  },
+  {
+    id: 'relaxation-musculaire',
+    title: 'Relâchement musculaire',
+    category: 'Relaxation',
+    minutes: 10,
+    goal: 'Relâcher les tensions du corps, zone après zone.',
+    why: 'Le stress s\'installe souvent dans le corps sans qu\'on s\'en rende compte : mâchoire serrée, épaules hautes, ventre noué. Contracter un muscle puis le relâcher permet de mieux sentir la différence entre tension et détente, ce qui peut aider à se détendre plus facilement.',
+    steps: [
+      'Allonge-toi ou assieds-toi confortablement et respire tranquillement.',
+      'Serre les poings et les bras pendant 5 secondes, puis relâche d\'un coup. Observe la détente pendant une quinzaine de secondes.',
+      'Hausse les épaules vers les oreilles, tiens, puis laisse-les retomber.',
+      'Plisse le visage (front, yeux, mâchoire), tiens, puis relâche.',
+      'Contracte le ventre et le dos, tiens, puis relâche.',
+      'Tends les jambes et ramène les orteils vers toi, tiens, puis relâche.',
+      'Reste immobile un instant et parcours ton corps, de la tête aux pieds.',
+    ],
+    limits: 'Contracte sans jamais aller jusqu\'à la douleur, et passe les zones blessées ou douloureuses. Si tu as des douleurs chroniques ou un problème musculaire, demande conseil à un professionnel de santé.',
+    source: 'Relaxation musculaire progressive d\'Edmund Jacobson.',
+  },
+  {
+    id: 'pause-stress',
+    title: 'Pause de trois minutes',
+    category: 'Stress',
+    minutes: 3,
+    goal: 'Sortir du pilote automatique au milieu d\'une journée chargée.',
+    why: 'Sous pression, on enchaîne sans s\'arrêter et on ne remarque plus ce qu\'on ressent. S\'accorder trois minutes pour observer, respirer puis élargir son attention peut aider à reprendre la suite avec un peu plus de recul.',
+    steps: [
+      'Arrête ce que tu fais et redresse-toi légèrement.',
+      'Première minute : observe ce qui est là. Quelles pensées ? Quelles émotions ? Quelles sensations ? Sans rien chercher à changer.',
+      'Deuxième minute : ramène toute ton attention sur ta respiration, là où tu la sens le mieux.',
+      'Troisième minute : élargis ton attention à tout ton corps, ta posture, ton visage.',
+      'Reprends ton activité en choisissant ce que tu fais en premier.',
+    ],
+    limits: 'Une pause ne remplace pas le repos ni un changement quand la charge est trop lourde. Si le stress dure depuis des semaines et pèse sur ton sommeil ou ta santé, parles-en à ton médecin.',
+    source: '« Espace de respiration de trois minutes », issu de la thérapie cognitive basée sur la pleine conscience (MBCT) de Zindel Segal, Mark Williams et John Teasdale.',
+  },
+  {
+    id: 'pensees-report',
+    title: 'Le rendez-vous des inquiétudes',
+    category: 'Pensées répétitives',
+    minutes: 15,
+    goal: 'Arrêter de ruminer toute la journée en donnant une place précise à tes inquiétudes.',
+    why: 'Essayer de chasser une inquiétude la fait souvent revenir plus fort. Lui donner un rendez-vous, à heure fixe et pour une durée limitée, peut aider à la laisser passer le reste du temps : tu ne l\'ignores pas, tu la reportes.',
+    steps: [
+      'Choisis un créneau de 15 minutes, chaque jour à la même heure, pas juste avant de dormir.',
+      'Dans la journée, quand une inquiétude arrive, note-la en quelques mots.',
+      'Dis-toi « j\'y reviendrai à mon rendez-vous » et reviens à ce que tu faisais.',
+      'À l\'heure prévue, relis ta liste et laisse-toi y penser pleinement.',
+      'Pour chaque inquiétude, demande-toi si tu peux agir. Si oui, note un premier geste. Sinon, reconnais qu\'elle ne dépend pas de toi.',
+      'Quand le temps est écoulé, arrête-toi et passe à une activité qui te change les idées.',
+    ],
+    limits: 'Cette méthode demande quelques jours de pratique. Si les inquiétudes envahissent tes journées ou t\'empêchent de dormir depuis plusieurs semaines, un médecin ou un psychologue peut t\'aider.',
+    source: 'Report des inquiétudes (« worry time »), technique de contrôle du stimulus utilisée en thérapie cognitive et comportementale.',
+  },
+  {
+    id: 'defusion',
+    title: 'Prendre de la distance avec une pensée',
+    category: 'Pensées répétitives',
+    minutes: 5,
+    goal: 'Te décoller d\'une pensée qui tourne en boucle, sans avoir à la combattre.',
+    why: 'Une pensée n\'est pas un fait : c\'est une phrase que ton esprit produit. La regarder comme une pensée, plutôt que de la croire ou de lutter contre elle, peut lui faire perdre un peu de son emprise. Le but n\'est pas de la faire disparaître.',
+    steps: [
+      'Repère la pensée qui revient et écris-la telle quelle, par exemple « je vais tout rater ».',
+      'Redis-la en commençant par : « J\'ai la pensée que… ».',
+      'Puis : « Je remarque que j\'ai la pensée que… ». Observe ce que ça change.',
+      'Imagine-la posée sur une feuille qui descend une rivière, ou écrite sur un écran devant toi.',
+      'Demande-toi : si je suis cette pensée, est-ce qu\'elle m\'emmène vers ce qui compte pour moi ?',
+      'Laisse-la être là et choisis une petite action qui a du sens pour toi maintenant.',
+    ],
+    limits: 'Il ne s\'agit pas de te convaincre que tout va bien. Si tes pensées portent sur l\'envie de te faire du mal ou de mourir, ne reste pas seul·e : appelle le 3114, gratuit, 24h/24.',
+    source: 'Défusion cognitive, issue de la thérapie d\'acceptation et d\'engagement (ACT) de Steven C. Hayes.',
+  },
+  {
+    id: 'lettre-non-envoyee',
+    title: 'La lettre que tu n\'enverras pas',
+    category: 'Réflexion',
+    minutes: 15,
+    goal: 'Déposer ce que tu n\'as pas pu dire à quelqu\'un, sans conséquence.',
+    why: 'Mettre en mots ce qu\'on garde pour soi peut aider à y voir plus clair et à alléger ce que l\'on porte. Comme la lettre n\'est pas envoyée, tu peux tout écrire, sans te censurer et sans avoir à gérer la réaction de l\'autre.',
+    steps: [
+      'Choisis la personne à qui tu écris. Ça peut aussi être toi, à un autre âge.',
+      'Installe-toi au calme et donne-toi une quinzaine de minutes.',
+      'Écris sans t\'arrêter et sans te corriger : ce qui s\'est passé, ce que tu as ressenti, ce que tu aurais voulu dire.',
+      'Termine par ce dont tu as besoin aujourd\'hui.',
+      'Relis si tu en as envie, puis décide ce que tu fais de la lettre : la garder, la déchirer, la supprimer.',
+    ],
+    limits: 'Écrire peut remuer des émotions fortes, et il est normal de se sentir un peu triste juste après. Si c\'est trop, arrête-toi : tu pourras y revenir. Si la lettre concerne des violences ou un traumatisme, il vaut mieux être accompagné·e par un professionnel.',
+    source: 'Écriture expressive, étudiée par le psychologue James W. Pennebaker, et technique de la lettre non envoyée utilisée en psychothérapie.',
+  },
+  {
+    id: 'cnv-message',
+    title: 'Préparer un message difficile',
+    category: 'Communication',
+    minutes: 10,
+    goal: 'Dire ce qui ne va pas clairement, sans attaquer ni t\'effacer.',
+    why: 'Quand on est blessé·e, on a tendance à accuser ou à se taire. Séparer les faits, ce que tu ressens, ce dont tu as besoin et ce que tu demandes peut rendre ton message plus facile à entendre. Ça ne garantit pas la réaction de l\'autre, mais tu auras dit les choses comme tu le voulais.',
+    steps: [
+      'Observation : décris ce qui s\'est passé, comme une caméra l\'aurait filmé. Sans « toujours », sans « jamais », sans jugement.',
+      'Sentiment : nomme ce que tu as ressenti. « Je me suis senti·e triste, inquiet·e, en colère… »',
+      'Besoin : dis ce qui compte pour toi derrière cette émotion (respect, confiance, clarté, soutien…).',
+      'Demande : formule une demande concrète, réalisable, à laquelle l\'autre peut dire non.',
+      'Assemble les quatre parties en un message court, puis relis-le à voix haute.',
+      'Choisis le bon moment pour l\'envoyer ou le dire : pas à chaud, pas en pleine nuit.',
+    ],
+    limits: 'Cette méthode suppose que l\'autre peut t\'écouter. Si tu as peur de cette personne ou si tu subis des violences, ta sécurité passe avant tout : le 3919 répond gratuitement, 24h/24.',
+    source: 'Communication NonViolente (CNV) de Marshall B. Rosenberg : observation, sentiment, besoin, demande.',
+  },
+  {
+    id: 'forces',
+    title: 'Retrouver tes forces',
+    category: 'Confiance en soi',
+    minutes: 10,
+    goal: 'Te rappeler, preuves à l\'appui, ce dont tu es capable.',
+    why: 'Quand la confiance baisse, on se souvient surtout de ses échecs. Revenir sur des moments précis où tu t\'en es sorti·e peut aider à rééquilibrer le regard que tu portes sur toi. Il ne s\'agit pas de te flatter, mais de regarder des faits.',
+    steps: [
+      'Pense à trois moments dont tu es plutôt fier ou fière, même modestes.',
+      'Pour chacun, note ce que tu as fait concrètement.',
+      'Demande-toi quelle qualité cela montre : patience, courage, humour, persévérance, attention aux autres…',
+      'Choisis une de ces forces et cherche où elle pourrait te servir cette semaine.',
+      'Garde cette liste pour la relire les jours où tu doutes.',
+    ],
+    limits: 'Si tu ne trouves rien, ce n\'est pas que tu n\'as pas de forces : c\'est souvent le signe que le moral est bas. Si ce sentiment de ne rien valoir s\'installe, parles-en à un professionnel.',
+    source: 'Identification et usage des forces personnelles, approche de la psychologie positive (Martin Seligman, Christopher Peterson).',
+  },
+  {
+    id: 'auto-compassion',
+    title: 'Te parler comme à un ami',
+    category: 'Confiance en soi',
+    minutes: 5,
+    goal: 'Remplacer l\'autocritique par un ton plus juste quand tu traverses un moment dur.',
+    why: 'On se dit souvent des choses qu\'on ne dirait jamais à quelqu\'un qu\'on aime. Se traiter avec la même bienveillance qu\'un ami ne veut pas dire s\'excuser de tout : cela peut aider à traverser une difficulté sans s\'accabler davantage.',
+    steps: [
+      'Pense à la situation qui te fait souffrir et reconnais-le simplement : « C\'est un moment difficile. »',
+      'Rappelle-toi que tu n\'es pas seul·e à vivre ça : se tromper, douter, souffrir fait partie de la vie de tout le monde.',
+      'Imagine qu\'un ami proche vive exactement la même chose. Que lui dirais-tu ? Sur quel ton ?',
+      'Écris ces mots, puis adresse-les à toi.',
+      'Si tu veux, pose une main sur ta poitrine et respire lentement quelques instants.',
+    ],
+    limits: 'Au début, cela peut sembler artificiel ou faire remonter de la tristesse : vas-y doucement. Si tu te juges très durement depuis longtemps, un psychologue peut t\'aider à comprendre d\'où ça vient.',
+    source: 'Auto-compassion selon Kristin Neff (bienveillance envers soi, humanité commune, pleine conscience) et sa « pause d\'auto-compassion ».',
+  },
+  {
+    id: 'routine-sommeil',
+    title: 'Routine du soir',
+    category: 'Sommeil',
+    minutes: 30,
+    goal: 'Préparer ton corps et ta tête au sommeil avec quelques habitudes simples.',
+    why: 'Le sommeil ne se commande pas, mais on peut lui préparer le terrain. Des horaires réguliers et un lit associé au sommeil plutôt qu\'aux écrans ou aux soucis peuvent aider à s\'endormir plus facilement. Les effets se voient en général après plusieurs jours de régularité, pas dès le premier soir.',
+    steps: [
+      'Choisis une heure de lever fixe, y compris le week-end : c\'est elle qui règle ton rythme.',
+      'Une heure avant le coucher, baisse les lumières et éloigne les écrans autant que possible.',
+      'Fais une activité calme : lecture, douche tiède, étirements, musique douce.',
+      'Si des pensées tournent, note-les sur un papier pour demain.',
+      'Va au lit seulement quand tu as sommeil.',
+      'Si tu ne dors pas au bout d\'une vingtaine de minutes, lève-toi, fais quelque chose de calme dans une autre pièce, et reviens quand le sommeil arrive.',
+    ],
+    limits: 'Évite aussi la caféine en fin de journée et l\'alcool le soir. Si tu dors mal au moins trois nuits par semaine depuis plus de trois mois, ou si tu ronfles fort avec des pauses respiratoires, consulte ton médecin.',
+    source: 'Hygiène du sommeil et contrôle du stimulus (Richard Bootzin), composantes de la thérapie cognitive et comportementale de l\'insomnie (TCC-I).',
+  },
+  {
+    id: 'objectif-petit-pas',
+    title: 'Le premier petit pas',
+    category: 'Objectifs',
+    minutes: 10,
+    goal: 'Transformer un objectif qui t\'impressionne en une première action faisable.',
+    why: 'Un objectif trop vague ou trop grand décourage avant même de commencer. Le réduire à un geste très petit, puis décider à l\'avance quand et où tu le feras, peut aider à passer de l\'intention à l\'action.',
+    steps: [
+      'Écris ton objectif en une phrase, tel qu\'il te vient.',
+      'Demande-toi pourquoi il compte pour toi. Garde cette raison sous les yeux.',
+      'Trouve la plus petite action possible, faisable en moins de dix minutes.',
+      'Décide quand et où : « Si on est [moment, lieu], alors je [action]. »',
+      'Prévois l\'obstacle le plus probable et ce que tu feras s\'il se présente.',
+      'Une fois le pas fait, note-le, puis choisis le suivant.',
+    ],
+    limits: 'Si rien ne te fait envie depuis des semaines et que tout te coûte, ce n\'est pas un manque de volonté : parles-en à un médecin ou à un psychologue.',
+    source: 'Intentions de mise en œuvre (« si… alors… ») de Peter Gollwitzer et principe des petits pas, utilisé notamment en activation comportementale.',
+  },
+];
+
+export const exerciseById = (id: string) => EXERCISES.find((e) => e.id === id) ?? null;

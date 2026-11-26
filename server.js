@@ -3,11 +3,15 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Anthropic from "@anthropic-ai/sdk";
-import { SYSTEM_PROMPT, MODES, TONES, personalContext } from "./prompt.js";
+import { SYSTEM_PROMPT, personalContext } from "./prompt.js";
 
 const PORT = process.env.PORT || 3000;
 const MODEL = process.env.CONFIE_MODEL || "claude-opus-5-5";
-const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "public");
+const ROOT = path.dirname(fileURLToPath(import.meta.url));
+// L'application (export web d'Expo). Construite par : npm run build
+const PUBLIC_DIR = path.join(ROOT, "mobile", "dist");
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY || "";
+const ALLOWED_ORIGINS = (process.env.CONFIE_ALLOWED_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean);
 
 const MAX_BODY_BYTES = 200_000;
 const MAX_MESSAGES = 40; // derniers messages envoyés au modèle
@@ -25,6 +29,10 @@ const MIME = {
   ".svg": "image/svg+xml",
   ".png": "image/png",
   ".webmanifest": "application/manifest+json",
+  ".ico": "image/x-icon",
+  ".ttf": "font/ttf",
+  ".woff2": "font/woff2",
+  ".map": "application/json",
 };
 
 const hits = new Map();
@@ -94,9 +102,6 @@ async function handleChat(req, res) {
   if (!messages.length || messages.at(-1).role !== "user") {
     return sendJson(res, 400, { error: "Message manquant." });
   }
-  const name = typeof body.name === "string" ? body.name.replace(/[^\p{L}\p{M} '-]/gu, "").trim().slice(0, 40) : "";
-  const mode = Object.hasOwn(MODES, body.mode) ? body.mode : "ecoute";
-  const tone = Object.hasOwn(TONES, body.tone) ? body.tone : "gentil";
 
   const stream = client.beta.messages.stream({
     model: MODEL,
@@ -107,7 +112,7 @@ async function handleChat(req, res) {
     fallbacks: "default",
     system: [
       { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
-      { type: "text", text: personalContext({ mode, tone, name }) },
+      { type: "text", text: personalContext(body.context) },
     ],
     messages,
   });
@@ -160,27 +165,86 @@ async function handleChat(req, res) {
   }
 }
 
+// Recherche de vraies vidéos YouTube (API officielle). Sans clé, l'app propose un lien de recherche.
+const videoCache = new Map();
+async function handleVideos(req, res, url) {
+  const q = (url.searchParams.get("q") || "").trim().slice(0, 120);
+  if (!q) return sendJson(res, 400, { error: "Recherche manquante." });
+  if (!YOUTUBE_API_KEY) return sendJson(res, 200, { verified: false, videos: [] });
+  const cached = videoCache.get(q);
+  if (cached && Date.now() - cached.at < 6 * 3600_000) return sendJson(res, 200, cached.data);
+  if (rateLimited("yt:" + (req.socket.remoteAddress ?? "?"))) return sendJson(res, 429, { error: "Trop de recherches." });
+  const api = new URL("https://www.googleapis.com/youtube/v3/search");
+  api.search = new URLSearchParams({
+    part: "snippet", type: "video", q, maxResults: "4", relevanceLanguage: "fr", safeSearch: "strict",
+    videoEmbeddable: "true", key: YOUTUBE_API_KEY,
+  }).toString();
+  try {
+    const r = await fetch(api, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error(`YouTube ${r.status}`);
+    const json = await r.json();
+    const videos = (json.items ?? []).filter((i) => i.id?.videoId).map((i) => ({
+      id: i.id.videoId,
+      title: i.snippet.title,
+      channel: i.snippet.channelTitle,
+      url: `https://www.youtube.com/watch?v=${i.id.videoId}`,
+      thumbnail: i.snippet.thumbnails?.medium?.url ?? null,
+    }));
+    const data = { verified: true, videos };
+    videoCache.set(q, { at: Date.now(), data });
+    if (videoCache.size > 500) videoCache.delete(videoCache.keys().next().value);
+    sendJson(res, 200, data);
+  } catch (err) {
+    console.error("[videos]", err?.message ?? err);
+    sendJson(res, 200, { verified: false, videos: [] });
+  }
+}
+
 async function serveStatic(req, res, pathname) {
   const rel = pathname === "/" ? "index.html" : decodeURIComponent(pathname).replace(/^\/+/, "");
   const file = path.join(PUBLIC_DIR, rel);
   if (!file.startsWith(PUBLIC_DIR + path.sep)) return sendJson(res, 403, { error: "Interdit." });
-  try {
-    const data = await fs.readFile(file);
+  const send = (data, f) => {
     res.writeHead(200, {
-      "Content-Type": MIME[path.extname(file)] ?? "application/octet-stream",
-      "Cache-Control": "no-cache",
+      "Content-Type": MIME[path.extname(f)] ?? "application/octet-stream",
+      // Les fichiers d'Expo portent une empreinte dans leur nom : ils peuvent être gardés longtemps.
+      "Cache-Control": f.includes(`${path.sep}_expo${path.sep}`) ? "public, max-age=31536000, immutable" : "no-cache",
     });
     res.end(data);
+  };
+  try {
+    send(await fs.readFile(file), file);
   } catch {
-    sendJson(res, 404, { error: "Introuvable." });
+    // Application à page unique : toute adresse inconnue sans extension renvoie l'app.
+    if (path.extname(rel)) return sendJson(res, 404, { error: "Introuvable." });
+    try {
+      const index = path.join(PUBLIC_DIR, "index.html");
+      send(await fs.readFile(index), index);
+    } catch {
+      sendJson(res, 404, { error: "L'application n'est pas encore construite. Lance : npm run build" });
+    }
   }
 }
 
 const server = http.createServer(async (req, res) => {
   try {
-    const { pathname } = new URL(req.url, "http://localhost");
+    const url = new URL(req.url, "http://localhost");
+    const { pathname } = url;
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    if (pathname.startsWith("/api/")) {
+      // Les apps iOS/Android n'envoient pas d'origine. Pour le web, seules les origines listées sont admises.
+      const origin = req.headers.origin;
+      if (origin && ALLOWED_ORIGINS.includes(origin)) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        res.setHeader("Vary", "Origin");
+      }
+      if (req.method === "OPTIONS") { res.writeHead(204); return res.end(); }
+    }
     if (pathname === "/api/chat" && req.method === "POST") return await handleChat(req, res);
-    if (pathname === "/api/status" && req.method === "GET") return sendJson(res, 200, { ready: hasCredentials });
+    if (pathname === "/api/status" && req.method === "GET") return sendJson(res, 200, { ready: hasCredentials, videos: Boolean(YOUTUBE_API_KEY) });
+    if (pathname === "/api/videos" && req.method === "GET") return await handleVideos(req, res, url);
     if (req.method === "GET" || req.method === "HEAD") return await serveStatic(req, res, pathname);
     sendJson(res, 405, { error: "Méthode non autorisée." });
   } catch (err) {
