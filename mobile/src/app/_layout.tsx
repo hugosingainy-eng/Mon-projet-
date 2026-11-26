@@ -1,5 +1,7 @@
-import { DMSans_400Regular, DMSans_500Medium } from '@expo-google-fonts/dm-sans';
-import { Fraunces_400Regular, Fraunces_500Medium } from '@expo-google-fonts/fraunces';
+import { Figtree_400Regular } from '@expo-google-fonts/figtree/400Regular';
+import { Figtree_500Medium } from '@expo-google-fonts/figtree/500Medium';
+import { Figtree_600SemiBold } from '@expo-google-fonts/figtree/600SemiBold';
+import { Fraunces_600SemiBold } from '@expo-google-fonts/fraunces/600SemiBold';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router/stack';
 import * as SplashScreen from 'expo-splash-screen';
@@ -14,7 +16,7 @@ import { useColors, useIsDark } from '@/theme';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({ Fraunces_400Regular, Fraunces_500Medium, DMSans_400Regular, DMSans_500Medium });
+  const [fontsLoaded, fontError] = useFonts({ Fraunces_600SemiBold, Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold });
   const hydrated = useHydrated();
   const c = useColors();
   const dark = useIsDark();

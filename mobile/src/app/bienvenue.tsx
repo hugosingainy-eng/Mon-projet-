@@ -22,7 +22,7 @@ export default function Welcome() {
         </View>
       }>
       <View style={{ flex: 1, justifyContent: 'center', gap: space.xl }}>
-        <View style={{ backgroundColor: c.surfaceAlt, borderRadius: radius.lg + 6, alignItems: 'center', paddingVertical: space.lg }}><Botanical size={190} /></View>
+        <View style={{ backgroundColor: c.surfaceAlt, borderRadius: radius.xl, alignItems: 'center', paddingVertical: space.xl, overflow: 'hidden' }}><Botanical size={230} /></View>
         <Txt variant="display">Tu peux tout dire.{'\n'}Ici, tu n'as pas à faire semblant.</Txt>
         <Txt color="textSoft" style={{ maxWidth: 340 }}>
           Un espace pour toi, à n'importe quelle heure. Parler librement, être écouté, comprendre, avancer.

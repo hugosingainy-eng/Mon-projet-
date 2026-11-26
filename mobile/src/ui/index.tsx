@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { HIT, MAX_WIDTH, radius, shadow, space, type, useColors, type Colors, type TypeVariant } from '@/theme';
+import { fonts, HIT, MAX_WIDTH, radius, shadow, shadowSoft, space, type, useColors, type Colors, type TypeVariant } from '@/theme';
 
 import { Icon, type IconName } from './Icon';
 
@@ -116,6 +116,7 @@ export function IconButton({ name, label, onPress, color, filled, size = 22, tes
 // ——— Puce de choix ———
 export function Chip({ label, selected, onPress, style }: { label: string; selected?: boolean; onPress?: () => void; style?: StyleProp<ViewStyle> }) {
   const c = useColors();
+  // Puce pleine : blanche au repos, vert forêt quand elle est choisie.
   return (
     <Pressable
       accessibilityRole="button"
@@ -124,10 +125,11 @@ export function Chip({ label, selected, onPress, style }: { label: string; selec
       onPress={() => { tap(); onPress?.(); }}
       style={({ pressed }) => [
         styles.chip,
-        { borderColor: selected ? c.sage : c.line, backgroundColor: selected ? c.surfaceAlt : 'transparent', opacity: pressed ? 0.7 : 1 },
+        { backgroundColor: selected ? c.primary : c.surface, opacity: pressed ? 0.75 : 1 },
+        !selected && shadowSoft,
         style,
       ]}>
-      <Text style={[type.small, { color: selected ? c.text : c.textSoft }]}>{label}</Text>
+      <Text style={[type.small, { fontFamily: fonts.sansMedium, color: selected ? c.onPrimary : c.text }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -263,7 +265,7 @@ const styles = StyleSheet.create({
   button: { minHeight: 54, paddingHorizontal: space.xl, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
   buttonSmall: { minHeight: HIT, paddingHorizontal: space.lg },
   iconButton: { width: HIT, height: HIT, borderRadius: HIT / 2, alignItems: 'center', justifyContent: 'center' },
-  chip: { minHeight: 40, paddingHorizontal: space.lg, borderRadius: radius.pill, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  chip: { minHeight: 42, paddingHorizontal: space.lg, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   chipGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   card: { borderRadius: radius.lg, padding: space.xl },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.lg, minHeight: 60, paddingVertical: space.md },

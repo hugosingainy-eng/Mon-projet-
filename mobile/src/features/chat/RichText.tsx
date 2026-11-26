@@ -7,7 +7,7 @@ import { fonts, space, type, useColors } from '@/theme';
 function inline(text: string, key: string) {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*\s][^*]*\*)/g).filter(Boolean);
   return parts.map((p, i) => {
-    if (p.startsWith('**')) return <Text key={`${key}-${i}`} style={{ fontFamily: fonts.sansMedium }}>{p.slice(2, -2)}</Text>;
+    if (p.startsWith('**')) return <Text key={`${key}-${i}`} style={{ fontFamily: fonts.sansBold }}>{p.slice(2, -2)}</Text>;
     if (p.startsWith('*')) return <Text key={`${key}-${i}`} style={{ fontStyle: 'italic' }}>{p.slice(1, -1)}</Text>;
     return p;
   });

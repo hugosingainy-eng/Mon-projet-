@@ -151,7 +151,7 @@ const EXIGENCES = [
   // Message 2 et brief — le design
   { demande: "Minimaliste, apaisant, vert sauge central, fond crème, coins arrondis, ombres légères, typographie élégante (palette #E7EDE4 #A8B9A1 #30483C #F6F3EC #FCFBF8 #8C918B #C6A77B)", test: (b) => session(b, {}, async ({ page }) => {
       for (const hex of ["#E7EDE4", "#A8B9A1", "#30483C", "#F6F3EC", "#FCFBF8", "#8C918B", "#C6A77B"]) need(theme.includes(hex), `la couleur ${hex} n'est pas dans le thème`);
-      need(theme.includes("Fraunces") && theme.includes("DMSans"), "typographies absentes du thème");
+      need(theme.includes("Fraunces") && theme.includes("Figtree"), "typographies absentes du thème");
       const bg = await tid(page, "home").evaluate((el) => getComputedStyle(el).backgroundColor);
       need(bg === "rgb(246, 243, 236)", `le fond n'est pas crème (${bg})`);
       const hard = fs.readdirSync(path.join(ROOT, "mobile/src/app"), { recursive: true }).filter((f) => f.endsWith(".tsx")).filter((f) => /#[0-9A-Fa-f]{6}\b/.test(read("mobile/src/app/" + f)));
@@ -187,6 +187,18 @@ const EXIGENCES = [
       await tid(page, "ai-message").first().waitFor({ timeout: 8000 });
       need(sent[0].messages[0].content === "Je me sens perdue", "ce qu'on écrit dans la carte verte n'ouvre pas la conversation");
     }) },
+
+  { demande: "C'est pas beau : arrange les polices et la page d'accueil, aide-toi de tes connecteurs et skills, de design, de TikTok et de Google pour voir les plus belles applications et les mieux notées", test: async (b) => {
+      await session(b, {}, async ({ page }) => {
+        const font = (loc) => loc.first().evaluate((el) => getComputedStyle(el).fontFamily + " " + getComputedStyle(el).fontSize);
+        const title = await font(tid(page, "home").getByText(/Comment tu te sens aujourd'hui/));
+        need(/Fraunces_600SemiBold/.test(title) && parseFloat(title.split(" ").pop()) >= 30, `le titre d'accueil n'est pas en gras et en grand (${title})`);
+        need(/Figtree/.test(await font(tid(page, "home").getByText(/Je suis là pour t'écouter/))), "le texte n'utilise pas la nouvelle police");
+        need(await page.evaluate(() => document.fonts.check("16px Fraunces_600SemiBold") && document.fonts.check("16px Figtree_400Regular")), "les polices ne se chargent pas");
+        for (const l of ["Très dur", "Dur", "Moyen", "Bien", "Très bien"]) await see(tid(page, "home").getByText(l, { exact: true }), `la tuile d'humeur « ${l} » manque`);
+      });
+      throw new Partiel("polices et accueil refaits d'après une étude web des apps de bien-être primées, avec le skill de design ; rien d'exploitable trouvé côté TikTok (son connecteur demande la connexion du propriétaire), et « beau » reste à valider par toi");
+    } },
 
   // Message 3 — la question du mode
   { demande: "Comment veux-tu que je t'aide aujourd'hui ? Écoute-moi / Aide-moi à comprendre / Sois honnête / Trouve des solutions / Rassure-moi / Challenge-moi (+ Motive-moi), modifiable à tout moment", test: (b) => session(b, {}, async ({ page, sent }) => {

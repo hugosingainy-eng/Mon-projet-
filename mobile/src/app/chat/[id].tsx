@@ -93,8 +93,8 @@ export default function ChatScreen() {
             </View>
             <View style={{ gap: space.sm, marginTop: space.lg, alignItems: 'flex-start' }}>
               {(chat.topic && chat.topic !== 'autre' ? [TOPICS.find((t) => t.id === chat.topic)!.starter, STARTERS[0]] : STARTERS.slice(0, 3)).map((s) => (
-                <Pressable key={s} accessibilityRole="button" onPress={() => session.send(s)} style={({ pressed }) => [{ borderWidth: 1, borderColor: c.line, borderRadius: radius.pill, paddingHorizontal: space.lg, minHeight: 42, justifyContent: 'center' }, pressed && { opacity: 0.6 }]}>
-                  <Txt variant="small" color="textSoft">{s}</Txt>
+                <Pressable key={s} accessibilityRole="button" onPress={() => session.send(s)} style={({ pressed }) => [{ backgroundColor: c.surfaceAlt, borderRadius: radius.md, paddingHorizontal: space.lg, minHeight: 46, justifyContent: 'center' }, pressed && { opacity: 0.6 }]}>
+                  <Txt variant="small">{s}</Txt>
                 </Pressable>
               ))}
             </View>

@@ -18,13 +18,14 @@ Direction : minimaliste, apaisante, premium, humaine. Le vert sauge est la coule
 Un thème sombre reprend les mêmes rôles. Les écrans n'utilisent jamais de couleur en dur : toujours `useColors()`.
 
 ## Typographie
-- **Fraunces** (serif) pour les titres : chaleur et élégance.
-- **DM Sans** pour le texte : lisible longtemps.
-- Échelle : `display` 34 · `title` 26 · `heading` 20 · `body` 16,5 · `small` 14,5 · `caption` 12,5.
+- **Fraunces demi-gras** (serif) pour les titres : chaleureuse et affirmée.
+- **Figtree** pour le texte : ronde, très lisible.
+- Échelle : `display` 32 · `title` 26 · `heading` 20 · `body` 16,5 · `small` 14,5 · `caption` 13.
+- Les textes secondaires sont en vert forêt adouci, jamais en gris pâle.
 
 ## Espaces et formes
 - Espaces : 4 · 8 · 12 · 16 · 24 · 32 · 48. Marges de page : 24.
-- Rayons : 10 · 16 · 22 · pilule. Une seule ombre, très légère, pour ce qui flotte.
+- Rayons : 10 · 18 · 24 · 30 · pilule. Cartes et puces pleines, sans contour. Une seule ombre, très légère, pour ce qui flotte.
 - Zones tactiles : 44 pt minimum ; bouton principal 54 pt.
 - Largeur maximale du contenu : 560 pt (tablettes et web).
 

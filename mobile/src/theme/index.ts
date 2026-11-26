@@ -17,10 +17,11 @@ const light = {
   bg: palette.cream,
   surface: palette.softWhite,
   surfaceAlt: palette.sageLight,
-  line: '#E6E2D7',
+  line: '#E9E5DA',
   text: palette.forest,
-  textSoft: '#5E6B62',
-  textMuted: palette.grey,
+  // Les textes secondaires sont du vert forêt adouci, jamais du gris pâle : ils restent lisibles.
+  textSoft: '#4C6156',
+  textMuted: '#66776C',
   primary: palette.forest,
   onPrimary: palette.softWhite,
   sage: palette.sage,
@@ -51,24 +52,32 @@ const dark: Colors = {
 export type Colors = Record<keyof typeof light, string>;
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 } as const;
-export const radius = { sm: 10, md: 16, lg: 22, pill: 999 } as const;
+export const radius = { sm: 10, md: 18, lg: 24, xl: 30, pill: 999 } as const;
 
+/** Une couleur du thème avec de la transparence (ex. alpha(c.accent, 0.3)). */
+export const alpha = (hex: string, a: number) => {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+};
+
+// Titres : Fraunces en demi-gras, chaleureuse et affirmée. Texte : Figtree, ronde et très lisible.
 export const fonts = {
-  serif: 'Fraunces_400Regular',
-  serifMedium: 'Fraunces_500Medium',
-  sans: 'DMSans_400Regular',
-  sansMedium: 'DMSans_500Medium',
+  serif: 'Fraunces_600SemiBold',
+  serifMedium: 'Fraunces_600SemiBold',
+  sans: 'Figtree_400Regular',
+  sansMedium: 'Figtree_500Medium',
+  sansBold: 'Figtree_600SemiBold',
 } as const;
 
 export const type = {
-  display: { fontFamily: fonts.serif, fontSize: 34, lineHeight: 42, letterSpacing: -0.3 },
-  title: { fontFamily: fonts.serif, fontSize: 26, lineHeight: 33, letterSpacing: -0.2 },
-  heading: { fontFamily: fonts.serifMedium, fontSize: 20, lineHeight: 27 },
-  body: { fontFamily: fonts.sans, fontSize: 16.5, lineHeight: 26 },
-  bodyMedium: { fontFamily: fonts.sansMedium, fontSize: 16.5, lineHeight: 26 },
+  display: { fontFamily: fonts.serif, fontSize: 32, lineHeight: 38, letterSpacing: -0.5 },
+  title: { fontFamily: fonts.serif, fontSize: 26, lineHeight: 32, letterSpacing: -0.3 },
+  heading: { fontFamily: fonts.serif, fontSize: 20, lineHeight: 26, letterSpacing: -0.1 },
+  body: { fontFamily: fonts.sans, fontSize: 16.5, lineHeight: 25 },
+  bodyMedium: { fontFamily: fonts.sansBold, fontSize: 16.5, lineHeight: 25 },
   small: { fontFamily: fonts.sans, fontSize: 14.5, lineHeight: 21 },
-  smallMedium: { fontFamily: fonts.sansMedium, fontSize: 14.5, lineHeight: 21 },
-  caption: { fontFamily: fonts.sans, fontSize: 12.5, lineHeight: 17, letterSpacing: 0.2 },
+  smallMedium: { fontFamily: fonts.sansBold, fontSize: 14.5, lineHeight: 21 },
+  caption: { fontFamily: fonts.sansMedium, fontSize: 13, lineHeight: 18 },
 } as const;
 
 export type TypeVariant = keyof typeof type;
@@ -83,6 +92,12 @@ export const shadow = Platform.select({
     shadowOffset: { width: 0, height: 8 },
     elevation: 2,
   },
+})!;
+
+// Ombre minuscule pour détacher une puce blanche du fond crème.
+export const shadowSoft = Platform.select({
+  web: { boxShadow: '0 1px 2px rgba(48,72,60,0.06)' } as object,
+  default: { shadowColor: '#30483C', shadowOpacity: 0.06, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
 })!;
 
 export const HIT = 44; // taille minimale d'une zone tactile

@@ -23,10 +23,10 @@ const font = (pkg, weight, name) => {
   return `@font-face{font-family:"${name}";src:url(data:font/ttf;base64,${fs.readFileSync(file).toString("base64")}) format("truetype");font-display:swap}`;
 };
 const fonts = [
-  font("fraunces", "400Regular", "Fraunces_400Regular"),
-  font("fraunces", "500Medium", "Fraunces_500Medium"),
-  font("dm-sans", "400Regular", "DMSans_400Regular"),
-  font("dm-sans", "500Medium", "DMSans_500Medium"),
+  font("fraunces", "600SemiBold", "Fraunces_600SemiBold"),
+  font("figtree", "400Regular", "Figtree_400Regular"),
+  font("figtree", "500Medium", "Figtree_500Medium"),
+  font("figtree", "600SemiBold", "Figtree_600SemiBold"),
 ].join("\n");
 
 const prompt = fs.readFileSync(path.join(ROOT, "prompt.js"), "utf8").replace(/^export /gm, "");

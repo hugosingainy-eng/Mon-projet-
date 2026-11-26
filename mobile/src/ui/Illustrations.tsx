@@ -9,12 +9,13 @@ import { Txt } from './index';
 // Visages d'humeur, au trait, du plus difficile (1) au plus léger (5).
 const MOUTHS = ['M8.5 16.2c1.2-1.6 5.8-1.6 7 0', 'M9 15.8c1-.9 5-.9 6 0', 'M9 15.2h6', 'M9 14.6c1 1.2 5 1.2 6 0', 'M8.3 14c1.4 2.6 6 2.6 7.4 0'] as const;
 
-export function MoodFace({ level, size = 34, selected }: { level: 1 | 2 | 3 | 4 | 5; size?: number; selected?: boolean }) {
+export function MoodFace({ level, size = 34, selected, bare }: { level: 1 | 2 | 3 | 4 | 5; size?: number; selected?: boolean; bare?: boolean }) {
   const c = useColors();
-  const stroke = selected ? c.onPrimary : c.primary;
+  const stroke = selected ? c.onPrimary : bare ? c.text : c.primary;
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" accessibilityElementsHidden importantForAccessibility="no">
-      <Circle cx={12} cy={12} r={10.2} fill={selected ? c.primary : c.surface} stroke={selected ? c.primary : c.sage} strokeWidth={1.3} />
+      {/* `bare` : le visage seul, posé sur une tuile déjà colorée. */}
+      <Circle cx={12} cy={12} r={10.2} fill={bare ? 'none' : selected ? c.primary : c.surface} stroke={bare ? stroke : selected ? c.primary : c.sage} strokeWidth={bare ? 1.5 : 1.3} />
       {level === 1 ? (
         <>
           <Path d="M7.6 9.2l2.6 1.1" stroke={stroke} strokeWidth={1.4} strokeLinecap="round" />
@@ -131,7 +132,7 @@ export function GrowthArt({ size = 96 }: Art) {
 export function Hero({ caption, title, text, art, children }: { caption?: string; title: string; text?: string; art: React.ReactNode; children?: React.ReactNode }) {
   const c = useColors();
   return (
-    <View style={{ marginTop: space.lg, backgroundColor: c.surfaceAlt, borderRadius: radius.lg + 4, padding: space.xl, overflow: 'hidden' }}>
+    <View style={{ marginTop: space.lg, backgroundColor: c.surfaceAlt, borderRadius: radius.xl, padding: space.xl, overflow: 'hidden' }}>
       <View style={{ position: 'absolute', right: -6, top: 6, opacity: 0.95 }}>{art}</View>
       {caption ? <Txt variant="caption" color="textSoft" style={{ marginRight: 92 }}>{caption}</Txt> : null}
       <Txt variant="title" style={{ marginTop: caption ? space.xs : 0, marginRight: 88 }}>{title}</Txt>
