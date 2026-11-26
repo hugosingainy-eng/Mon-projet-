@@ -1,5 +1,5 @@
 {
-  "_comment": "Settings of the THIRD run, prepared 26 Nov 2026: restart from 5,000 EUR at the owner's request, wider crypto universe (OKX added, USDT-quoted coins). The owner's wish is 30-100 trades a day and 1,000 EUR a day; 1,974 short-term technique variants were back-tested on a month of data before this run and none was profitable after costs, so until the owner decides otherwise ONLY lab-validated strategies trade. Agent-consensus trading is off (it lost in runs 1 and 2). Protective rules: take profit at +1.5% net, stop to break-even after +0.8%, loss capped at -1.2% per position, day stopped at -3%. Runs 1 and 2 are archived in backup/run1-2026-11-13-state.json and backup/run2-2026-11-16-state.json.",
+  "_comment": "Settings of the THIRD run, started 26 Nov 2026 at 10:49 UTC from 5,000 EUR at the owner's request: wider crypto universe (OKX added, USDT-quoted coins) and, since 26 Nov about 12:30 UTC, the SCALPER: 30-100 quick trades a day on 5-minute bars with positions of 500-1,000 EUR, chosen by the owner after being told that 1,974 back-tested variants of short-term techniques were all unprofitable after costs (expected loss 90-180 EUR a day). Each position has a 0.8% stop, a 1.6% target and a 3-hour limit; stop to break-even after +0.8%; more size on set-ups that test or trade positive; an instrument that keeps losing is left for the day; the day stops at -3% (150 EUR). Agent-consensus trading is off. Runs 1 and 2 are archived in backup/.",
   "forward_min_trades": 0,
   "forward_min_hours": 0,
   "lab_min_trades_per_day": 0.3,
@@ -44,5 +44,14 @@
     "kraken",
     "okx"
   ],
-  "max_drawdown_pct": 0.1
+  "max_drawdown_pct": 0.1,
+  "scalp_enabled": true,
+  "scalp_classes": [
+    "crypto",
+    "equity",
+    "etf"
+  ],
+  "scalp_trades_per_day": 60,
+  "scalp_max_trades_per_day": 100,
+  "scalp_max_positions": 8
 }

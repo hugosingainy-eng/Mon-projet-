@@ -19,6 +19,7 @@ from .data.hub import DataHub
 from .db import Database, EquitySnapshot, Position, Signal, Strategy, utcnow
 from .instruments import BY_SYMBOL, is_market_open
 from .lab import Lab
+from .scalper import Scalper
 from .risk import Proposal, RiskManager
 from .strategies import Data, signals as strategy_signals
 
@@ -43,6 +44,7 @@ class Engine:
         self.broker = PaperBroker(settings, self.db, self.hub)
         self.risk = RiskManager(settings, self.db, self.hub, self.broker)
         self.lab = Lab(settings, self.db, self.hub)
+        self.scalper = Scalper(self)
         self.lab.on_finish = self.deploy
         self.lab.revalidate = self._active_configs
         self.agents = build_agents()
@@ -219,6 +221,10 @@ class Engine:
                 self.run_agent(agent)
         if self.state["status"] == "running":
             self.evaluate_strategies(self.now())
+            try:
+                self.scalper.step(self.now())
+            except Exception as e:          # the scalper must never take the engine loop down
+                self.incident("error", "scalper", f"{type(e).__name__}: {e}"[:300], every=300)
             with self._lock:
                 self.consensus_trader(self.now())
         with self._lock:
@@ -631,6 +637,7 @@ class Engine:
                           | {"enabled": self.s.consensus_trading, "halted": bool(st.get("consensus_halted")),
                              "stop_giveback_eur": self.s.consensus_stop_drawdown_eur}),
             "agent_memory": self.agent_scores,
+            "scalper": self.scalper.record(now),
             "objectives": {"return_pct": self.s.objective_return_pct,
                            "trade_eur_min": self.s.objective_trade_eur_min,
                            "trade_eur_max": self.s.objective_trade_eur_max,

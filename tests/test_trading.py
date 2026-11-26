@@ -651,3 +651,46 @@ def test_usdt_quoted_crypto_converts_through_usdt_eur_with_small_leg_cost(broker
     hub.quotes.pop("USDT/EUR")                                    # no conversion rate -> no trade
     with pytest.raises(BrokerError):
         broker.open(BY_SYMBOL["TAO/USDT"], 1, 100.0)
+
+
+def test_scalper_opens_tested_setups_with_stop_target_and_respects_pace(eng, providers, monkeypatch, settings):
+    import quantum_edge.scalper as sc
+    settings.scalp_enabled, settings.scalp_classes = True, ["crypto"]
+    settings.scalp_trades_per_day, settings.scalp_max_trades_per_day, settings.scalp_max_positions = 48, 72, 4
+    settings.scalp_refresh_per_cycle = 100
+    eng.control("start")
+    assert eng.scalper.record()["opened_today"] == 0
+
+    def fake(o, h, l, c, v, level=0):                 # a long "dip" on the latest bar of every instrument
+        z = np.zeros(len(c), dtype=int)
+        dip = z.copy(); dip[-1] = 1
+        return {"dip": dip, "burst": z, "breakout": z}
+    monkeypatch.setattr(sc, "signals", fake)
+    eng.cycle()
+    pos = [p for p in eng.broker.open_positions("live") if p.strategy_name == "scalp:dip"]
+    hour_cap = 3                                      # ceil(72 / 24)
+    assert 1 <= len(pos) <= hour_cap                  # the hourly pace caps the burst of entries
+    for p in pos:
+        assert p.side == 1 and p.stop_price < p.entry_price < p.take_profit and p.expires_at is not None
+        assert np.isclose(p.stop_price / p.entry_price, 1 - settings.scalp_sl_pct, atol=2e-3)
+    n = len(pos)
+    eng.cycle()                                       # same bars: nothing is acted on twice
+    assert len([p for p in eng.broker.open_positions("live") if p.strategy_name == "scalp:dip"]) == n
+    rec = eng.state_view()["scalper"]
+    assert rec["enabled"] and rec["opened_today"] == n and rec["open_now"] == n
+    settings.scalp_enabled = False
+
+
+def test_scalper_signals_and_quick_test_are_consistent():
+    from quantum_edge.scalper import quick_test, signals
+    rng = np.random.default_rng(3)
+    c = 100 * np.exp(np.cumsum(rng.normal(0, 0.003, 800)))
+    o = np.roll(c, 1); o[0] = c[0]
+    h, l, v = np.maximum(o, c) * 1.001, np.minimum(o, c) * 0.999, rng.uniform(1, 5, 800)
+    strict, loose = signals(o, h, l, c, v, 0), signals(o, h, l, c, v, 2)
+    for k in strict:
+        assert set(np.unique(strict[k])) <= {-1, 0, 1} and not strict[k][:205].any()
+        assert np.count_nonzero(loose[k]) >= np.count_nonzero(strict[k])      # looser level, more set-ups
+    n, mean = quick_test(o, h, l, c, loose["dip"], 0.016, 0.008, 36, 0.0034)
+    assert n > 0 and -0.0115 <= mean <= 0.0127       # bounded by stop and target, net of costs
+    assert quick_test(o, h, l, c, np.zeros(800, dtype=int), 0.016, 0.008, 36, 0.0034) == (0, 0.0)

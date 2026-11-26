@@ -151,6 +151,22 @@ class Settings:
     consensus_hours: float = 4.0
     consensus_stop_drawdown_eur: float = 40.0   # stop the method once it has given back this much from its peak
 
+    # --- short-term trading / scalper (OFF by default) ----------------------------------
+    # Many quick positions on 5-minute bars, on the owner's explicit request. Back-tests found
+    # no profitable variant: expect a loss of about the trading costs (see scalper.py).
+    scalp_enabled: bool = False
+    scalp_classes: list = field(default_factory=lambda: ["crypto"])
+    scalp_trades_per_day: int = 60          # pace aimed at; thresholds loosen when behind
+    scalp_max_trades_per_day: int = 100
+    scalp_max_positions: int = 8
+    scalp_tp_pct: float = 0.016             # target, as a price move
+    scalp_sl_pct: float = 0.008             # stop, as a price move
+    scalp_hold_minutes: float = 180.0       # time limit
+    scalp_weight_best: float = 1.0          # x max_position_pct when the set-up tested positive on recent bars
+    scalp_weight: float = 0.5               # x max_position_pct otherwise
+    scalp_cooldown_minutes: float = 30.0    # no re-entry on an instrument just traded
+    scalp_refresh_per_cycle: int = 8        # crypto candle refreshes per engine cycle
+
     def cost_per_side(self, asset_class: str, quote_ccy: str) -> float:
         """Fractional one-way cost used by the backtester (fee + slippage + half spread + FX)."""
         bps = (self.fee_bps[asset_class] + self.slippage_bps[asset_class]
