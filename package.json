@@ -1,0 +1,16 @@
+{
+  "name": "confie",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Confie — un espace d'écoute IA pour l'amour et les relations",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.14.0"
+  }
+}

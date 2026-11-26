@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F7F2E8">
+  <meta name="description" content="Confie — un espace d'écoute pour l'amour et les relations. Sans jugement, à toute heure.">
+  <title>Confie</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Accueil -->
+  <main id="welcome" class="screen" hidden>
+    <div class="welcome-inner">
+      <svg class="leaf" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 43V22M24 30c-9 0-14-6-14-15 9 0 14 6 14 15Zm0-8c0-9 5-15 14-15 0 9-5 15-14 15Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h1>Confie</h1>
+      <p class="lead">Un endroit calme pour parler d'amour, de tes relations, de ce que tu ressens. Sans jugement, à toute heure.</p>
+
+      <form id="welcome-form" novalidate>
+        <label class="field">
+          <span>Comment veux-tu que je t'appelle&nbsp;? <em>(facultatif)</em></span>
+          <input id="name-input" type="text" maxlength="40" autocomplete="given-name" placeholder="Ton prénom ou un surnom">
+        </label>
+
+        <fieldset class="field">
+          <legend>Comment veux-tu que je t'aide aujourd'hui&nbsp;?</legend>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="mode" value="ecoute" checked><span><strong>Écoute-moi</strong></span></label>
+            <label class="choice"><input type="radio" name="mode" value="comprendre"><span><strong>Aide-moi à comprendre</strong></span></label>
+            <label class="choice"><input type="radio" name="mode" value="honnete"><span><strong>Sois honnête</strong></span></label>
+            <label class="choice"><input type="radio" name="mode" value="solutions"><span><strong>Trouve des solutions</strong></span></label>
+            <label class="choice"><input type="radio" name="mode" value="rassure"><span><strong>Rassure-moi</strong></span></label>
+            <label class="choice"><input type="radio" name="mode" value="challenge"><span><strong>Challenge-moi</strong></span></label>
+          </div>
+        </fieldset>
+
+        <label class="switch-row">
+          <span><strong>Me souvenir de nos échanges</strong><small>Gardés uniquement sur cet appareil.</small></span>
+          <input id="memory-input" type="checkbox" class="switch" checked>
+        </label>
+
+        <button class="primary" type="submit">Commencer</button>
+      </form>
+
+      <p class="fineprint">Confie est une IA. Elle ne remplace pas un psychologue ni un médecin. En cas de détresse, appelle le <a href="tel:3114">3114</a> (gratuit, 24h/24).</p>
+    </div>
+  </main>
+
+  <!-- Conversation -->
+  <div id="chat" class="screen chat" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <svg class="leaf small" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 43V22M24 30c-9 0-14-6-14-15 9 0 14 6 14 15Zm0-8c0-9 5-15 14-15 0 9-5 15-14 15Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Confie</span>
+      </div>
+      <nav class="actions">
+        <button id="help-btn" class="ghost" type="button">Aide urgente</button>
+        <button id="settings-btn" class="icon-btn" type="button" aria-label="Réglages">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+        </button>
+      </nav>
+    </header>
+
+    <section id="messages" class="messages" aria-live="polite"></section>
+
+    <div id="starters" class="starters" hidden></div>
+
+    <form id="composer" class="composer">
+      <textarea id="input" rows="1" maxlength="6000" placeholder="Écris ce que tu as sur le cœur…" aria-label="Ton message"></textarea>
+      <button id="send" type="submit" aria-label="Envoyer" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- Réglages -->
+  <dialog id="settings" class="sheet">
+    <form method="dialog" class="sheet-inner">
+      <h2>Réglages</h2>
+      <label class="field">
+        <span>Ton prénom</span>
+        <input id="set-name" type="text" maxlength="40" placeholder="Facultatif">
+      </label>
+      <fieldset class="field">
+        <legend>Comment veux-tu que je t'aide aujourd'hui&nbsp;?</legend>
+        <div class="choices">
+            <label class="choice"><input type="radio" name="set-mode" value="ecoute"><span><strong>Écoute-moi</strong></span></label>
+            <label class="choice"><input type="radio" name="set-mode" value="comprendre"><span><strong>Aide-moi à comprendre</strong></span></label>
+            <label class="choice"><input type="radio" name="set-mode" value="honnete"><span><strong>Sois honnête</strong></span></label>
+            <label class="choice"><input type="radio" name="set-mode" value="solutions"><span><strong>Trouve des solutions</strong></span></label>
+            <label class="choice"><input type="radio" name="set-mode" value="rassure"><span><strong>Rassure-moi</strong></span></label>
+            <label class="choice"><input type="radio" name="set-mode" value="challenge"><span><strong>Challenge-moi</strong></span></label>
+          </div>
+      </fieldset>
+      <label class="switch-row">
+        <span><strong>Me souvenir de nos échanges</strong><small>Désactivé&nbsp;: tout s'efface quand tu fermes la page.</small></span>
+        <input id="set-memory" type="checkbox" class="switch">
+      </label>
+      <button id="erase" class="danger" type="button">Tout effacer</button>
+      <button class="primary" value="close">Fermer</button>
+    </form>
+  </dialog>
+
+  <!-- Aide urgente -->
+  <dialog id="help" class="sheet">
+    <form method="dialog" class="sheet-inner">
+      <h2>Tu n'es pas seul·e</h2>
+      <p>Si tu vas très mal ou si tu es en danger, des personnes formées répondent tout de suite, gratuitement.</p>
+      <ul class="lines">
+        <li><a href="tel:3114"><strong>3114</strong><span>Prévention du suicide · 24h/24</span></a></li>
+        <li><a href="tel:3919"><strong>3919</strong><span>Violences dans le couple · 24h/24</span></a></li>
+        <li><a href="tel:119"><strong>119</strong><span>Enfance en danger · 24h/24</span></a></li>
+        <li><a href="tel:112"><strong>112</strong><span>Urgences · partout en Europe</span></a></li>
+      </ul>
+      <p class="fineprint">Numéros valables en France. Ailleurs, contacte les secours de ton pays.</p>
+      <button class="primary" value="close">Fermer</button>
+    </form>
+  </dialog>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
