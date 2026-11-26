@@ -89,6 +89,25 @@ UNIVERSE: list[Instrument] = [
     _eq("NKE", "Nike"), _eq("DIS", "Disney"), _eq("HD", "Home Depot"), _eq("UBER", "Uber"),
     _eq("ORCL", "Oracle"), _eq("CRM", "Salesforce"), _eq("INTC", "Intel"), _eq("SHOP", "Shopify"),
     _eq("MSTR", "Strategy (MicroStrategy)"),
+    # themes asked for by the owner (26 Nov 2026) -------------------------------------------
+    # space
+    _eq("RKLB", "Rocket Lab"), _eq("ASTS", "AST SpaceMobile"), _eq("LUNR", "Intuitive Machines"),
+    # defence, weapons and drones (military software: PLTR above)
+    _eq("LMT", "Lockheed Martin"), _eq("RTX", "RTX"), _eq("NOC", "Northrop Grumman"),
+    _eq("GD", "General Dynamics"), _eq("LHX", "L3Harris"), _eq("AVAV", "AeroVironment (drones)"),
+    _eq("KTOS", "Kratos (drones)"), _etf("ITA", "US aerospace & defence ETF"),
+    # AI chips
+    _eq("TSM", "TSMC"), _etf("SMH", "Semiconductor ETF"),
+    # electricity, nuclear and gas
+    _etf("XLU", "US utilities (electricity) ETF"), _eq("NEE", "NextEra Energy"), _eq("VST", "Vistra"),
+    _eq("CEG", "Constellation Energy (nuclear)"), _eq("CCJ", "Cameco (uranium)"), _eq("OKLO", "Oklo (nuclear)"),
+    _etf("URA", "Uranium ETF"), _eq("LNG", "Cheniere Energy (gas)"), _eq("EQT", "EQT (gas)"),
+    _etf("XLE", "US energy (oil & gas) ETF"),
+    # data centres: where AI runs
+    _eq("EQIX", "Equinix (data centres)"), _eq("DLR", "Digital Realty (data centres)"),
+    _eq("VRT", "Vertiv (data-centre power & cooling)"),
+    # France (CAC 40 proxy)
+    _etf("EWQ", "France (CAC 40 proxy) ETF"),
     # index / commodity exposure through tradable ETFs
     Instrument("SPY", "S&P 500 ETF", "etf", "yahoo", "SPY", "USD", True, "us", "QQQ"),
     _etf("QQQ", "Nasdaq 100 ETF"), _etf("DIA", "Dow Jones ETF"), _etf("EWG", "Germany (DAX proxy) ETF"),
@@ -98,6 +117,11 @@ UNIVERSE: list[Instrument] = [
     _fx("EURUSD", "USD"), _fx("GBPUSD", "USD"), _fx("USDJPY", "JPY"), _fx("EURGBP", "GBP"),
     _fx("USDCHF", "CHF"), _fx("AUDUSD", "USD"), _fx("USDCAD", "CAD"),
     # monitored only (not tradable)
+    _watch("NANC", "ETF copying trades of Democratic members of Congress", "etf", "NANC", "USD", "us",
+           "too thinly traded to trade: watched as an indicator"),
+    _watch("GOP", "ETF copying trades of Republican members of Congress", "etf", "GOP", "USD", "us",
+           "too thinly traded to trade: watched as an indicator"),
+    _watch("^FCHI", "CAC 40 index", "index", "^FCHI", "EUR", "eu", "index: monitor only, trade EWQ"),
     _watch("^GSPC", "S&P 500 index", "index", "^GSPC", "USD", "us", "index: monitor only, trade SPY"),
     _watch("^NDX", "Nasdaq 100 index", "index", "^NDX", "USD", "us", "index: monitor only, trade QQQ"),
     _watch("^DJI", "Dow Jones index", "index", "^DJI", "USD", "us", "index: monitor only, trade DIA"),
